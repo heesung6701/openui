@@ -1,0 +1,31 @@
+:root {
+  --bg: #ffffff; --panel: #f6f6f8; --line: #e2e2e8; --text: #1d1b20; --muted: #6b6870; --accent: #6750a4; --err: #b3261e; --ok: #146c2e;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --bg: #141218; --panel: #1d1b20; --line: #36343b; --text: #e6e0e9; --muted: #a09ca6; --accent: #d0bcff; --err: #f2b8b5; --ok: #8fd9a0; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px/1.45 system-ui, sans-serif; }
+#app {
+  height: 100vh; display: grid;
+  grid-template: "head head head" auto "files code right" 1fr "files problems right" 160px / 220px minmax(320px, 1fr) minmax(360px, 1.2fr);
+}
+header { grid-area: head; display: flex; gap: 16px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
+header select { margin-left: 4px; }
+#status { margin-left: auto; color: var(--muted); }
+#files { grid-area: files; overflow: auto; border-right: 1px solid var(--line); background: var(--panel); padding: 6px 0; }
+.file { padding: 3px 12px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: ui-monospace, monospace; font-size: 12px; }
+.file:hover { background: var(--line); }
+.file.active { background: var(--accent); color: var(--bg); }
+.err { color: var(--err); font-weight: 600; }
+.file.active .err { color: var(--bg); }
+#code { grid-area: code; overflow: hidden; border-right: 1px solid var(--line); }
+#code .cm-editor { height: 100%; }
+#problems { grid-area: problems; overflow: auto; border-top: 1px solid var(--line); border-right: 1px solid var(--line); padding: 4px 8px; font-family: ui-monospace, monospace; font-size: 12px; }
+#problems .title { font-weight: 600; margin-bottom: 4px; }
+.problem { cursor: pointer; padding: 1px 0; }
+.problem:hover { color: var(--accent); }
+#right { grid-area: right; overflow: auto; display: flex; flex-direction: column; }
+#preview { padding: 12px; }
+#checklist { padding: 12px; border-top: 1px solid var(--line); }

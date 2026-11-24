@@ -5,7 +5,9 @@ import type { Diagnostic } from "./diagnostics";
 export function parseYaml(text: string, file: string): { doc: unknown; diagnostics: Diagnostic[] } {
   const diagnostics: Diagnostic[] = [];
   const doc = parseDocument(text, { uniqueKeys: true, prettyErrors: true });
-  for (const e of doc.errors) diagnostics.push({ file, path: [], message: `YAML: ${e.message.split("\n")[0]}` });
+  // Report the first syntax error only; later ones are usually cascades of it.
+  const [first, ...rest] = doc.errors;
+  if (first) diagnostics.push({ file, path: [], range: first.pos, message: `YAML: ${first.message.split("\n")[0]}${rest.length ? ` (+${rest.length} more)` : ""}` });
 
   // `fill: {md.sys.color.primary}` parses as a flow map {"md.sys.color.primary": null}.
   const walk = (node: unknown, path: (string | number)[]) => {

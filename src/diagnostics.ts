@@ -1,6 +1,12 @@
 import type { z } from "zod";
 
-export type Diagnostic = { file: string; path: (string | number)[]; message: string };
+export type Diagnostic = {
+  file: string;
+  path: (string | number)[];
+  message: string;
+  /** Source offsets when known without a path (YAML syntax errors). */
+  range?: [number, number];
+};
 
 export function fromZod(err: z.ZodError, file: string, base: (string | number)[] = []): Diagnostic[] {
   return err.issues.map((i) => ({

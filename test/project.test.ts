@@ -13,8 +13,12 @@ test("duplicate YAML key is an error with file name", () => {
 });
 test("unquoted alias gets a hint", () =>
   expect(parseYaml("fill: {md.sys.color.primary}\n", "a.yaml").diagnostics[0]!.message).toContain('"{md.sys.color.primary}"'));
-test("YAML syntax error is a diagnostic, not a throw", () =>
-  expect(parseYaml('a: "unterminated\n', "a.yaml").diagnostics.length).toBeGreaterThan(0));
+test("YAML syntax error is one diagnostic (cascades summarized), not a throw", () => {
+  const d = parseYaml('a: {b: 1\nc: [x\nd: "e\n', "a.yaml").diagnostics;
+  expect(d.length).toBe(1);
+  expect(d[0]!.message).toMatch(/^YAML: .*\(\+\d+ more\)$/);
+  expect(d[0]!.range).toEqual([expect.any(Number), expect.any(Number)]);
+});
 test("globToRegExp", () => {
   expect(globToRegExp("components/*.yaml").test("components/button.yaml")).toBe(true);
   expect(globToRegExp("components/*.yaml").test("components/x/button.yaml")).toBe(false);
