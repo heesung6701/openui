@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "test": "bun test",
-    "validate": "bun src/cli.ts validate"
+    "validate": "bun src/cli.ts validate",
+    "editor": "bun editor/server.ts"
   },
   "dependencies": {
     "yaml": "^2",
