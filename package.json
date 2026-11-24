@@ -1,0 +1,17 @@
+{
+  "name": "openui",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "bun test",
+    "validate": "bun src/cli.ts validate"
+  },
+  "dependencies": {
+    "yaml": "^2",
+    "zod": "^4"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.5",
+    "typescript": "^7.0.2"
+  }
+}
