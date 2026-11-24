@@ -80,7 +80,7 @@ export async function folderIO(): Promise<EditorIO> {
 /** Static build ships projects.json; the dev server does not. */
 export async function bundledProjects(): Promise<BundledProject[] | null> {
   try {
-    const res = await fetch("./projects.json");
+    const res = await fetch("./projects.json", { cache: "no-cache" }); // revalidate: Pages serves max-age=600
     return res.ok ? ((await res.json()) as { projects: BundledProject[] }).projects : null;
   } catch {
     return null;
