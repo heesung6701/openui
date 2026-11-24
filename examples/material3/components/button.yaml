@@ -1,0 +1,117 @@
+# yaml-language-server: $schema=../../../schema/component.schema.json
+# M3 common buttons (filled / outlined / text / elevated / filled tonal), material-web v0.192 tokens.
+# Shared state behaviour lives in `base` (state layers win over variant specificity, spec §5);
+# per-style colors live in `style=…` blocks.
+kind: Component
+metadata:
+  id: button
+  name: Button
+  description: M3 common button. Padding values come from material-web button CSS (no padding tokens in v0.192).
+data:
+  props:
+    label: { type: text, default: Button }
+    icon:  { type: instance, default: icon-add, preferred: [icon-add, icon-star], description: Leading icon (withIcon=true) }
+  variants:
+    style:
+      values:
+        filled:   { description: "Highest emphasis, final or primary actions" }
+        outlined: { description: "Medium emphasis, important but not primary actions" }
+        text:     { description: "Lowest emphasis, dialogs and cards" }
+        elevated: { description: "Filled tonal with shadow, for visual separation on patterned backgrounds" }
+        tonal:    { description: "Filled tonal; between filled and outlined" }
+      default: filled
+    withIcon:
+      values: { "false": {}, "true": { description: "Leading icon shown; leading padding shrinks" } }
+      default: "false"
+  states: [enabled, hovered, focused, pressed, disabled]
+  anatomy:
+    root:
+      kind: frame
+      layout:
+        direction: row
+        gap: 8px
+        padding: [0, 24px]
+        align: { main: center, cross: center }
+        width: hug
+        height: "{md.comp.filled-button.container-height}"
+      children:
+        stateLayer: { kind: frame, layout: { position: absolute, width: fill, height: fill } }
+        icon:       { kind: instance, prop: icon }
+        label:      { kind: text, text: { prop: label } }
+  styles:
+    base:
+      enabled:
+        root:       { cornerRadius: "{md.comp.filled-button.container-shape}" }
+        stateLayer: { cornerRadius: "{md.comp.filled-button.container-shape}", opacity: 0 }
+        icon:       { width: "{md.comp.filled-button.with-icon-icon-size}", height: "{md.comp.filled-button.with-icon-icon-size}" }
+        label:      { typography: "{md.sys.typescale.label-large}" }
+      hovered:
+        stateLayer: { opacity: "{md.comp.filled-button.hover-state-layer-opacity}" }
+      focused:
+        stateLayer: { opacity: "{md.comp.filled-button.focus-state-layer-opacity}" }
+      pressed:
+        stateLayer: { opacity: "{md.comp.filled-button.pressed-state-layer-opacity}" }
+      disabled:
+        label: { color: "{md.comp.filled-button.disabled-label-text-color}", opacity: "{md.comp.filled-button.disabled-label-text-opacity}" }
+        icon:  { fill: "{md.comp.filled-button.with-icon-disabled-icon-color}", fillOpacity: "{md.comp.filled-button.with-icon-disabled-icon-opacity}" }
+
+    withIcon=false:
+      enabled:
+        icon: { visible: false }
+    withIcon=true:
+      enabled:
+        root: { padding: [0, 24px, 0, 16px] }
+
+    style=filled:
+      enabled:
+        root:       { fill: "{md.comp.filled-button.container-color}", shadow: "{md.sys.elevation-shadow.level0}" }
+        stateLayer: { fill: "{md.comp.filled-button.hover-state-layer-color}" }
+        label:      { color: "{md.comp.filled-button.label-text-color}" }
+        icon:       { fill: "{md.comp.filled-button.with-icon-icon-color}" }
+      hovered:
+        root: { shadow: "{md.sys.elevation-shadow.level1}" }
+      disabled:
+        root: { fill: "{md.comp.filled-button.disabled-container-color}", fillOpacity: "{md.comp.filled-button.disabled-container-opacity}" }
+
+    style=outlined:
+      enabled:
+        root:       { fill: transparent, strokeColor: "{md.comp.outlined-button.outline-color}", strokeWidth: "{md.comp.outlined-button.outline-width}" }
+        stateLayer: { fill: "{md.comp.outlined-button.hover-state-layer-color}" }
+        label:      { color: "{md.comp.outlined-button.label-text-color}" }
+        icon:       { fill: "{md.comp.outlined-button.with-icon-icon-color}" }
+      focused:
+        root: { strokeColor: "{md.comp.outlined-button.focus-outline-color}" }
+      disabled:
+        root: { strokeColor: "{md.comp.outlined-button.disabled-outline-color}", strokeOpacity: "{md.comp.outlined-button.disabled-outline-opacity}" }
+
+    style=text:
+      enabled:
+        root:       { fill: transparent, padding: [0, 12px] }
+        stateLayer: { fill: "{md.comp.text-button.hover-state-layer-color}" }
+        label:      { color: "{md.comp.text-button.label-text-color}" }
+        icon:       { fill: "{md.comp.text-button.with-icon-icon-color}" }
+    style=text,withIcon=true:
+      enabled:
+        root: { padding: [0, 16px, 0, 12px] }
+
+    style=elevated:
+      enabled:
+        root:       { fill: "{md.comp.elevated-button.container-color}", shadow: "{md.sys.elevation-shadow.level1}" }
+        stateLayer: { fill: "{md.comp.elevated-button.hover-state-layer-color}" }
+        label:      { color: "{md.comp.elevated-button.label-text-color}" }
+        icon:       { fill: "{md.comp.elevated-button.with-icon-icon-color}" }
+      hovered:
+        root: { shadow: "{md.sys.elevation-shadow.level2}" }
+      disabled:
+        root: { fill: "{md.comp.elevated-button.disabled-container-color}", fillOpacity: "{md.comp.elevated-button.disabled-container-opacity}", shadow: "{md.sys.elevation-shadow.level0}" }
+
+    style=tonal:
+      enabled:
+        root:       { fill: "{md.comp.filled-tonal-button.container-color}", shadow: "{md.sys.elevation-shadow.level0}" }
+        stateLayer: { fill: "{md.comp.filled-tonal-button.hover-state-layer-color}" }
+        label:      { color: "{md.comp.filled-tonal-button.label-text-color}" }
+        icon:       { fill: "{md.comp.filled-tonal-button.with-icon-icon-color}" }
+      hovered:
+        root: { shadow: "{md.sys.elevation-shadow.level1}" }
+      disabled:
+        root: { fill: "{md.comp.filled-tonal-button.disabled-container-color}", fillOpacity: "{md.comp.filled-tonal-button.disabled-container-opacity}" }

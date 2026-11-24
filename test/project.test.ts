@@ -19,6 +19,12 @@ test("YAML syntax error is one diagnostic (cascades summarized), not a throw", (
   expect(d[0]!.message).toMatch(/^YAML: .*\(\+\d+ more\)$/);
   expect(d[0]!.range).toEqual([expect.any(Number), expect.any(Number)]);
 });
+test("comma inside an unquoted flow-map string gets a quoting hint", () => {
+  const d = parseYaml("v: { description: Highest emphasis, primary actions }\n", "a.yaml").diagnostics;
+  expect(d.length).toBe(1);
+  expect(d[0]!.message).toContain("quote");
+  expect(d[0]!.path).toEqual(["v", "primary actions"]);
+});
 test("globToRegExp", () => {
   expect(globToRegExp("components/*.yaml").test("components/button.yaml")).toBe(true);
   expect(globToRegExp("components/*.yaml").test("components/x/button.yaml")).toBe(false);

@@ -79,12 +79,17 @@ export function partStyle(kind: PartKind, props: Record<string, unknown>, ctx: C
     else s.background = c;
   }
   if (props.strokeColor !== undefined) {
-    const c = val(props.strokeColor);
+    const raw = val(props.strokeColor);
     const w = props.strokeWidth ?? "1px";
-    if (kind === "vector") Object.assign(s, { stroke: c, "stroke-width": val(w) });
-    else if (props.strokeAlign === "outside") shadows.push(`0 0 0 ${val(w)} ${c}`);
-    else if (props.strokeAlign === "center") shadows.push(`inset 0 0 0 ${half(w)} ${c}`, `0 0 0 ${half(w)} ${c}`);
-    else shadows.push(`inset 0 0 0 ${val(w)} ${c}`);
+    if (kind === "vector") {
+      Object.assign(s, { stroke: raw, "stroke-width": val(w) });
+      if (props.strokeOpacity !== undefined) s["stroke-opacity"] = val(props.strokeOpacity);
+    } else {
+      const c = props.strokeOpacity === undefined ? raw : `color-mix(in srgb, ${raw} ${pct(props.strokeOpacity)}, transparent)`;
+      if (props.strokeAlign === "outside") shadows.push(`0 0 0 ${val(w)} ${c}`);
+      else if (props.strokeAlign === "center") shadows.push(`inset 0 0 0 ${half(w)} ${c}`, `0 0 0 ${half(w)} ${c}`);
+      else shadows.push(`inset 0 0 0 ${val(w)} ${c}`);
+    }
   }
   if (props.shadow !== undefined) shadows.push(val(props.shadow));
   if (shadows.length) s["box-shadow"] = shadows.join(", ");

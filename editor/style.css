@@ -6,7 +6,9 @@
   :root:not([data-theme="light"]) { --bg: #141218; --panel: #1d1b20; --line: #36343b; --text: #e6e0e9; --muted: #a09ca6; --accent: #d0bcff; --err: #f2b8b5; --ok: #8fd9a0; color-scheme: dark; }
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px/1.45 system-ui, sans-serif; }
+/* keep the html font-size at the browser default (16px): previews use rem tokens */
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); }
+body { font: 13px/1.45 system-ui, sans-serif; }
 #app {
   height: 100vh; display: grid;
   grid-template: "head head head" auto "files code right" 1fr "files problems right" 160px / 220px minmax(320px, 1fr) minmax(360px, 1.2fr);

@@ -22,6 +22,12 @@ export function parseYaml(text: string, file: string): { doc: unknown; diagnosti
       for (const pair of node.items) {
         if (!isPair(pair)) continue;
         const k = isScalar(pair.key) ? String(pair.key.value) : String(pair.key);
+        // `{ description: a, b }` splits at the comma: `b` becomes a key with no value.
+        const empty = pair.value === null || (isScalar(pair.value) && pair.value.value === null);
+        if (node.flow && empty && /\s/.test(k)) {
+          diagnostics.push({ file, path: [...path, k], message: `"${k}" has no value: text containing a comma inside { } must be quoted` });
+          continue;
+        }
         walk(pair.value, [...path, k]);
       }
     } else if (isSeq(node)) node.items.forEach((item, i) => walk(item, [...path, i]));

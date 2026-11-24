@@ -37,6 +37,7 @@ const cases: [string, (d: any) => void, string][] = [
   ["axis named state",         d => (d.data.variants.state = { values: { a: {} }, default: "a" }), "state"],
   ["x-figma duplicates core",  d => (d.data["x-figma"] = { parts: { root: { fill: "#000000" } } }), "fill"],
   ["fillOpacity on text",      d => (d.data.styles.base.enabled.label.fillOpacity = 0.5),       "fillOpacity"],
+  ["strokeOpacity on text",    d => (d.data.styles.base.enabled.label.strokeOpacity = 0.5),     "strokeOpacity"],
 ];
 for (const [name, mutate, needle] of cases)
   test(name, () => {

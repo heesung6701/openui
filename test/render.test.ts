@@ -34,6 +34,8 @@ test("paint mapping", () => {
   expect(css("frame", { strokeColor: "#000000", strokeWidth: "1px", shadow: "{e.1}" })["box-shadow"]).toBe("inset 0 0 0 1px #000000, var(--e-1)");
   expect(css("frame", { strokeColor: "#000000", strokeWidth: "2px", strokeAlign: "center" })["box-shadow"]).toBe("inset 0 0 0 1px #000000, 0 0 0 1px #000000");
   expect(css("frame", { strokeColor: "#000000", strokeWidth: "{w}", strokeAlign: "outside" })["box-shadow"]).toBe("0 0 0 var(--w) #000000");
+  expect(css("frame", { strokeColor: "{c}", strokeWidth: "1px", strokeOpacity: 0.12 })["box-shadow"]).toBe("inset 0 0 0 1px color-mix(in srgb, var(--c) 12%, transparent)");
+  expect(css("vector", { strokeColor: "{c}", strokeOpacity: 0.5 })).toMatchObject({ stroke: "var(--c)", "stroke-opacity": "0.5" });
   expect(css("instance", { fill: "{c}" })).toMatchObject({ "--ou-icon-fill": "var(--c)" });
   expect(css("vector", { fill: "{c}", fillOpacity: 0.5 })).toMatchObject({ fill: "var(--ou-icon-fill, var(--c))", "fill-opacity": "var(--ou-icon-fill-opacity, 0.5)" });
   expect(css("text", { typography: "{t.label}" })).toMatchObject({ "font-size": "var(--t-label-font-size)", "line-height": "var(--t-label-line-height)" });

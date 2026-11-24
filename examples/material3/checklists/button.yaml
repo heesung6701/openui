@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=../../../schema/checklist.schema.json
+# Expected values are M3 system tokens or literals (material-web v0.192 comp token files), never the comp tokens
+# the component itself references — so this cross-checks comp→sys mapping, the YAML, and the renderer.
+kind: Checklist
+metadata:
+  id: button
+  component: button
+  source: "material-web@268681913e0a tokens/versions/v0_192/_md-comp-{filled,outlined,text,elevated,filled-tonal}-button.scss"
+items:
+  - { id: height, title: "컨테이너 높이 40dp", check: { part: root, property: height, expect: 40px } }
+  - { id: shape, title: "모서리 corner-full", check: { part: root, property: border-top-left-radius, expect: "{md.sys.shape.corner-full}" } }
+  - { id: filled-container, title: "Filled 컨테이너 = primary", check: { variant: { style: filled }, state: [enabled, hovered, focused, pressed], part: root, property: background-color, expect: "{md.sys.color.primary}" } }
+  - { id: filled-label, title: "Filled 라벨 = on-primary", check: { variant: { style: filled }, state: [enabled, hovered, focused, pressed], part: label, property: color, expect: "{md.sys.color.on-primary}" } }
+  - { id: filled-hover-elevation, title: "Filled hover 시 elevation level1", check: { variant: { style: filled }, state: hovered, part: root, property: box-shadow, expect: "{md.sys.elevation-shadow.level1}" } }
+  - { id: tonal-container, title: "Tonal 컨테이너 = secondary-container", check: { variant: { style: tonal }, state: enabled, part: root, property: background-color, expect: "{md.sys.color.secondary-container}" } }
+  - { id: tonal-label, title: "Tonal 라벨 = on-secondary-container", check: { variant: { style: tonal }, state: enabled, part: label, property: color, expect: "{md.sys.color.on-secondary-container}" } }
+  - { id: elevated-container, title: "Elevated 컨테이너 = surface-container-low", check: { variant: { style: elevated }, state: enabled, part: root, property: background-color, expect: "{md.sys.color.surface-container-low}" } }
+  - { id: elevated-shadow, title: "Elevated 기본 level1, hover level2", check: { variant: { style: elevated }, state: [enabled, focused, pressed], part: root, property: box-shadow, expect: "{md.sys.elevation-shadow.level1}" } }
+  - { id: elevated-hover-shadow, title: "Elevated hover level2", check: { variant: { style: elevated }, state: hovered, part: root, property: box-shadow, expect: "{md.sys.elevation-shadow.level2}" } }
+  - { id: outlined-outline, title: "Outlined 1dp outline", check: { variant: { style: outlined }, state: [enabled, hovered, pressed], part: root, property: box-shadow, expect: "inset 0 0 0 1px {md.sys.color.outline}" } }
+  - { id: outlined-focus-outline, title: "Outlined focus 시 outline = primary", check: { variant: { style: outlined }, state: focused, part: root, property: box-shadow, expect: "inset 0 0 0 1px {md.sys.color.primary}" } }
+  - { id: outlined-disabled-outline, title: "Outlined disabled outline = on-surface 12%", check: { variant: { style: outlined }, state: disabled, part: root, property: box-shadow, expect: "inset 0 0 0 1px color-mix(in srgb, {md.sys.color.on-surface} 12%, transparent)" } }
+  - { id: text-transparent, title: "Text·Outlined 컨테이너 없음", check: { variant: { style: [text, outlined] }, part: root, property: background-color, expect: transparent } }
+  - { id: text-label, title: "Text·Outlined·Elevated 라벨 = primary", check: { variant: { style: [text, outlined, elevated] }, state: enabled, part: label, property: color, expect: "{md.sys.color.primary}" } }
+  - { id: label-size, title: "라벨 label-large 14sp", check: { part: label, property: font-size, expect: 14px } }
+  - { id: label-weight, title: "라벨 weight medium(500)", check: { part: label, property: font-weight, expect: "500" } }
+  - { id: label-line-height, title: "라벨 line-height 20dp", check: { part: label, property: line-height, expect: 20px } }
+  - { id: disabled-container, title: "Disabled 컨테이너 on-surface 12%", check: { variant: { style: [filled, tonal, elevated] }, state: disabled, part: root, property: background-color, expect: "color-mix(in srgb, {md.sys.color.on-surface} 12%, transparent)" } }
+  - { id: disabled-label, title: "Disabled 라벨 on-surface 38%", check: { state: disabled, part: label, property: opacity, expect: 0.38 } }
+  - { id: disabled-label-color, title: "Disabled 라벨 색 = on-surface", check: { state: disabled, part: label, property: color, expect: "{md.sys.color.on-surface}" } }
+  - { id: enabled-layer, title: "Enabled state layer 없음", check: { state: enabled, part: stateLayer, property: opacity, expect: 0 } }
+  - { id: hover-layer, title: "Hover state layer 8%", check: { state: hovered, part: stateLayer, property: opacity, expect: "{md.sys.state.hover-state-layer-opacity}" } }
+  - { id: focus-layer, title: "Focus state layer 10%", check: { state: focused, part: stateLayer, property: opacity, expect: "{md.sys.state.focus-state-layer-opacity}" } }
+  - { id: pressed-layer, title: "Pressed state layer 10%", check: { state: pressed, part: stateLayer, property: opacity, expect: "{md.sys.state.pressed-state-layer-opacity}" } }
+  - { id: filled-layer-color, title: "Filled state layer = on-primary", check: { variant: { style: filled }, state: hovered, part: stateLayer, property: background-color, expect: "{md.sys.color.on-primary}" } }
+  - { id: padding, title: "좌우 패딩 24dp (Text는 12dp)", check: { variant: { style: [filled, outlined, elevated, tonal], withIcon: "false" }, part: root, property: padding-left, expect: 24px } }
+  - { id: text-padding, title: "Text 좌우 패딩 12dp", check: { variant: { style: text, withIcon: "false" }, part: root, property: padding-right, expect: 12px } }
+  - { id: with-icon-padding, title: "아이콘 있으면 leading 16dp (Text는 12dp)", check: { variant: { style: [filled, outlined, elevated, tonal], withIcon: "true" }, part: root, property: padding-left, expect: 16px } }
+  - { id: text-with-icon-padding, title: "Text + 아이콘: trailing 16dp", check: { variant: { style: text, withIcon: "true" }, part: root, property: padding-right, expect: 16px } }
+  - { id: icon-size, title: "아이콘 18dp", check: { variant: { withIcon: "true" }, part: icon, property: width, expect: 18px } }
+  - { id: icon-hidden, title: "withIcon=false면 아이콘 숨김", check: { variant: { withIcon: "false" }, part: icon, property: display, expect: none } }
+  - { id: gap, title: "아이콘-라벨 간격 8dp", check: { variant: { withIcon: "true" }, part: root, property: column-gap, expect: 8px } }
+  - { id: focus-ring, title: "포커스 링(3dp secondary, offset 2dp) — v0.1 어휘로 미표현임을 확인", manual: true, hint: { state: focused } }
+  - { id: ripple, title: "pressed 리플이 탭 위치에서 퍼짐 — 정적 프리뷰는 state layer만 표시", manual: true, hint: { state: pressed } }
+  - { id: touch-target, title: "터치 타깃 48dp 확보(컨테이너 40dp + 외부 여백)", manual: true }
+  - { id: long-label, title: "긴 라벨: 한 줄 유지, 컨테이너가 늘어남", manual: true }

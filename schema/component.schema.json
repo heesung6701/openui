@@ -563,6 +563,19 @@
                       }
                     ]
                   },
+                  "strokeOpacity": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^\\{[^{}]+\\}$"
+                      }
+                    ]
+                  },
                   "strokeAlign": {
                     "type": "string",
                     "enum": [

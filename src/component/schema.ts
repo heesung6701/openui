@@ -61,6 +61,7 @@ export const STYLE_PROPERTIES: Record<string, Prop> = {
   fillOpacity: p(num01, ["number"], ["frame", "slot", "vector", "instance"]),
   strokeColor: p(color, ["color"], ["frame", "slot", "vector"]),
   strokeWidth: p(dim, ["dimension"], ["frame", "slot", "vector"]),
+  strokeOpacity: p(num01, ["number"], ["frame", "slot", "vector"]),
   strokeAlign: p(z.enum(["inside", "outside", "center"]), [], ["frame", "slot", "vector"]),
   cornerRadius: p(corners, ["dimension"], ["frame", "slot", "image"]),
   opacity: p(num01, ["number"], "all"),
