@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../../schema/component.schema.json
+# M3 filter chip (flat), material-web v0.192 tokens. Padding from material-web chip CSS (no padding tokens).
+kind: Component
+metadata:
+  id: filter-chip
+  name: Filter chip
+  description: M3 flat filter chip. Elevated chips and the dragged state are out of scope for the pilot.
+data:
+  props:
+    label: { type: text, default: Filter }
+  variants:
+    selected:
+      values: { "false": {}, "true": { description: "Selected: tonal container and leading check" } }
+      default: "false"
+  states: [enabled, hovered, focused, pressed, disabled]
+  anatomy:
+    root:
+      kind: frame
+      layout:
+        direction: row
+        gap: 8px
+        padding: [0, 16px]
+        align: { main: center, cross: center }
+        width: hug
+        height: "{md.comp.filter-chip.container-height}"
+      children:
+        stateLayer: { kind: frame, layout: { position: absolute, width: fill, height: fill } }
+        leading:    { kind: instance, component: icon-check }
+        label:      { kind: text, text: { prop: label } }
+  styles:
+    base:
+      enabled:
+        root:       { fill: transparent, cornerRadius: "{md.comp.filter-chip.container-shape}", strokeColor: "{md.comp.filter-chip.flat-unselected-outline-color}", strokeWidth: "{md.comp.filter-chip.flat-unselected-outline-width}" }
+        stateLayer: { cornerRadius: "{md.comp.filter-chip.container-shape}", opacity: 0, fill: "{md.comp.filter-chip.unselected-hover-state-layer-color}" }
+        leading:    { visible: false, width: "{md.comp.filter-chip.with-icon-icon-size}", height: "{md.comp.filter-chip.with-icon-icon-size}", fill: "{md.comp.filter-chip.with-leading-icon-selected-leading-icon-color}" }
+        label:      { typography: "{md.sys.typescale.label-large}", color: "{md.comp.filter-chip.unselected-label-text-color}" }
+      hovered:
+        stateLayer: { opacity: "{md.comp.filter-chip.unselected-hover-state-layer-opacity}" }
+      focused:
+        root:       { strokeColor: "{md.comp.filter-chip.flat-unselected-focus-outline-color}" }
+        stateLayer: { opacity: "{md.comp.filter-chip.unselected-focus-state-layer-opacity}" }
+      pressed:
+        stateLayer: { opacity: "{md.comp.filter-chip.unselected-pressed-state-layer-opacity}", fill: "{md.comp.filter-chip.unselected-pressed-state-layer-color}" }
+      disabled:
+        root:    { strokeColor: "{md.comp.filter-chip.flat-disabled-unselected-outline-color}", strokeOpacity: "{md.comp.filter-chip.flat-disabled-unselected-outline-opacity}" }
+        label:   { color: "{md.comp.filter-chip.disabled-label-text-color}", opacity: "{md.comp.filter-chip.disabled-label-text-opacity}" }
+        leading: { fill: "{md.comp.filter-chip.with-leading-icon-disabled-leading-icon-color}", fillOpacity: "{md.comp.filter-chip.with-leading-icon-disabled-leading-icon-opacity}" }
+    selected=true:
+      enabled:
+        root:       { fill: "{md.comp.filter-chip.flat-selected-container-color}", strokeWidth: "{md.comp.filter-chip.flat-selected-outline-width}", padding: [0, 16px, 0, 8px] }
+        stateLayer: { fill: "{md.comp.filter-chip.selected-hover-state-layer-color}" }
+        leading:    { visible: true }
+        label:      { color: "{md.comp.filter-chip.selected-label-text-color}" }
+      pressed:
+        stateLayer: { fill: "{md.comp.filter-chip.selected-pressed-state-layer-color}" }
+      disabled:
+        root: { fill: "{md.comp.filter-chip.flat-disabled-selected-container-color}", fillOpacity: "{md.comp.filter-chip.flat-disabled-selected-container-opacity}" }

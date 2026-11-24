@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../../schema/checklist.schema.json
+kind: Checklist
+metadata:
+  id: filter-chip
+  component: filter-chip
+  source: "material-web@268681913e0a tokens/versions/v0_192/_md-comp-filter-chip.scss"
+items:
+  - { id: height, title: "높이 32dp", check: { part: root, property: height, expect: 32px } }
+  - { id: shape, title: "모서리 corner-small 8dp", check: { part: root, property: border-top-left-radius, expect: "{md.sys.shape.corner-small}" } }
+  - { id: unselected-outline, title: "Unselected 1dp outline", check: { variant: { selected: "false" }, state: [enabled, hovered, pressed], part: root, property: box-shadow, expect: "inset 0 0 0 1px {md.sys.color.outline}" } }
+  - { id: unselected-focus-outline, title: "Unselected focus outline = on-surface-variant", check: { variant: { selected: "false" }, state: focused, part: root, property: box-shadow, expect: "inset 0 0 0 1px {md.sys.color.on-surface-variant}" } }
+  - { id: unselected-transparent, title: "Unselected 컨테이너 없음", check: { variant: { selected: "false" }, part: root, property: background-color, expect: transparent } }
+  - { id: selected-container, title: "Selected 컨테이너 = secondary-container", check: { variant: { selected: "true" }, state: [enabled, hovered, focused, pressed], part: root, property: background-color, expect: "{md.sys.color.secondary-container}" } }
+  - { id: unselected-label, title: "Unselected 라벨 = on-surface-variant", check: { variant: { selected: "false" }, state: [enabled, hovered, focused, pressed], part: label, property: color, expect: "{md.sys.color.on-surface-variant}" } }
+  - { id: selected-label, title: "Selected 라벨 = on-secondary-container", check: { variant: { selected: "true" }, state: [enabled, hovered, focused, pressed], part: label, property: color, expect: "{md.sys.color.on-secondary-container}" } }
+  - { id: leading-hidden, title: "Unselected면 leading 아이콘 없음", check: { variant: { selected: "false" }, part: leading, property: display, expect: none } }
+  - { id: leading-shown, title: "Selected면 leading 체크 표시", check: { variant: { selected: "true" }, part: leading, property: display, expect: block } }
+  - { id: leading-color, title: "Leading 체크 = on-secondary-container", check: { variant: { selected: "true" }, state: enabled, part: leading, property: --ou-icon-fill, expect: "{md.sys.color.on-secondary-container}" } }
+  - { id: leading-size, title: "Leading 아이콘 18dp", check: { variant: { selected: "true" }, part: leading, property: width, expect: 18px } }
+  - { id: padding-unselected, title: "Unselected 좌측 패딩 16dp", check: { variant: { selected: "false" }, part: root, property: padding-left, expect: 16px } }
+  - { id: padding-selected, title: "Selected(아이콘) 좌측 패딩 8dp", check: { variant: { selected: "true" }, part: root, property: padding-left, expect: 8px } }
+  - { id: padding-right, title: "우측 패딩 16dp", check: { part: root, property: padding-right, expect: 16px } }
+  - { id: label-size, title: "라벨 label-large 14sp", check: { part: label, property: font-size, expect: 14px } }
+  - { id: disabled-label, title: "Disabled 라벨 on-surface 38%", check: { state: disabled, part: label, property: opacity, expect: 0.38 } }
+  - { id: disabled-selected, title: "Disabled selected 컨테이너 on-surface 12%", check: { variant: { selected: "true" }, state: disabled, part: root, property: background-color, expect: "color-mix(in srgb, {md.sys.color.on-surface} 12%, transparent)" } }
+  - { id: disabled-unselected, title: "Disabled unselected outline on-surface 12%", check: { variant: { selected: "false" }, state: disabled, part: root, property: box-shadow, expect: "inset 0 0 0 1px color-mix(in srgb, {md.sys.color.on-surface} 12%, transparent)" } }
+  - { id: enabled-layer, title: "Enabled state layer 없음", check: { state: enabled, part: stateLayer, property: opacity, expect: 0 } }
+  - { id: hover-layer, title: "Hover state layer 8%", check: { state: hovered, part: stateLayer, property: opacity, expect: "{md.sys.state.hover-state-layer-opacity}" } }
+  - { id: focus-layer, title: "Focus state layer 10%", check: { state: focused, part: stateLayer, property: opacity, expect: "{md.sys.state.focus-state-layer-opacity}" } }
+  - { id: pressed-layer, title: "Pressed state layer 10%", check: { state: pressed, part: stateLayer, property: opacity, expect: "{md.sys.state.pressed-state-layer-opacity}" } }
+  - { id: unselected-pressed-layer, title: "Unselected pressed layer = on-secondary-container", check: { variant: { selected: "false" }, state: pressed, part: stateLayer, property: background-color, expect: "{md.sys.color.on-secondary-container}" } }
+  - { id: long-label, title: "긴 라벨: 한 줄 유지, 칩이 늘어남", manual: true }
+  - { id: dragged, title: "Dragged 상태 — 파일럿 범위 밖", manual: true }
+  - { id: touch-target, title: "터치 타깃 48dp(높이 32dp + 외부 여백)", manual: true }

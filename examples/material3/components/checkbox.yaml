@@ -1,0 +1,93 @@
+# yaml-language-server: $schema=../../../schema/component.schema.json
+# M3 checkbox, material-web v0.192 tokens. Selection is a variant axis (spec v0.1: toggles are variants, not states).
+kind: Component
+metadata:
+  id: checkbox
+  name: Checkbox
+  description: "M3 checkbox. The check glyph uses Material Icons `check`, not M3's custom check-mark path."
+data:
+  variants:
+    type:
+      values:
+        unselected:    {}
+        selected:      {}
+        indeterminate: { description: "Partially selected (parent of mixed children)" }
+      default: unselected
+    error:
+      values: { "false": {}, "true": { description: "Invalid input" } }
+      default: "false"
+  states: [enabled, hovered, focused, pressed, disabled]
+  anatomy:
+    root:
+      kind: frame
+      layout: { direction: none, width: "{md.comp.checkbox.state-layer-size}", height: "{md.comp.checkbox.state-layer-size}" }
+      children:
+        stateLayer: { kind: frame, layout: { position: absolute, width: fill, height: fill } }
+        container:  { kind: frame, layout: { x: 11px, y: 11px, width: "{md.comp.checkbox.container-size}", height: "{md.comp.checkbox.container-size}" } }
+        check:      { kind: instance, component: icon-check }
+        dash:       { kind: instance, component: icon-remove }
+  styles:
+    base:
+      enabled:
+        root:       { fill: transparent }
+        stateLayer: { cornerRadius: "{md.comp.checkbox.state-layer-shape}", opacity: 0, fill: "{md.comp.checkbox.unselected-hover-state-layer-color}" }
+        container:  { cornerRadius: "{md.comp.checkbox.container-shape}", fill: transparent, strokeColor: "{md.comp.checkbox.unselected-outline-color}", strokeWidth: "{md.comp.checkbox.unselected-outline-width}" }
+        check:      { x: 11px, y: 11px, width: "{md.comp.checkbox.icon-size}", height: "{md.comp.checkbox.icon-size}", visible: false, fill: "{md.comp.checkbox.selected-icon-color}" }
+        dash:       { x: 11px, y: 11px, width: "{md.comp.checkbox.icon-size}", height: "{md.comp.checkbox.icon-size}", visible: false, fill: "{md.comp.checkbox.selected-icon-color}" }
+      hovered:
+        stateLayer: { opacity: "{md.comp.checkbox.unselected-hover-state-layer-opacity}" }
+        container:  { strokeColor: "{md.comp.checkbox.unselected-hover-outline-color}" }
+      focused:
+        stateLayer: { opacity: "{md.comp.checkbox.unselected-focus-state-layer-opacity}" }
+        container:  { strokeColor: "{md.comp.checkbox.unselected-focus-outline-color}" }
+      pressed:
+        stateLayer: { opacity: "{md.comp.checkbox.unselected-pressed-state-layer-opacity}", fill: "{md.comp.checkbox.unselected-pressed-state-layer-color}" }
+        container:  { strokeColor: "{md.comp.checkbox.unselected-pressed-outline-color}" }
+      disabled:
+        container: { strokeColor: "{md.comp.checkbox.unselected-disabled-outline-color}", strokeOpacity: "{md.comp.checkbox.unselected-disabled-container-opacity}" }
+
+    # selected and indeterminate share container styling (spec v0.1 has no OR in variant expressions)
+    type=selected:
+      enabled:
+        stateLayer: { fill: "{md.comp.checkbox.selected-hover-state-layer-color}" }
+        container:  { fill: "{md.comp.checkbox.selected-container-color}", strokeWidth: "{md.comp.checkbox.selected-outline-width}" }
+        check:      { visible: true }
+      pressed:
+        stateLayer: { fill: "{md.comp.checkbox.selected-pressed-state-layer-color}" }
+      disabled:
+        container: { fill: "{md.comp.checkbox.selected-disabled-container-color}", fillOpacity: "{md.comp.checkbox.selected-disabled-container-opacity}" }
+        check:     { fill: "{md.comp.checkbox.selected-disabled-icon-color}" }
+    type=indeterminate:
+      enabled:
+        stateLayer: { fill: "{md.comp.checkbox.selected-hover-state-layer-color}" }
+        container:  { fill: "{md.comp.checkbox.selected-container-color}", strokeWidth: "{md.comp.checkbox.selected-outline-width}" }
+        dash:       { visible: true }
+      pressed:
+        stateLayer: { fill: "{md.comp.checkbox.selected-pressed-state-layer-color}" }
+      disabled:
+        container: { fill: "{md.comp.checkbox.selected-disabled-container-color}", fillOpacity: "{md.comp.checkbox.selected-disabled-container-opacity}" }
+        dash:      { fill: "{md.comp.checkbox.selected-disabled-icon-color}" }
+
+    error=true:
+      enabled:
+        stateLayer: { fill: "{md.comp.checkbox.error-hover-state-layer-color}" }
+        container:  { strokeColor: "{md.comp.checkbox.unselected-error-outline-color}" }
+      hovered:
+        container: { strokeColor: "{md.comp.checkbox.unselected-error-hover-outline-color}" }
+      focused:
+        container: { strokeColor: "{md.comp.checkbox.unselected-error-focus-outline-color}" }
+      pressed:
+        stateLayer: { fill: "{md.comp.checkbox.error-pressed-state-layer-color}" }
+        container:  { strokeColor: "{md.comp.checkbox.unselected-error-pressed-outline-color}" }
+    type=selected,error=true:
+      enabled:
+        container: { fill: "{md.comp.checkbox.selected-error-container-color}" }
+        check:     { fill: "{md.comp.checkbox.selected-error-icon-color}" }
+      pressed:
+        stateLayer: { fill: "{md.comp.checkbox.error-pressed-state-layer-color}" }
+    type=indeterminate,error=true:
+      enabled:
+        container: { fill: "{md.comp.checkbox.selected-error-container-color}" }
+        dash:      { fill: "{md.comp.checkbox.selected-error-icon-color}" }
+      pressed:
+        stateLayer: { fill: "{md.comp.checkbox.error-pressed-state-layer-color}" }
