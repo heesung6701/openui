@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { Component, EXT_SCHEMAS } from "../src/component/schema";
 import { Manifest } from "../src/manifest";
+import { Checklist } from "../src/checklist/schema";
 
 const convert = (schema: z.ZodType): string =>
   JSON.stringify(
@@ -19,6 +20,7 @@ export function genSchemas(): Record<string, string> {
   return {
     "component.schema.json": convert(Component),
     "manifest.schema.json": convert(Manifest),
+    "checklist.schema.json": convert(Checklist),
   };
 }
 

@@ -1,0 +1,58 @@
+import { partsOf, statesOf, variantAxes } from "../component/validate";
+import type { Diagnostic } from "../diagnostics";
+import type { Project } from "../project";
+import type { Checklist } from "./schema";
+
+const list = (v: string | string[] | undefined): string[] => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
+
+export function validateChecklist(cl: Checklist, file: string, project: Project): Diagnostic[] {
+  const out: Diagnostic[] = [];
+  const err = (path: (string | number)[], message: string) => out.push({ file, path, message });
+  const comp = project.components.get(cl.metadata.component);
+  if (!comp) {
+    err(["metadata", "component"], `unknown component "${cl.metadata.component}"`);
+    return out;
+  }
+  const parts = partsOf(comp.doc);
+  const axes = variantAxes(comp.doc);
+  const states = statesOf(comp.doc);
+  const modifiers = new Map(project.tokens.collections.filter((c) => c.kind === "modifier").map((c) => [c.name, c.modes]));
+  const ids = new Set<string>();
+
+  const checkVariant = (variant: Record<string, string | string[]> | undefined, at: (string | number)[]) => {
+    for (const [axis, v] of Object.entries(variant ?? {})) {
+      if (!axes[axis]) err([...at, axis], `unknown variant axis "${axis}"`);
+      else for (const value of list(v)) if (!axes[axis].values.includes(value)) err([...at, axis], `unknown value "${value}" for axis "${axis}"`);
+    }
+  };
+  const checkStates = (s: string | string[] | undefined, at: (string | number)[]) => {
+    for (const state of list(s)) if (!states.includes(state)) err(at, `unknown state "${state}" (declared: ${states.join(", ")})`);
+  };
+
+  cl.items.forEach((item, i) => {
+    const at = ["items", i];
+    if (ids.has(item.id)) err([...at, "id"], `duplicate item id "${item.id}"`);
+    ids.add(item.id);
+    if (item.check) {
+      const c = item.check;
+      if (!parts.has(c.part)) err([...at, "check", "part"], `unknown part "${c.part}"`);
+      checkVariant(c.variant, [...at, "check", "variant"]);
+      checkStates(c.state, [...at, "check", "state"]);
+      for (const [m, v] of Object.entries(c.mode ?? {})) {
+        const modes = modifiers.get(m);
+        if (!modes) err([...at, "check", "mode", m], `unknown modifier "${m}"`);
+        else for (const ctx of list(v)) if (!modes.includes(ctx)) err([...at, "check", "mode", m], `unknown context "${ctx}" of modifier "${m}"`);
+      }
+      if (typeof c.expect === "string") {
+        for (const [, alias] of c.expect.matchAll(/\{([^{}]+)\}/g)) {
+          if (!project.tokens.tokens.has(alias!)) err([...at, "check", "expect"], `unknown token "{${alias}}"`);
+        }
+      }
+    }
+    if (item.hint) {
+      checkVariant(item.hint.variant, [...at, "hint", "variant"]);
+      checkStates(item.hint.state, [...at, "hint", "state"]);
+    }
+  });
+  return out;
+}

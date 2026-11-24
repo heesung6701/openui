@@ -1,0 +1,7 @@
+# yaml-language-server: $schema=../../../schema/checklist.schema.json
+kind: Checklist
+metadata: { id: button, component: button, source: conformance }
+items:
+  - { id: height, title: "높이 40px", check: { variant: { size: medium }, part: root, property: height, expect: 40px } }
+  - { id: filled-bg, title: "filled 배경", check: { variant: { style: filled }, state: enabled, part: root, property: background-color, expect: "{color.primary}" } }
+  - { id: ripple, title: "리플", manual: true, hint: { state: pressed } }

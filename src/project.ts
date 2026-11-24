@@ -1,3 +1,5 @@
+import { Checklist } from "./checklist/schema";
+import { validateChecklist } from "./checklist/validate";
 import { Component } from "./component/schema";
 import { validateComponent } from "./component/validate";
 import { fromZod, type Diagnostic } from "./diagnostics";
@@ -11,6 +13,8 @@ export type Project = {
   manifest: Manifest;
   tokens: TokenSet;
   components: Map<string, { file: string; doc: Component }>;
+  /** Keyed by the checked component id. */
+  checklists: Map<string, { file: string; doc: Checklist }>;
 };
 
 const MANIFEST = "openui.yaml";
@@ -31,8 +35,12 @@ export async function loadProject(io: ProjectIO): Promise<{ project?: Project; d
   const t = await loadTokens(io, manifest.data.tokens);
   diagnostics.push(...t.diagnostics);
 
-  const globs = manifest.data.components.map(globToRegExp);
-  const files = (await io.list()).filter((f) => globs.some((g) => g.test(f)));
+  const all = await io.list();
+  const matching = (patterns: string[] = []) => {
+    const globs = patterns.map(globToRegExp);
+    return all.filter((f) => globs.some((g) => g.test(f)));
+  };
+  const files = matching(manifest.data.components);
   const components = new Map<string, { file: string; doc: Component }>();
   for (const file of files) {
     const y = parseYaml(await io.read(file), file);
@@ -54,5 +62,24 @@ export async function loadProject(io: ProjectIO): Promise<{ project?: Project; d
   const ctx = { tokens: t.tokens, componentIds: new Set(components.keys()) };
   for (const { file, doc } of components.values()) diagnostics.push(...validateComponent(doc, file, ctx));
 
-  return { project: { manifest: manifest.data, tokens: t.tokens, components }, diagnostics };
+  const checklists = new Map<string, { file: string; doc: Checklist }>();
+  const project: Project = { manifest: manifest.data, tokens: t.tokens, components, checklists };
+  for (const file of matching(manifest.data.checklists)) {
+    const y = parseYaml(await io.read(file), file);
+    diagnostics.push(...y.diagnostics);
+    const c = Checklist.safeParse(y.doc);
+    if (!c.success) {
+      diagnostics.push(...fromZod(c.error, file));
+      continue;
+    }
+    const prev = checklists.get(c.data.metadata.component);
+    if (prev) {
+      diagnostics.push({ file, path: ["metadata", "component"], message: `component "${c.data.metadata.component}" already has a checklist (${prev.file})` });
+      continue;
+    }
+    diagnostics.push(...validateChecklist(c.data, file, project));
+    checklists.set(c.data.metadata.component, { file, doc: c.data });
+  }
+
+  return { project, diagnostics };
 }

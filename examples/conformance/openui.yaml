@@ -6,3 +6,4 @@ info:
   description: Minimal fixtures that exercise every v0.1 concept (tokens, modes, props, variants, states, layout, slots).
 tokens: tokens/conformance.resolver.yaml
 components: ["components/*.yaml"]
+checklists: ["checklists/*.yaml"]
