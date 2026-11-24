@@ -7,6 +7,7 @@ import { basicSetup } from "codemirror";
 import type { Diagnostic } from "../src/diagnostics";
 import { memoryIO } from "../src/io";
 import { loadProject, type Project } from "../src/project";
+import { bundledProjects, bundleIO, canOpenFolder, folderIO, serverIO, type BundledProject, type EditorIO } from "./io";
 import { rangeOf, tokenCompletion } from "./support";
 
 type Buffer = { text: string; saved: string };
@@ -18,6 +19,8 @@ export const state = {
   current: "",
   project: undefined as Project | undefined,
   diagnostics: [] as Diagnostic[],
+  io: serverIO as EditorIO,
+  bundled: null as BundledProject[] | null,
 };
 
 /** Hooks filled in by the preview / checklist modules. */
@@ -35,7 +38,9 @@ const $ = <T extends HTMLElement>(sel: string) => document.querySelector(sel) as
 document.querySelector("#app")!.innerHTML = `
   <header>
     <strong>OpenUI editor</strong>
+    <span id="source"></span>
     <span id="modes"></span>
+    <button id="save" title="Save (⌘S)">Save</button>
     <span id="status"></span>
   </header>
   <aside id="files"></aside>
@@ -126,11 +131,16 @@ async function save() {
   const b = state.buffers.get(path);
   if (!b) return;
   const text = b.text;
-  const res = await fetch(`/api/file?path=${encodeURIComponent(path)}`, { method: "PUT", body: text });
-  if (res.ok) b.saved = text;
-  $("#status").textContent = res.ok ? `saved ${path}` : `save failed (${res.status})`;
+  try {
+    const how = await state.io.write(path, text);
+    b.saved = text;
+    $("#status").textContent = `${how} ${path}`;
+  } catch (e) {
+    $("#status").textContent = (e as Error).message;
+  }
   renderFiles();
 }
+$("#save").addEventListener("click", () => save());
 
 // ---------- side panels ----------
 function renderFiles() {
@@ -163,17 +173,56 @@ $("#problems").addEventListener("click", (e) => {
 export const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 window.addEventListener("beforeunload", (e) => {
-  if ([...state.buffers.values()].some((b) => b.text !== b.saved)) e.preventDefault();
+  if (dirty()) e.preventDefault();
 });
+
+// ---------- project source ----------
+const dirty = () => [...state.buffers.values()].some((b) => b.text !== b.saved);
+
+function renderSource() {
+  const parts: string[] = [];
+  if (state.bundled) {
+    parts.push(`<select id="project" title="Example project">${state.bundled
+      .map((p, i) => `<option value="${i}"${state.io.kind === "bundle" && state.io.label === p.title ? " selected" : ""}>${escapeHtml(p.title)}</option>`).join("")}${state.io.kind === "folder" ? `<option selected>📁 ${escapeHtml(state.io.label)}</option>` : ""}</select>`);
+    if (canOpenFolder()) parts.push(`<button id="open-folder" title="Edit YAML files in a local folder (writes in place)">Open folder…</button>`);
+    if (state.io.kind === "bundle") parts.push(`<span class="muted">example · Save downloads the file</span>`);
+  }
+  $("#source").innerHTML = parts.join(" ");
+}
+$("#source").addEventListener("change", async (e) => {
+  const sel = e.target as HTMLSelectElement;
+  if (sel.id !== "project" || !state.bundled?.[Number(sel.value)]) return;
+  if (dirty() && !confirm("Discard unsaved changes?")) return renderSource();
+  await load(bundleIO(state.bundled[Number(sel.value)]!));
+});
+$("#source").addEventListener("click", async (e) => {
+  if ((e.target as HTMLElement).id !== "open-folder") return;
+  if (dirty() && !confirm("Discard unsaved changes?")) return;
+  try {
+    await load(await folderIO());
+  } catch (err) {
+    if ((err as Error).name !== "AbortError") $("#status").textContent = (err as Error).message;
+  }
+});
+
+export async function load(io: EditorIO) {
+  state.io = io;
+  state.files = await io.list();
+  state.buffers.clear();
+  state.editorStates.clear();
+  state.current = "";
+  await Promise.all(state.files.map(async (f) => {
+    const text = await io.read(f);
+    state.buffers.set(f, { text, saved: text });
+  }));
+  renderSource();
+  openFile(state.files.find((f) => f.startsWith("components/")) ?? state.files[0] ?? "");
+  $("#status").textContent = io.label;
+  await validate();
+}
 
 // ---------- boot ----------
 export async function boot() {
-  const { files } = (await (await fetch("/api/files")).json()) as { files: string[] };
-  state.files = files;
-  await Promise.all(files.map(async (f) => {
-    const text = await (await fetch(`/api/file?path=${encodeURIComponent(f)}`)).text();
-    state.buffers.set(f, { text, saved: text });
-  }));
-  openFile(files.find((f) => f.startsWith("components/")) ?? files[0] ?? "");
-  await validate();
+  state.bundled = await bundledProjects();
+  await load(state.bundled?.length ? bundleIO(state.bundled[0]!) : serverIO);
 }

@@ -47,3 +47,5 @@ header select { margin-left: 4px; }
 .ck-item { padding: 3px 0; cursor: pointer; }
 .ck-item:hover { color: var(--accent); }
 .ck-item ul { margin: 2px 0 4px 18px; padding: 0; color: var(--err); font-family: ui-monospace, monospace; font-size: 11px; }
+header button, header select { font: inherit; }
+#save { margin-left: 8px; }

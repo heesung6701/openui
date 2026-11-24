@@ -5,7 +5,9 @@
   "scripts": {
     "test": "bun test",
     "validate": "bun src/cli.ts validate",
-    "editor": "bun editor/server.ts"
+    "editor": "bun editor/server.ts",
+    "build:pages": "bun scripts/build-pages.ts dist",
+    "deploy:pages": "bash scripts/deploy-pages.sh"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.4",
