@@ -1,0 +1,30 @@
+# M3 elevation shadows, transcribed from material-web@268681913e0a elevation/internal/_elevation.scss
+# (key shadow at 30% opacity + ambient shadow at 15% of md.sys.color.shadow = #000).
+md:
+  sys:
+    elevation-shadow:
+      $type: shadow
+      level0:
+        $value:
+          - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.3 }, offsetX: { value: 0, unit: px }, offsetY: { value: 0, unit: px }, blur: { value: 0, unit: px }, spread: { value: 0, unit: px } }
+          - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.15 }, offsetX: { value: 0, unit: px }, offsetY: { value: 0, unit: px }, blur: { value: 0, unit: px }, spread: { value: 0, unit: px } }
+      level1:
+        $value:
+          - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.3 }, offsetX: { value: 0, unit: px }, offsetY: { value: 1, unit: px }, blur: { value: 2, unit: px }, spread: { value: 0, unit: px } }
+          - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.15 }, offsetX: { value: 0, unit: px }, offsetY: { value: 1, unit: px }, blur: { value: 3, unit: px }, spread: { value: 1, unit: px } }
+      level2:
+        $value:
+          - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.3 }, offsetX: { value: 0, unit: px }, offsetY: { value: 1, unit: px }, blur: { value: 2, unit: px }, spread: { value: 0, unit: px } }
+          - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.15 }, offsetX: { value: 0, unit: px }, offsetY: { value: 2, unit: px }, blur: { value: 6, unit: px }, spread: { value: 2, unit: px } }
+      level3:
+        $value:
+          - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.3 }, offsetX: { value: 0, unit: px }, offsetY: { value: 1, unit: px }, blur: { value: 3, unit: px }, spread: { value: 0, unit: px } }
+          - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.15 }, offsetX: { value: 0, unit: px }, offsetY: { value: 4, unit: px }, blur: { value: 8, unit: px }, spread: { value: 3, unit: px } }
+      level4:
+        $value:
+          - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.3 }, offsetX: { value: 0, unit: px }, offsetY: { value: 2, unit: px }, blur: { value: 3, unit: px }, spread: { value: 0, unit: px } }
+          - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.15 }, offsetX: { value: 0, unit: px }, offsetY: { value: 6, unit: px }, blur: { value: 10, unit: px }, spread: { value: 4, unit: px } }
+      level5:
+        $value:
+          - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.3 }, offsetX: { value: 0, unit: px }, offsetY: { value: 4, unit: px }, blur: { value: 4, unit: px }, spread: { value: 0, unit: px } }
+          - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.15 }, offsetX: { value: 0, unit: px }, offsetY: { value: 8, unit: px }, blur: { value: 12, unit: px }, spread: { value: 6, unit: px } }

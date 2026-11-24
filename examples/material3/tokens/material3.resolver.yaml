@@ -1,0 +1,18 @@
+version: "2025.10"
+name: Material 3 (material-web v0.192)
+sets:
+  ref:  { sources: [{ $ref: ref.tokens.yaml }] }
+  sys:  { sources: [{ $ref: sys.tokens.yaml }, { $ref: elevation.tokens.yaml }] }
+  comp: { sources: [{ $ref: comp.tokens.yaml }] }
+modifiers:
+  theme:
+    description: Color scheme
+    contexts:
+      light: [{ $ref: sys-color-light.tokens.yaml }]
+      dark:  [{ $ref: sys-color-dark.tokens.yaml }]
+    default: light
+resolutionOrder:
+  - { $ref: "#/sets/ref" }
+  - { $ref: "#/sets/sys" }
+  - { $ref: "#/modifiers/theme" }
+  - { $ref: "#/sets/comp" }

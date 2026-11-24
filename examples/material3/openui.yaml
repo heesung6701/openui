@@ -1,0 +1,9 @@
+# yaml-language-server: $schema=../../schema/manifest.schema.json
+openui: "0.1"
+info:
+  title: Material 3 (material-web v0.192)
+  version: 0.1.0
+  description: Pilot Material 3 components specified in OpenUI YAML. Tokens converted from material-web@268681913e0a (Apache-2.0).
+tokens: tokens/material3.resolver.yaml
+components: ["components/*.yaml"]
+checklists: ["checklists/*.yaml"]

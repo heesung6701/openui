@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../../schema/component.schema.json
+# Material Icons "remove" (24px), Apache-2.0 — google/material-design-icons src/*/remove/materialicons/24px.svg
+kind: Component
+metadata: { id: icon-remove, name: "Icon / remove" }
+data:
+  anatomy:
+    root:
+      kind: frame
+      layout: { direction: none, width: 24px, height: 24px }
+      children:
+        glyph: { kind: vector, svg: { viewBox: "0 0 24 24", d: "M19 13H5v-2h14v2z" } }
+  styles:
+    base:
+      enabled:
+        glyph: { width: fill, height: fill, fill: "{md.sys.color.on-surface}" }

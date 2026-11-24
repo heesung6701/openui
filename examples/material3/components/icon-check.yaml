@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=../../../schema/component.schema.json
+# Material Icons "check" (24px), Apache-2.0 — google/material-design-icons src/*/check/materialicons/24px.svg
+kind: Component
+metadata: { id: icon-check, name: "Icon / check" }
+data:
+  anatomy:
+    root:
+      kind: frame
+      layout: { direction: none, width: 24px, height: 24px }
+      children:
+        glyph: { kind: vector, svg: { viewBox: "0 0 24 24", d: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" } }
+  styles:
+    base:
+      enabled:
+        glyph: { width: fill, height: fill, fill: "{md.sys.color.on-surface}" }
