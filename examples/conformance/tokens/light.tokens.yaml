@@ -1,0 +1,9 @@
+color:
+  $type: color
+  primary: { $value: "{palette.purple40}" }
+  on-primary: { $value: "{palette.white}" }
+  surface: { $value: "{palette.white}" }
+  on-surface: { $value: "{palette.gray10}" }
+  outline: { $value: "{palette.gray50}" }
+  disabled: { $value: "{palette.gray10}" }
+  on-disabled: { $value: "{palette.gray10}" }

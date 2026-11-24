@@ -1,0 +1,16 @@
+# yaml-language-server: $schema=../../../schema/component.schema.json
+kind: Component
+metadata: { id: icon, name: Icon, description: "Conformance: vector part with a fill alias" }
+data:
+  anatomy:
+    root:
+      kind: frame
+      layout: { direction: none, width: 24px, height: 24px }
+      children:
+        glyph:
+          kind: vector
+          svg: { viewBox: "0 0 24 24", d: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" }
+  styles:
+    base:
+      enabled:
+        glyph: { width: fill, height: fill, fill: "{color.on-surface}" }

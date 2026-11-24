@@ -1,9 +1,9 @@
-import { parse } from "yaml";
 import { z } from "zod";
 import { fromZod, type Diagnostic } from "../diagnostics";
 import { resolvePath, type ProjectIO } from "../io";
 import { walkTokenTree, type TokenDef } from "./tree";
 import { aliasTarget, typedAliases, type TokenType } from "./values";
+import { parseYaml } from "../yaml";
 
 export type Collection = { name: string; kind: "set" | "modifier"; modes: string[]; defaultMode: string };
 export type TokenEntry = { collection: string; type: TokenType; byMode: Record<string, TokenDef> };
@@ -30,7 +30,9 @@ export async function loadTokens(io: ProjectIO, resolverPath: string): Promise<{
 
   let doc: unknown;
   try {
-    doc = parse(await io.read(resolverPath));
+    const y = parseYaml(await io.read(resolverPath), resolverPath);
+    diagnostics.push(...y.diagnostics);
+    doc = y.doc;
   } catch (e) {
     err(resolverPath, [], `cannot read resolver: ${(e as Error).message}`);
     return empty();
@@ -71,14 +73,9 @@ export async function loadTokens(io: ProjectIO, resolverPath: string): Promise<{
         err(resolverPath, [...at, i, "$ref"], `cannot read "${file}": ${(e as Error).message}`);
         continue;
       }
-      let tree: unknown;
-      try {
-        tree = parse(text);
-      } catch (e) {
-        err(file, [], `YAML error: ${(e as Error).message}`);
-        continue;
-      }
-      const w = walkTokenTree(tree, file);
+      const y = parseYaml(text, file);
+      diagnostics.push(...y.diagnostics);
+      const w = walkTokenTree(y.doc, file);
       diagnostics.push(...w.diagnostics);
       for (const t of w.tokens) out.set(t.path, t); // later sources win (DTCG)
     }

@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../../schema/component.schema.json
+kind: Component
+metadata: { id: card, name: Card, description: "Conformance: slot prop, column layout, absolute state layer, shadow, outside stroke" }
+data:
+  props:
+    title:   { type: text, default: Title }
+    content: { type: slot, min: 1, max: 3, preferred: [button], preferredOnly: true, description: Card actions }
+  states: [enabled, hovered]
+  anatomy:
+    root:
+      kind: frame
+      layout: { direction: column, gap: "{space.gap}", padding: [16px, 16px, 24px, 16px], width: 320px, height: hug }
+      children:
+        stateLayer: { kind: frame, layout: { position: absolute, width: fill, height: fill } }
+        heading:    { kind: text, text: { prop: title } }
+        body:       { kind: slot, prop: content, layout: { direction: row, gap: "{space.gap}", width: fill } }
+  styles:
+    base:
+      enabled:
+        root:       { fill: "{color.surface}", cornerRadius: "{radius.medium}", shadow: "{elevation.1}", strokeColor: "{color.outline}", strokeWidth: 1px, strokeAlign: outside }
+        stateLayer: { fill: "{color.on-surface}", opacity: 0, cornerRadius: "{radius.medium}" }
+        heading:    { color: "{color.on-surface}", typography: "{type.body}" }
+      hovered:
+        stateLayer: { opacity: 0.08 }

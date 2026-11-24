@@ -1,0 +1,15 @@
+version: "2025.10"
+name: conformance
+sets:
+  base:
+    sources: [{ $ref: base.tokens.yaml }]
+modifiers:
+  theme:
+    description: Color theme
+    contexts:
+      light: [{ $ref: light.tokens.yaml }]
+      dark: [{ $ref: dark.tokens.yaml }]
+    default: light
+resolutionOrder:
+  - { $ref: "#/sets/base" }
+  - { $ref: "#/modifiers/theme" }

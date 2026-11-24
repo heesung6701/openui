@@ -1,0 +1,51 @@
+# One token of every supported $type (DTCG 2025.10 profile, see spec §3).
+palette:
+  $type: color
+  purple20: { $value: { colorSpace: srgb, components: [0.22, 0.118, 0.447], hex: "#381e72" } }
+  purple40: { $value: { colorSpace: srgb, components: [0.404, 0.314, 0.643], hex: "#6750a4" } }
+  purple80: { $value: { colorSpace: srgb, components: [0.816, 0.737, 1], hex: "#d0bcff" } }
+  gray10: { $value: { colorSpace: srgb, components: [0.114, 0.106, 0.125], hex: "#1d1b20" } }
+  gray50: { $value: { colorSpace: srgb, components: [0.475, 0.455, 0.494], hex: "#79747e" } }
+  gray60: { $value: { colorSpace: srgb, components: [0.576, 0.561, 0.6], hex: "#938f99" } }
+  gray90: { $value: { colorSpace: srgb, components: [0.902, 0.878, 0.914], hex: "#e6e0e9" } }
+  white: { $value: { colorSpace: srgb, components: [1, 1, 1], hex: "#ffffff" } }
+space:
+  $type: dimension
+  gap: { $value: { value: 8, unit: px } }
+  inset: { $value: { value: 1, unit: rem } }
+radius:
+  $type: dimension
+  full: { $value: { value: 9999, unit: px } }
+  medium: { $value: { value: 12, unit: px } }
+opacity:
+  $type: number
+  pressed: { $value: 0.9 }
+motion:
+  short: { $type: duration, $value: { value: 150, unit: ms } }
+  easing: { $type: cubicBezier, $value: [0.2, 0, 0, 1] }
+font:
+  plain:
+    $type: fontFamily
+    $value: [Roboto, sans-serif]
+    $extensions:
+      com.figma: { scopes: [FONT_FAMILY], codeSyntax: { WEB: "var(--font-plain)" } }
+  medium: { $type: fontWeight, $value: medium }
+  regular: { $type: fontWeight, $value: 400 }
+type:
+  $type: typography
+  label:
+    $value: { fontFamily: "{font.plain}", fontSize: { value: 14, unit: px }, fontWeight: "{font.medium}", letterSpacing: { value: 0.1, unit: px }, lineHeight: 1.4285714285714286 }
+  body:
+    $value: { fontFamily: "{font.plain}", fontSize: { value: 16, unit: px }, fontWeight: "{font.regular}", letterSpacing: { value: 0.5, unit: px }, lineHeight: 1.5 }
+elevation:
+  $type: shadow
+  "1":
+    $value:
+      - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.3 }, offsetX: { value: 0, unit: px }, offsetY: { value: 1, unit: px }, blur: { value: 2, unit: px }, spread: { value: 0, unit: px } }
+      - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.15 }, offsetX: { value: 0, unit: px }, offsetY: { value: 1, unit: px }, blur: { value: 3, unit: px }, spread: { value: 1, unit: px } }
+gradient:
+  scrim:
+    $type: gradient
+    $value:
+      - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0 }, position: 0 }
+      - { color: { colorSpace: srgb, components: [0, 0, 0], alpha: 0.6 }, position: 1 }

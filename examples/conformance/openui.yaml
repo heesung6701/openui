@@ -1,0 +1,8 @@
+# yaml-language-server: $schema=../../schema/manifest.schema.json
+openui: "0.1"
+info:
+  title: OpenUI conformance
+  version: 0.1.0
+  description: Minimal fixtures that exercise every v0.1 concept (tokens, modes, props, variants, states, layout, slots).
+tokens: tokens/conformance.resolver.yaml
+components: ["components/*.yaml"]

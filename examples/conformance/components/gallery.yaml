@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=../../../schema/component.schema.json
+kind: Component
+metadata: { id: gallery, name: Gallery, description: "Conformance: grid, wrap, absolute badge, image, gradient fill, x-figma" }
+data:
+  props:
+    caption: { type: text, default: Gallery }
+  anatomy:
+    root:
+      kind: frame
+      layout: { direction: column, gap: 12px, padding: "{space.inset}", width: hug, height: hug }
+      children:
+        grid:
+          kind: frame
+          layout: { direction: grid, grid: { columns: 2, rows: 2 }, gap: 8px, crossGap: 8px }
+          children:
+            photo: { kind: image, src: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='96' height='96' fill='%23d0bcff'/></svg>" }
+            badge: { kind: text, text: New }
+        tags:
+          kind: frame
+          layout: { direction: row, wrap: true, gap: 4px, crossGap: 4px, width: 200px }
+          children:
+            tagA: { kind: text, text: Alpha }
+            tagB: { kind: text, text: Beta }
+            tagC: { kind: text, text: Gamma }
+        caption: { kind: text, text: { prop: caption } }
+  styles:
+    base:
+      enabled:
+        root:    { fill: "{color.surface}", cornerRadius: [12px, 12px, 0, 0] }
+        grid:    { fill: "{gradient.scrim}" }
+        photo:   { width: 96px, height: 96px, cornerRadius: 8px }
+        badge:   { position: absolute, x: 4px, y: 4px, color: "{color.on-primary}", typography: "{type.label}" }
+        caption: { color: "{color.on-surface}", typography: "{type.body}", textAlign: center }
+  x-figma:
+    parts:
+      root: { blendMode: PASS_THROUGH, clipsContent: true }
