@@ -14,7 +14,11 @@ export const serverIO: EditorIO = {
   kind: "server",
   label: "local server",
   list: async () => ((await (await fetch("/api/files")).json()) as { files: string[] }).files,
-  read: async (p) => (await fetch(`/api/file?path=${encodeURIComponent(p)}`)).text(),
+  read: async (p) => {
+    const res = await fetch(`/api/file?path=${encodeURIComponent(p)}`);
+    if (!res.ok) throw new Error(`cannot read ${p} (${res.status})`); // never load an error body as file content
+    return res.text();
+  },
   write: async (p, text) => {
     const res = await fetch(`/api/file?path=${encodeURIComponent(p)}`, { method: "PUT", body: text });
     if (!res.ok) throw new Error(`save failed (${res.status})`);

@@ -1,6 +1,6 @@
 import type { TokenSet } from "../tokens/resolver";
 import { aliasTarget, FONT_WEIGHT_NAMES, type TokenType } from "../tokens/values";
-import { cssVar } from "./css-var";
+import { cssSubVar, cssVar } from "./css-var";
 
 type Obj = Record<string, unknown>;
 const TYPO_KEYS = ["font-family", "font-size", "font-weight", "letter-spacing", "line-height"] as const;
@@ -14,7 +14,7 @@ const sub = (v: unknown, type: TokenType): string => {
 export function tokenValueCss(type: TokenType, value: unknown): string | Record<string, string> {
   const alias = aliasTarget(value);
   if (alias) {
-    if (type === "typography") return Object.fromEntries(TYPO_KEYS.map((k) => [k, `var(${cssVar(alias)}-${k})`]));
+    if (type === "typography") return Object.fromEntries(TYPO_KEYS.map((k) => [k, `var(${cssSubVar(alias, k)})`]));
     return `var(${cssVar(alias)})`;
   }
   switch (type) {
@@ -66,13 +66,13 @@ export function tokenValueCss(type: TokenType, value: unknown): string | Record<
   }
 }
 
-/** `.ou-root` carries set tokens + each modifier's default context; one rule per modifier context. */
+/** `.ou-root` carries set tokens + each modifier's default context; one rule per modifier context. Typography expands to `--x__font-size` etc. */
 export function tokenSheet(set: TokenSet): string {
   const decls = (path: string, type: TokenType, value: unknown): string[] => {
     const css = tokenValueCss(type, value);
     return typeof css === "string"
       ? [`${cssVar(path)}: ${css};`]
-      : Object.entries(css).map(([k, v]) => `${cssVar(path)}-${k}: ${v};`);
+      : Object.entries(css).map(([k, v]) => `${cssSubVar(path, k)}: ${v};`);
   };
   const rule = (selector: string, lines: string[]) => `${selector} {\n${lines.map((l) => `  ${l}`).join("\n")}\n}\n`;
   const kinds = new Map(set.collections.map((c) => [c.name, c]));

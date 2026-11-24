@@ -10,9 +10,10 @@ export type RenderOptions = { variant: Record<string, string>; state: string; pr
 const MAX_DEPTH = 8;
 const note = (text: string): VNode => ({ tag: "div", attrs: {}, style: {}, text, children: [] });
 
-/** Spec → VNode tree. Every part carries `data-part`; the root also `data-component`. */
-export function buildComponent(project: Project, id: string, opts: RenderOptions, depth = 0): VNode {
-  if (depth > MAX_DEPTH) return note("instance depth limit");
+/** Spec → VNode tree. Every part carries `data-part`; the root also `data-component`. `chain` = ancestor component ids. */
+export function buildComponent(project: Project, id: string, opts: RenderOptions, chain: string[] = []): VNode {
+  if (chain.includes(id)) return note(`instance cycle: ${[...chain, id].join(" → ")}`);
+  if (chain.length > MAX_DEPTH) return note("instance depth limit");
   const comp = project.components.get(id);
   if (!comp) return note(`unknown component "${id}"`);
   const doc = comp.doc;
@@ -49,7 +50,7 @@ export function buildComponent(project: Project, id: string, opts: RenderOptions
         const target = part.component ?? (part.prop ? propVal(part.prop) : null);
         if (typeof target !== "string") return { tag: "div", attrs, style, children: [] };
         const targetDoc = project.components.get(target)?.doc;
-        const inner = buildComponent(project, target, { variant: {}, state: targetDoc ? statesOf(targetDoc)[0]! : "enabled", props: {} }, depth + 1);
+        const inner = buildComponent(project, target, { variant: {}, state: targetDoc ? statesOf(targetDoc)[0]! : "enabled", props: {} }, [...chain, id]);
         const sized = (k: "width" | "height") => resolved[k] !== undefined && resolved[k] !== "hug";
         if (sized("width")) inner.style.width = "100%";
         if (sized("height")) inner.style.height = "100%";

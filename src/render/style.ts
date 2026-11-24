@@ -1,6 +1,6 @@
 import type { PartKind } from "../component/schema";
 import { aliasTarget } from "../tokens/values";
-import { aliasesToVars, cssVar } from "./css-var";
+import { aliasesToVars, cssSubVar, cssVar } from "./css-var";
 
 type Ctx = { parentDirection: string | null; isRoot: boolean };
 
@@ -19,7 +19,9 @@ const TYPO = ["font-family", "font-size", "font-weight", "letter-spacing", "line
 
 /** §W part → CSS (kebab-case). `props` is one part's resolved style map. */
 export function partStyle(kind: PartKind, props: Record<string, unknown>, ctx: Ctx): Record<string, string> {
-  const s: Record<string, string> = { "box-sizing": "border-box" };
+  // Every part is positioned: with all siblings positioned, DOM (= key) order is paint order (spec §4.4),
+  // so an earlier absolute state layer paints below later in-flow content.
+  const s: Record<string, string> = { "box-sizing": "border-box", position: "relative" };
   const container = kind === "frame" || kind === "slot";
   const absolute = props.position === "absolute";
 
@@ -37,7 +39,6 @@ export function partStyle(kind: PartKind, props: Record<string, unknown>, ctx: C
       if (g) Object.assign(s, { "grid-template-columns": `repeat(${g.columns}, max-content)`, "grid-template-rows": `repeat(${g.rows}, auto)` });
       if (gap !== undefined) Object.assign(s, { "column-gap": gap, "row-gap": cross! });
     } else s.display = "block";
-    s.position = "relative";
     const align = props.align as { main?: string; cross?: string } | undefined;
     if (align?.main) s["justify-content"] = MAIN[align.main]!;
     if (align?.cross) s["align-items"] = CROSS[align.cross]!;
@@ -101,7 +102,7 @@ export function partStyle(kind: PartKind, props: Record<string, unknown>, ctx: C
     s["white-space"] = "nowrap";
     if (props.color !== undefined) s.color = val(props.color);
     const t = aliasTarget(props.typography);
-    if (t) for (const k of TYPO) s[k] = `var(${cssVar(t)}-${k})`;
+    if (t) for (const k of TYPO) s[k] = `var(${cssSubVar(t, k)})`;
     if (props.textAlign !== undefined) s["text-align"] = props.textAlign === "justified" ? "justify" : String(props.textAlign);
   }
   if (kind === "image") s["object-fit"] = "cover";

@@ -15,6 +15,18 @@ test("safePath", () => {
   symlinkSync(outside, join(root, "link"));
   expect(safePath(root, "link/a.yaml")).toBeNull();
 });
+test("I1: dangling symlinks (leaf or directory) cannot redirect writes outside the root", () => {
+  const root = tmp("ou-");
+  const outside = tmp("ou-out-");
+  mkdirSync(join(root, "components"));
+  symlinkSync(join(outside, "pwned.yaml"), join(root, "components/x.yaml")); // target does not exist yet
+  symlinkSync(join(outside, "nope"), join(root, "gone"));
+  expect(safePath(root, "components/x.yaml")).toBeNull();
+  expect(safePath(root, "gone/a.yaml")).toBeNull();
+  writeFileSync(join(root, "components/real.yaml"), "a: 1\n");
+  symlinkSync(join(root, "components/real.yaml"), join(root, "components/alias.yaml")); // stays inside: allowed
+  expect(safePath(root, "components/alias.yaml")).toBe(join(root, "components/alias.yaml"));
+});
 test("allowedHost", () => {
   expect(allowedHost("127.0.0.1:4173", 4173)).toBe(true);
   expect(allowedHost("localhost:4173", 4173)).toBe(true);

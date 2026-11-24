@@ -21,3 +21,37 @@ export function tokenCompletion(textBefore: string, tokenPaths: string[]): { fro
   const prefix = m[1]!;
   return { from: textBefore.length - prefix.length, options: tokenPaths.filter((p) => p.startsWith(prefix)) };
 }
+
+export const escapeHtml = (s: string): string =>
+  s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+
+type Buf = { text: string; saved: string };
+type Diag = { file: string; path: (string | number)[]; message: string };
+
+/** File list HTML. File names and YAML keys are untrusted (cloned repos, PRs): always escaped. */
+export function filesHtml(files: string[], buffers: Map<string, Buf>, current: string, diagnostics: Diag[]): string {
+  return files
+    .map((f) => {
+      const b = buffers.get(f);
+      const errors = diagnostics.filter((d) => d.file === f).length;
+      const dirty = b && b.text !== b.saved ? "● " : "";
+      return `<div class="file${f === current ? " active" : ""}" data-file="${escapeHtml(f)}">${dirty}${escapeHtml(f)}${errors ? ` <span class="err">${errors}</span>` : ""}</div>`;
+    })
+    .join("");
+}
+
+export function problemsHtml(diagnostics: Diag[]): string {
+  return `<div class="title">Problems (${diagnostics.length})</div>` +
+    diagnostics.map((x, i) => `<div class="problem" data-i="${i}"><b>${escapeHtml(x.file)}</b> ${escapeHtml(x.path.join("."))}: ${escapeHtml(x.message)}</div>`).join("");
+}
+
+/**
+ * What the preview should show for the open file: a live render, the last good render (while the file has YAML
+ * syntax errors or its component fails the schema), or nothing.
+ */
+export function previewMode(file: string, componentFound: boolean, diagnostics: Diag[], lastGoodFile: string | null): "render" | "keep" | "none" {
+  const yamlBroken = diagnostics.some((d) => d.file === file && d.message.startsWith("YAML:"));
+  if (componentFound && !yamlBroken) return "render";
+  if (lastGoodFile === file) return "keep";
+  return componentFound ? "render" : "none";
+}

@@ -1,6 +1,6 @@
 import { Checklist } from "./checklist/schema";
 import { validateChecklist } from "./checklist/validate";
-import { Component } from "./component/schema";
+import { Component, type PartNode } from "./component/schema";
 import { validateComponent } from "./component/validate";
 import { fromZod, type Diagnostic } from "./diagnostics";
 import { globToRegExp } from "./glob";
@@ -36,11 +36,15 @@ export async function loadProject(io: ProjectIO): Promise<{ project?: Project; d
   diagnostics.push(...t.diagnostics);
 
   const all = await io.list();
-  const matching = (patterns: string[] = []) => {
+  const matching = (key: "components" | "checklists") => {
+    const patterns = manifest.data[key] ?? [];
+    patterns.forEach((pattern, i) => {
+      if (!all.some((f) => globToRegExp(pattern).test(f))) diagnostics.push({ file: MANIFEST, path: [key, i], message: `"${pattern}" matches no files` });
+    });
     const globs = patterns.map(globToRegExp);
     return all.filter((f) => globs.some((g) => g.test(f)));
   };
-  const files = matching(manifest.data.components);
+  const files = matching("components");
   const components = new Map<string, { file: string; doc: Component }>();
   for (const file of files) {
     const y = parseYaml(await io.read(file), file);
@@ -58,13 +62,41 @@ export async function loadProject(io: ProjectIO): Promise<{ project?: Project; d
     components.set(c.data.metadata.id, { file, doc: c.data });
   }
 
+  // Instance graph (fixed `component:` refs + instance-prop defaults) must be acyclic: every instance is rendered.
+  const edges = (doc: Component): string[] => {
+    const out = Object.values(doc.data.props ?? {}).flatMap((p) => (p.type === "instance" && p.default ? [p.default] : []));
+    const walk = (part: PartNode) => {
+      if (part.kind === "instance" && part.component) out.push(part.component);
+      Object.values(part.children ?? {}).forEach(walk);
+    };
+    walk(doc.data.anatomy.root as PartNode);
+    return out;
+  };
+  const seen = new Set<string>();
+  const reported = new Set<string>();
+  const visit = (id: string, stack: string[]) => {
+    if (stack.includes(id)) {
+      const cycle = [...stack.slice(stack.indexOf(id)), id];
+      const key = [...new Set(cycle)].sort().join(",");
+      if (!reported.has(key)) {
+        reported.add(key);
+        diagnostics.push({ file: components.get(id)!.file, path: ["data", "anatomy"], message: `instance cycle: ${cycle.join(" → ")}` });
+      }
+      return;
+    }
+    if (seen.has(id) || !components.has(id)) return;
+    seen.add(id);
+    for (const next of edges(components.get(id)!.doc)) visit(next, [...stack, id]);
+  };
+  for (const id of [...components.keys()].sort()) visit(id, []);
+
   // Components with semantic errors stay in the project so the editor can still preview them.
   const ctx = { tokens: t.tokens, componentIds: new Set(components.keys()) };
   for (const { file, doc } of components.values()) diagnostics.push(...validateComponent(doc, file, ctx));
 
   const checklists = new Map<string, { file: string; doc: Checklist }>();
   const project: Project = { manifest: manifest.data, tokens: t.tokens, components, checklists };
-  for (const file of matching(manifest.data.checklists)) {
+  for (const file of matching("checklists")) {
     const y = parseYaml(await io.read(file), file);
     diagnostics.push(...y.diagnostics);
     const c = Checklist.safeParse(y.doc);

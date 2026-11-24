@@ -419,7 +419,7 @@ items:
 | fontWeight | 숫자(이름은 DTCG 표대로 변환) |
 | shadow | box-shadow 목록 |
 | gradient | `linear-gradient(180deg, …)` |
-| typography | `-font-family`, `-font-size`, `-font-weight`, `-letter-spacing`, `-line-height` 하위 변수 5개 |
+| typography | 하위 변수 5개: `__font-family`, `__font-size`, `__font-weight`, `__letter-spacing`, `__line-height`. 예: `--md-sys-typescale-label-large__line-height`. `__`를 쓰는 이유는 형제 토큰 `label-large-line-height`(`--md-sys-typescale-label-large-line-height`)와 이름이 겹치지 않게 하려는 것 |
 
 **part → CSS**
 
@@ -427,7 +427,8 @@ items:
 |---|---|
 | direction row/column | `display:flex; flex-direction` |
 | direction grid | `display:grid; grid-template-columns:repeat(c, max-content); grid-template-rows:repeat(r, auto)` |
-| direction none | `display:block`. 컨테이너는 항상 `position:relative` |
+| direction none | `display:block` |
+| (모든 part) | 기본값 `position:relative`. 형제가 모두 positioned이므로 키 순서가 곧 칠하는 순서가 된다(§4.4) |
 | gap / crossGap | 주축 gap / 교차축 gap(`column-gap`·`row-gap`). direction none이면 무시 |
 | align.main / cross | `justify-content` / `align-items` |
 | width·height: dim / hug | 해당 값 또는 `max-content`, 그리고 `flex-shrink:0` |

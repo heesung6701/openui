@@ -25,8 +25,9 @@ export function expandCheck(check: Check, doc: Component, tokens: TokenSet): Cas
 export const expectToCss = (expect: string | number): string => (typeof expect === "number" ? String(expect) : aliasesToVars(expect));
 
 const PX = /^-?\d+(\.\d+)?px$/;
-/** Equal strings, or both px lengths within 0.05px (layout rounding). */
+/** Equal non-empty strings, or both px lengths within 0.05px (layout rounding). Empty = nothing was measured. */
 export function sameCss(a: string, b: string): boolean {
+  if (!a || !b) return false;
   if (a === b) return true;
   return PX.test(a) && PX.test(b) && Math.abs(parseFloat(a) - parseFloat(b)) < 0.05;
 }

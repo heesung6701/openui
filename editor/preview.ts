@@ -4,6 +4,7 @@ import type { Project } from "../src/project";
 import { tokenSheet } from "../src/render/tokens";
 import { buildComponent, type RenderOptions, type VNode } from "../src/render/vnode";
 import { escapeHtml, hooks, state } from "./app";
+import { previewMode } from "./support";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -33,7 +34,7 @@ export function ouRoot(p: Project, modes: Record<string, string> = {}): HTMLElem
 /** Component id shown for the current file (a component file, or the component a checklist targets). */
 export function previewTarget(p: Project): string | null {
   for (const [id, c] of p.components) if (c.file === state.current) return id;
-  for (const [id, c] of p.checklists) if (c.file === state.current) return id;
+  for (const [id, c] of p.checklists) if (c.file === state.current && p.components.has(id)) return id;
   return null;
 }
 
@@ -80,7 +81,7 @@ host.addEventListener("input", (e) => {
   renderGrid(p, id);
 });
 
-let lastGood: { id: string; grid: HTMLElement } | null = null;
+let lastGood: { file: string; id: string; grid: HTMLElement } | null = null;
 
 export function renderGrid(p: Project, id: string) {
   const doc = p.components.get(id)!.doc;
@@ -102,16 +103,26 @@ export function renderGrid(p: Project, id: string) {
   }
   const slot = host.querySelector(".pv-grid-slot")!;
   slot.replaceChildren(grid);
-  lastGood = { id, grid };
+  lastGood = { file: state.current, id, grid };
 }
 
 export function renderPreview() {
   const p = state.project;
   if (!p) return;
-  sheet.textContent = tokenSheet(p.tokens);
+  try {
+    sheet.textContent = tokenSheet(p.tokens);
+  } catch (e) {
+    console.error("token sheet failed", e); // keep the previous sheet; diagnostics explain why
+  }
   renderModes(p);
   const id = previewTarget(p);
-  if (!id) {
+  const mode = previewMode(state.current, id !== null, state.diagnostics, lastGood?.file ?? null);
+  if (mode === "keep") {
+    host.innerHTML = `<h3>${escapeHtml(lastGood!.id)}</h3><div class="pv-error">Preview paused: fix the errors in this file to update it.</div><div class="pv-grid-slot"></div>`;
+    host.querySelector(".pv-grid-slot")!.replaceChildren(lastGood!.grid);
+    return;
+  }
+  if (mode === "none" || !id) {
     host.innerHTML = `<p class="muted">Open a component or checklist file to preview it.</p>`;
     lastGood = null;
     return;

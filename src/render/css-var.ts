@@ -2,5 +2,8 @@
 // ponytail: `a.b-c` and `a-b.c` collide; DTCG names rarely mix both, add escaping if a real collision appears.
 export const cssVar = (path: string): string => `--${path.replaceAll(".", "-")}`;
 
+/** Typography sub-property variable: `--a-b__font-size`. `__` keeps it apart from sibling tokens like `a.b-font-size`. */
+export const cssSubVar = (path: string, sub: string): string => `${cssVar(path)}__${sub}`;
+
 /** Replace every `{a.b}` alias inside a string with `var(--a-b)`. */
 export const aliasesToVars = (s: string): string => s.replace(/\{([^{}]+)\}/g, (_, p: string) => `var(${cssVar(p)})`);

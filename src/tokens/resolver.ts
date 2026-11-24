@@ -139,7 +139,16 @@ export async function loadTokens(io: ProjectIO, resolverPath: string): Promise<{
   const tokens = new Map<string, TokenEntry>();
   for (const [path, e] of raw) {
     const type = typeOf(path, new Set());
-    if (type) tokens.set(path, { ...e, type });
+    if (!type) continue;
+    // every mode must agree on the type (renderers and Figma variables hold one type per token)
+    const [firstMode] = Object.keys(e.byMode);
+    const clash = Object.entries(e.byMode).find(([, d]) => d.type && d.type !== type);
+    if (clash) {
+      const ownMode = Object.entries(e.byMode).find(([, d]) => d.type === type)?.[0] ?? firstMode;
+      err(clash[1].file, path.split("."), `token "${path}" is ${type} in "${ownMode}" but ${clash[1].type} in "${clash[0]}"`);
+      continue;
+    }
+    tokens.set(path, { ...e, type });
   }
 
   const isGroup = (p: string) => [...raw.keys()].some((k) => k.startsWith(p + "."));

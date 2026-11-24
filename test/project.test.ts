@@ -71,3 +71,34 @@ test("CLI exit codes", () => {
   expect(good.stdout.toString()).toContain("ok:");
   expect(Bun.spawnSync(["bun", "src/cli.ts", "validate", "test/fixtures/broken"]).exitCode).toBe(1);
 });
+
+test("C2: fsIO lists posix paths relative to the root for ./, trailing-slash and . roots", async () => {
+  for (const root of ["./examples/conformance", "examples/conformance/"]) {
+    const files = await fsIO(root).list();
+    expect(files).toContain("openui.yaml");
+    expect(files).toContain("components/button.yaml");
+  }
+  const r = Bun.spawnSync(["bun", "../../src/cli.ts", "validate", "."], { cwd: "examples/conformance" });
+  expect(r.stdout.toString()).toContain("4 components");
+});
+test("C2: a components/checklists glob that matches nothing is a diagnostic", async () => {
+  const files = await conformance();
+  files["openui.yaml"] = files["openui.yaml"]!.replace('components: ["components/*.yaml"]', 'components: ["component/*.yaml"]');
+  expect(msgs((await loadProject(memoryIO(files))).diagnostics)).toContain('"component/*.yaml" matches no files');
+});
+
+test("I4: instance cycles (component and instance-prop defaults) are diagnostics", async () => {
+  const comp = (id: string, inner: string) => `kind: Component
+metadata: { id: ${id}, name: ${id} }
+data:
+  props: { slotIcon: { type: instance, default: ${inner} } }
+  anatomy: { root: { kind: frame, children: { inner: { kind: instance, prop: slotIcon } } } }
+`;
+  const files = {
+    "openui.yaml": 'openui: "0.1"\ninfo: { title: t, version: "1" }\ntokens: r.yaml\ncomponents: ["c/*.yaml"]\n',
+    "r.yaml": 'version: "2025.10"\nresolutionOrder: []\n',
+    "c/a.yaml": comp("a", "b"),
+    "c/b.yaml": comp("b", "a"),
+  };
+  expect(msgs((await loadProject(memoryIO(files))).diagnostics)).toContain("instance cycle: a → b → a");
+});

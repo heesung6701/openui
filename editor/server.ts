@@ -1,4 +1,4 @@
-import { existsSync, realpathSync } from "node:fs";
+import { existsSync, lstatSync, realpathSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, resolve, sep } from "node:path";
 import { fsIO } from "../src/fs-io";
@@ -10,10 +10,28 @@ export function safePath(root: string, rel: string): string | null {
   const rootReal = realpathSync(root);
   const abs = resolve(rootReal, rel);
   if (!abs.startsWith(rootReal + sep)) return null;
-  let probe = abs;
-  while (!existsSync(probe)) probe = dirname(probe);
-  const real = realpathSync(probe); // follows symlinks on the deepest existing ancestor
-  return real === rootReal || real.startsWith(rootReal + sep) ? abs : null;
+  const inside = (p: string) => p === rootReal || p.startsWith(rootReal + sep);
+  // Walk every existing component (leaf included): a symlink must resolve inside the root;
+  // a dangling symlink is rejected because writing through it would create its (outside) target.
+  let p = rootReal;
+  for (const seg of abs.slice(rootReal.length + 1).split(sep)) {
+    p = `${p}${sep}${seg}`;
+    let isLink: boolean;
+    try {
+      isLink = lstatSync(p).isSymbolicLink();
+    } catch {
+      break; // does not exist: nothing below it exists either
+    }
+    if (!isLink) continue;
+    let target: string;
+    try {
+      target = realpathSync(p);
+    } catch {
+      return null; // dangling
+    }
+    if (!inside(target)) return null;
+  }
+  return abs;
 }
 
 /** DNS-rebinding guard: only our own loopback origin may call the API. */

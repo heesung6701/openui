@@ -4,6 +4,7 @@ import type { Project } from "../src/project";
 import { buildComponent } from "../src/render/vnode";
 import { escapeHtml, hooks, state } from "./app";
 import { ouRoot, previewTarget, toDOM } from "./preview";
+import { previewMode } from "./support";
 
 /** Render one case off-screen and read computed styles: the part's actual value vs. a probe set to `expect`. */
 export function domMeasure(p: Project, id: string): Measure {
@@ -16,9 +17,11 @@ export function domMeasure(p: Project, id: string): Measure {
     try {
       // parts of nested instances also carry data-part; only match parts owned by the top component
       const el = c.part === "root" ? top : [...top.querySelectorAll(`[data-part="${CSS.escape(c.part)}"]`)].find((e) => e.closest("[data-component]") === top);
-      const actual = el ? getComputedStyle(el).getPropertyValue(c.property).trim() : "(part not rendered)";
+      const actual = el ? getComputedStyle(el).getPropertyValue(c.property).trim() || "(no value)" : "(part not rendered)";
       probe.style.setProperty(c.property, c.expectCss);
-      const expected = getComputedStyle(probe).getPropertyValue(c.property).trim();
+      // the browser drops invalid declarations: an empty inline value means a bad expect or an unknown property
+      const accepted = probe.style.getPropertyValue(c.property) !== "";
+      const expected = accepted ? getComputedStyle(probe).getPropertyValue(c.property).trim() : `(invalid: ${c.property}: ${c.expectCss})`;
       return { actual, expected };
     } finally {
       stage.remove();
@@ -57,7 +60,7 @@ const setTick = (k: string, v: boolean) => {
 
 const host = document.querySelector<HTMLElement>("#checklist")!;
 let generation = 0;
-let current: { cl: Checklist; results: ItemResult[] } | null = null;
+let current: { cl: Checklist; results: ItemResult[]; file: string; paused?: boolean } | null = null;
 
 const fmtCase = (c: ItemResult["cases"][number]) =>
   `${[...Object.entries(c.variant).map(([k, v]) => `${k}=${v}`), c.state, ...Object.values(c.mode)].join(" · ")}: ${c.actual} ≠ ${c.expected}`;
@@ -71,7 +74,7 @@ function render() {
   const auto = results.filter((r) => r.kind === "auto");
   const manual = results.filter((r) => r.kind === "manual");
   const ticked = manual.filter((r) => getTick(key(cl, r.id))).length;
-  host.innerHTML = `<h3>Checklist · <span class="${auto.every((r) => r.pass) ? "ok" : "err"}">auto ${auto.filter((r) => r.pass).length}/${auto.length}</span> · manual ${ticked}/${manual.length}</h3>` +
+  host.innerHTML = (current.paused ? `<div class="pv-error">Checklist paused: fix the errors in this file to re-run it.</div>` : "") + `<h3>Checklist · <span class="${auto.every((r) => r.pass) ? "ok" : "err"}">auto ${auto.filter((r) => r.pass).length}/${auto.length}</span> · manual ${ticked}/${manual.length}</h3>` +
     results.map((r) => {
       if (r.kind === "manual") {
         return `<div class="ck-item" data-item="${r.id}"><label><input type="checkbox" data-tick="${r.id}"${getTick(key(cl, r.id)) ? " checked" : ""}> ✋ ${escapeHtml(r.title)}</label></div>`;
@@ -110,6 +113,12 @@ async function refresh() {
   const entry = id ? p.checklists.get(id) : undefined;
   const comp = id ? p!.components.get(id) : undefined;
   const gen = ++generation;
+  const mode = previewMode(state.current, !!(p && id && entry && comp), state.diagnostics, current?.file ?? null);
+  if (mode === "keep" && current) {
+    current = { ...current, paused: true };
+    render();
+    return;
+  }
   if (!p || !id || !entry || !comp) {
     current = null;
     render();
@@ -117,7 +126,7 @@ async function refresh() {
   }
   const results = await runChecklist(entry.doc, comp.doc, p.tokens, domMeasure(p, id));
   if (gen !== generation) return;
-  current = { cl: entry.doc, results };
+  current = { cl: entry.doc, results, file: state.current };
   render();
 }
 

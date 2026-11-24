@@ -8,7 +8,9 @@ import type { Diagnostic } from "../src/diagnostics";
 import { memoryIO } from "../src/io";
 import { loadProject, type Project } from "../src/project";
 import { bundledProjects, bundleIO, canOpenFolder, folderIO, serverIO, type BundledProject, type EditorIO } from "./io";
-import { rangeOf, tokenCompletion } from "./support";
+import { escapeHtml, filesHtml, problemsHtml, rangeOf, tokenCompletion } from "./support";
+
+export { escapeHtml };
 
 type Buffer = { text: string; saved: string };
 
@@ -71,7 +73,13 @@ async function validate() {
   pushLint();
   renderProblems();
   renderFiles();
-  for (const h of hooks.afterValidate) h();
+  for (const h of hooks.afterValidate) {
+    try {
+      h();
+    } catch (e) {
+      console.error(e); // one failing panel must not block the others
+    }
+  }
 }
 
 // ---------- editor ----------
@@ -144,13 +152,7 @@ $("#save").addEventListener("click", () => save());
 
 // ---------- side panels ----------
 function renderFiles() {
-  $("#files").innerHTML = state.files
-    .map((f) => {
-      const b = state.buffers.get(f)!;
-      const errors = state.diagnostics.filter((d) => d.file === f).length;
-      return `<div class="file${f === state.current ? " active" : ""}" data-file="${f}">${b.text !== b.saved ? "● " : ""}${f}${errors ? ` <span class="err">${errors}</span>` : ""}</div>`;
-    })
-    .join("");
+  $("#files").innerHTML = filesHtml(state.files, state.buffers, state.current, state.diagnostics);
 }
 $("#files").addEventListener("click", (e) => {
   const f = (e.target as HTMLElement).closest<HTMLElement>("[data-file]")?.dataset.file;
@@ -158,9 +160,7 @@ $("#files").addEventListener("click", (e) => {
 });
 
 function renderProblems() {
-  const d = state.diagnostics;
-  $("#problems").innerHTML = `<div class="title">Problems (${d.length})</div>` +
-    d.map((x, i) => `<div class="problem" data-i="${i}"><b>${x.file}</b> ${x.path.join(".")}: ${escapeHtml(x.message)}</div>`).join("");
+  $("#problems").innerHTML = problemsHtml(state.diagnostics);
 }
 $("#problems").addEventListener("click", (e) => {
   const i = (e.target as HTMLElement).closest<HTMLElement>("[data-i]")?.dataset.i;
@@ -170,7 +170,6 @@ $("#problems").addEventListener("click", (e) => {
   openFile(d.file, rangeOf(state.buffers.get(d.file)!.text, d.path));
 });
 
-export const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
 
 window.addEventListener("beforeunload", (e) => {
   if (dirty()) e.preventDefault();

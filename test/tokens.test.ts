@@ -85,3 +85,10 @@ test("missing source file is a diagnostic, not a throw", async () => {
   delete files["t/dark.tokens.yaml"];
   expect(msgs((await load(files)).diagnostics)).toContain("t/dark.tokens.yaml");
 });
+test("I3: literal $type differing between modifier contexts is an error", async () => {
+  const m = msgs((await load(tree(
+    `zz: { $type: color, $value: { colorSpace: srgb, components: [1, 0, 0] } }`,
+    `zz: { $type: dimension, $value: { value: 8, unit: px } }`,
+  ))).diagnostics);
+  expect(m).toContain('"zz" is color in "light" but dimension in "dark"');
+});

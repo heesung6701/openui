@@ -64,3 +64,10 @@ for (const [name, from, to, needle] of bad)
     const m = msgs((await loadProject(memoryIO(files))).diagnostics);
     expect(m).toContain(needle);
   });
+test("I6: empty measurements never pass (unknown property / invalid expect)", async () => {
+  expect(sameCss("", "")).toBe(false);
+  const { project } = await loadProject(fsIO("examples/conformance"));
+  const cl = project!.checklists.get("button")!.doc, doc = project!.components.get("button")!.doc;
+  const r = await runChecklist(cl, doc, project!.tokens, async () => ({ actual: "", expected: "" }));
+  expect(r[0]!.pass).toBe(false);
+});
