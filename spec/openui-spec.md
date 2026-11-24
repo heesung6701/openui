@@ -48,6 +48,7 @@ openui: "0.1"                         # 필수, 고정값
 info: { title: …, version: …, description?: … }
 tokens: tokens/<name>.resolver.yaml   # DTCG Resolver 문서 경로(루트 기준)
 components: ["components/*.yaml"]     # 컴포넌트 문서 glob 목록(1개 이상)
+checklists?: ["checklists/*.yaml"]    # 체크리스트 문서 glob 목록(8장)
 ```
 
 - glob 문법: `*`는 슬래시를 제외한 문자열, `?`는 한 글자, `**/`는 0개 이상의 디렉터리.
@@ -55,7 +56,10 @@ components: ["components/*.yaml"]     # 컴포넌트 문서 glob 목록(1개 이
 - 모든 문서는 **YAML 1.2**로 해석한다.
   - 같은 맵에 중복 키가 있으면 오류다.
   - 따옴표 없는 `{a.b}`는 YAML에서 mapping이 된다. 검증기는 이를 감지해 `alias must be a quoted string` 힌트를 낸다.
-- 편집기 지원용 JSON Schema: `schema/manifest.schema.json`, `schema/component.schema.json`(zod 스키마에서 생성).
+- 편집기 지원용 JSON Schema: `schema/manifest.schema.json`, `schema/component.schema.json`, `schema/checklist.schema.json`(zod 스키마에서 생성).
+- **흔한 YAML 실수 두 가지**는 검증기가 직접 힌트를 준다.
+  - 따옴표 없는 alias: `{a.b}`
+  - `{ }` 안의 따옴표 없는 쉼표: `{ description: a, b }`는 `b`를 값 없는 키로 만든다.
 
 ## 3. 토큰
 
@@ -236,6 +240,7 @@ styles:
 | `fillOpacity` | 0..1 | number | frame, slot, vector, instance | |
 | `strokeColor` | color | color | frame, slot, vector | |
 | `strokeWidth` | dim | dimension | frame, slot, vector | |
+| `strokeOpacity` | 0..1 | number | frame, slot, vector | |
 | `strokeAlign` | `inside \| outside \| center`(기본 inside) | – | frame, slot, vector | |
 | `cornerRadius` | dim \| [좌상, 우상, 우하, 좌하] | dimension | frame, slot, image | |
 | `opacity` | 0..1 | number | 전부 | |
@@ -251,7 +256,8 @@ styles:
 - `x`/`y`는 `position: absolute`이거나 부모 `direction: none`일 때만 의미가 있다.
 - `position: absolute`이면서 `width`/`height`가 `fill`이면 부모 크기에 맞춰 늘어난다. 상태 레이어 같은 오버레이용.
 - instance part의 `fill`은 그 instance 안 벡터들의 fill을 덮어쓴다(아이콘 색). instance 내부의 다른 속성은 덮어쓸 수 없다.
-- `fillOpacity`는 칠(paint)에만, `opacity`는 part와 그 자손 전체에 적용된다.
+- `fillOpacity`와 `strokeOpacity`는 각각 칠과 선(paint)에만 적용된다. 예: M3의 disabled 컨테이너 12%, 외곽선 12%.
+- `opacity`는 part와 그 자손 전체에 적용된다.
 
 **값 shorthand**(컴포넌트 문서 전용. 토큰 파일은 DTCG 객체 형식을 쓴다):
 - dim: `8px`, `1.5rem`, 단위 없는 `0`, 또는 alias `"{…}"`
@@ -301,6 +307,44 @@ Figma 컴포넌트로 옮길 때는 variant 조합 × state 하나하나를 이 
 
 v0.1의 렌더러와 도구는 authoring 문서를 직접 읽고 `resolveStyles`로 해석한다.
 
+## 8. 체크리스트
+
+`kind: Checklist` 문서는 한 컴포넌트가 의도대로 구현되었는지 확인하는 항목 목록이다. 참조 구현은 `src/checklist/`이고, 웹 에디터가 실행한다.
+
+```yaml
+# yaml-language-server: $schema=../../../schema/checklist.schema.json
+kind: Checklist
+metadata: { id: button, component: button, source?: "<출처>", description?: "" }
+items:
+  - id: height                       # kebab-case, 파일 안에서 고유
+    title: 컨테이너 높이 40dp
+    check:                           # 자동 항목
+      variant?: { style: filled | [filled, tonal] }   # 생략한 축 = 모든 값
+      state?: enabled | [enabled, hovered]            # 생략 = 모든 state
+      mode?: { theme: light | [light, dark] }         # 생략 = 모든 modifier context
+      part: root
+      property: height               # CSS longhand(사용자 정의 속성 --x 포함)
+      expect: 40px                   # 문자열 안의 "{a.b}"는 토큰 값으로 치환, 또는 number
+  - id: ripple
+    title: pressed 리플
+    manual: true                     # 수동 항목
+    hint?: { variant?: {...}, state?: pressed }       # 프리뷰에서 강조할 셀
+```
+
+**검증 규칙**
+- `metadata.component`, part, 축/값, state, modifier/context는 실제로 있어야 한다.
+- `expect` 안의 alias는 존재하는 토큰이어야 한다.
+- item id는 고유하고, `check`와 `manual`은 정확히 하나만 둔다.
+- `property`는 CSS shorthand(`background`, `border`, `border-radius`, `padding`, `margin`, `font`, `gap`, `inset`, `outline`, `flex`, `grid`, `place-items`, `overflow`, `transition`, `animation`)가 아니어야 한다. shorthand의 computed 값은 비교하기 어렵기 때문.
+- 컴포넌트당 체크리스트는 최대 1개다.
+
+**판정**
+- 각 케이스(variant × state × mode)를 렌더하고 part의 computed `property` 값을 읽는다.
+- 기대값은 같은 컨텍스트에 둔 프로브 요소에 `expect`를 설정해서 얻은 computed 값이다. 양쪽을 브라우저가 같은 방식으로 정규화하게 하려는 것.
+- 문자열이 같으면 통과한다. 둘 다 px 길이면 차이가 0.05px 미만일 때 통과한다(레이아웃 반올림 허용).
+
+**기대값 작성 원칙**: 컴포넌트가 참조하는 comp 토큰을 그대로 기대값으로 쓰지 않는다. 대신 sys 토큰이나 공식 스펙의 리터럴을 쓴다. 그래야 comp→sys 연결, YAML 작성, 렌더러가 한꺼번에 교차 검증된다.
+
 ## 부록 A. Figma 매핑
 
 필드 이름은 `figma/rest-api-spec`의 `dist/api_types.ts` 기준이다. Plugin API 열은 생성할 때 쓰는 호출이다.
@@ -330,7 +374,7 @@ v0.1의 렌더러와 도구는 authoring 문서를 직접 읽고 `resolveStyles`
 | min / max | `minWidth`, `maxWidth`, `minHeight`, `maxHeight` | 같음 |
 | `position`, `x`, `y` | `layoutPositioning`(`AUTO\|ABSOLUTE`), 상대 위치 | 같음 |
 | `fill` / `fillOpacity` | `fills[]`(`SolidPaint.color`, `opacity`) | `fills`, `setBoundVariableForPaint` |
-| `strokeColor` / `strokeWidth` / `strokeAlign` | `strokes[]` / `strokeWeight` / `strokeAlign`(`INSIDE\|OUTSIDE\|CENTER`) | 같음 |
+| `strokeColor` / `strokeWidth` / `strokeAlign` / `strokeOpacity` | `strokes[]` / `strokeWeight` / `strokeAlign`(`INSIDE\|OUTSIDE\|CENTER`) / `strokes[].opacity` | 같음 |
 | `cornerRadius` | `cornerRadius` / `rectangleCornerRadii` | `cornerRadius`, `topLeftRadius` 등 |
 | `opacity` / `visible` | `opacity` / `visible` | 같음 |
 | `shadow` | `effects[]` | `effects`, `effectStyleId` |
@@ -346,6 +390,53 @@ v0.1의 렌더러와 도구는 authoring 문서를 직접 읽고 `resolveStyles`
 - **string/boolean 토큰**: DTCG에 타입이 없다. Figma STRING/BOOLEAN 변수 대응 방법이 필요하다.
 - **variant 조합 제외**: 존재하지 않는 조합(예: 특정 style에는 없는 size)을 표현할 방법이 없다.
 - **리플·포커스 링 오프셋·모션**: 어휘가 없다. 체크리스트의 수동 항목으로 확인한다.
+- **variant 식의 OR**: `type=selected|indeterminate` 같은 표현이 없어서 같은 블록을 반복해야 한다(Material 3 checkbox).
+- **prop에 따라 달라지는 스타일**: 스타일 표는 variant×state 기준이라, "아이콘 표시 여부에 따른 패딩"은 prop이 아닌 variant 축(`withIcon`)으로 모델링했다.
+- **instance 내부 덮어쓰기**: v0.1은 벡터 fill(아이콘 색)만 덮어쓸 수 있다.
+- **슬롯 기본 콘텐츠의 미리보기**: 프리뷰는 빈 slot을 placeholder로만 그린다.
 - **Exchange 포맷**(7장): 0.2에서 정의한다.
 - **주석을 보존하는 병합**: 도구가 YAML을 갱신할 때 사람이 단 주석을 유지하는 방법.
 - **이름**: "OpenUI"는 W3C Open UI Community Group과 겹친다. 공개 전에 재검토한다.
+
+## 부록 C. 웹(CSS) 매핑
+
+참조 렌더러는 `src/render/`(`tokenSheet`, `partStyle`, `buildComponent`)다. 모든 part는 `data-part`를 갖고, 루트는 `data-component`도 갖는다.
+
+**토큰 → CSS 변수**
+- 이름 규칙: `--` + 경로의 `.`을 `-`로 바꾼 것. 예: `md.sys.color.primary` → `--md-sys-color-primary`
+- alias는 `var(--대상)`이 된다.
+- 시트 구성:
+  - `.ou-root`에 set 토큰과 각 modifier의 기본 context를 둔다.
+  - modifier context마다 `.ou-root[data-<modifier>="<context>"]` 규칙을 하나씩 만든다.
+
+| `$type` | CSS 값 |
+|---|---|
+| color | `rgb(R G B / A)` |
+| dimension, duration | `${value}${unit}` |
+| number | 숫자 |
+| cubicBezier | `cubic-bezier(…)` |
+| fontFamily | 큰따옴표 목록 |
+| fontWeight | 숫자(이름은 DTCG 표대로 변환) |
+| shadow | box-shadow 목록 |
+| gradient | `linear-gradient(180deg, …)` |
+| typography | `-font-family`, `-font-size`, `-font-weight`, `-letter-spacing`, `-line-height` 하위 변수 5개 |
+
+**part → CSS**
+
+| 스펙 | CSS |
+|---|---|
+| direction row/column | `display:flex; flex-direction` |
+| direction grid | `display:grid; grid-template-columns:repeat(c, max-content); grid-template-rows:repeat(r, auto)` |
+| direction none | `display:block`. 컨테이너는 항상 `position:relative` |
+| gap / crossGap | 주축 gap / 교차축 gap(`column-gap`·`row-gap`). direction none이면 무시 |
+| align.main / cross | `justify-content` / `align-items` |
+| width·height: dim / hug | 해당 값 또는 `max-content`, 그리고 `flex-shrink:0` |
+| width·height: fill | 부모 주축이면 `flex:1 1 0`, 교차축이면 `align-self:stretch`, 부모가 none/grid이거나 루트면 `100%` |
+| position absolute (+fill) | `position:absolute; left/top = x/y`. fill이면 `left:0; right:0` 또는 `top:0; bottom:0` |
+| fill / fillOpacity (frame) | `background`, 또는 `background-color: color-mix(in srgb, C P%, transparent)` |
+| fill (vector / instance) | `fill: var(--ou-icon-fill, C)` / 래퍼에 `--ou-icon-fill` (`-opacity`도 같은 방식) |
+| stroke* (frame) | `box-shadow`: inside → `inset 0 0 0 W C`, outside → `0 0 0 W C`, center → 둘로 나눔. strokeOpacity는 color-mix |
+| shadow | `box-shadow`에 stroke 그림자 뒤로 이어 붙임 |
+| cornerRadius / opacity / visible:false | `border-radius` / `opacity` / `display:none` |
+| text | `white-space:nowrap`, `color`, typography 하위 변수, `text-align` |
+| vector / image | `<svg viewBox><path d>` / `<img object-fit:cover>` |
