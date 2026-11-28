@@ -1,3 +1,4 @@
+import { modePropsOf } from "../component/tokens";
 import { partsOf, statesOf, variantAxes } from "../component/validate";
 import type { Diagnostic } from "../diagnostics";
 import type { Project } from "../project";
@@ -39,8 +40,9 @@ export function validateChecklist(cl: Checklist, file: string, project: Project)
       if (!parts.has(c.part)) err([...at, "check", "part"], `unknown part "${c.part}"`);
       checkVariant(c.variant, [...at, "check", "variant"]);
       checkStates(c.state, [...at, "check", "state"]);
+      const modeProps = modePropsOf(comp.doc);
       for (const [m, v] of Object.entries(c.mode ?? {})) {
-        const modes = modifiers.get(m);
+        const modes = modifiers.get(m) ?? modeProps[m]?.values;
         if (!modes) err([...at, "check", "mode", m], `unknown modifier "${m}"`);
         else for (const ctx of list(v)) if (!modes.includes(ctx)) err([...at, "check", "mode", m], `unknown context "${ctx}" of modifier "${m}"`);
       }

@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../../schema/component.schema.json
 # M3 cards (elevated / filled / outlined), material-web v0.192 tokens. Content is a slot.
-# One UI tree for all styles: `style` is a mode prop (tokens/card-style.*.tokens.yaml), not a variant.
+# One UI tree for all styles: `style` is a mode prop (data.tokens `$when: style=…`), not a variant.
 kind: Component
 metadata:
   id: card
@@ -9,27 +9,91 @@ metadata:
 data:
   props:
     content: { type: slot, min: 1, description: "Card content (media, text, actions)" }
-    style:   { type: mode, modifier: card-style, description: "elevated | filled | outlined (token mode)" }
+    style:   { type: mode, values: [elevated, filled, outlined], default: elevated, description: "elevated | filled | outlined (token mode)" }
   states: [enabled, hovered, focused, pressed, disabled]
+  # The tokens this component uses ("{card.<name>}"), values from material-web v0.192 component tokens. $when = the value for that style.
+  tokens:
+    content-gap: { $type: dimension, $value: { value: 8, unit: px } }
+    padding: { $type: dimension, $value: { value: 16, unit: px } }
+    preview-width: { $type: dimension, $value: { value: 360, unit: px } }
+    container-color:
+      $type: color
+      $value: "{md.sys.color.surface-container-low}"
+      $when:
+        style=filled: "{md.sys.color.surface-container-highest}"
+        style=outlined: "{md.sys.color.surface}"
+    container-shape: { $type: dimension, $value: "{md.sys.shape.corner-medium}" }
+    outline-color:
+      $type: color
+      $value: "{md.sys.color.transparent}"
+      $when:
+        style=outlined: "{md.sys.color.outline-variant}"
+    outline-width:
+      $type: dimension
+      $value: "{md.sys.space.zero}"
+      $when:
+        style=outlined: { value: 1, unit: px }
+    shadow:
+      $type: shadow
+      $value: "{md.sys.elevation-shadow.level1}"
+      $when:
+        style=filled: "{md.sys.elevation-shadow.level0}"
+        style=outlined: "{md.sys.elevation-shadow.level0}"
+    enabled-state-layer-opacity: { $type: number, $value: "{md.sys.opacity.zero}" }
+    hover-state-layer-color: { $type: color, $value: "{md.sys.color.on-surface}" }
+    hover-shadow:
+      $type: shadow
+      $value: "{md.sys.elevation-shadow.level2}"
+      $when:
+        style=filled: "{md.sys.elevation-shadow.level1}"
+        style=outlined: "{md.sys.elevation-shadow.level1}"
+    hover-state-layer-opacity: { $type: number, $value: "{md.sys.state.hover-state-layer-opacity}" }
+    focus-outline-color:
+      $type: color
+      $value: "{md.sys.color.transparent}"
+      $when:
+        style=outlined: "{md.sys.color.on-surface}"
+    focus-state-layer-opacity: { $type: number, $value: "{md.sys.state.focus-state-layer-opacity}" }
+    pressed-state-layer-opacity: { $type: number, $value: "{md.sys.state.pressed-state-layer-opacity}" }
+    disabled-container-color:
+      $type: color
+      $value: "{md.sys.color.surface}"
+      $when:
+        style=filled: "{md.sys.color.surface-variant}"
+    disabled-container-opacity:
+      $type: number
+      $value: 0.38
+      $when:
+        style=outlined: "{md.sys.opacity.full}"
+    disabled-outline-color:
+      $type: color
+      $value: "{md.sys.color.transparent}"
+      $when:
+        style=outlined: "{md.sys.color.outline}"
+    disabled-outline-opacity:
+      $type: number
+      $value: "{md.sys.opacity.zero}"
+      $when:
+        style=outlined: 0.12
   anatomy:
     root:
       kind: frame
-      layout: { direction: column, gap: "{md.comp.card.content-gap}", padding: "{md.comp.card.padding}", width: "{md.comp.card.preview-width}", height: hug }
+      layout: { direction: column, gap: "{card.content-gap}", padding: "{card.padding}", width: "{card.preview-width}", height: hug }
       children:
         stateLayer: { kind: frame, layout: { position: absolute, width: fill, height: fill } }
-        body:       { kind: slot, prop: content, layout: { direction: column, gap: "{md.comp.card.content-gap}", width: fill } }
+        body:       { kind: slot, prop: content, layout: { direction: column, gap: "{card.content-gap}", width: fill } }
   styles:
     base:
       enabled:
-        root:       { fill: "{card.container-color}", cornerRadius: "{md.comp.elevated-card.container-shape}", strokeColor: "{card.outline-color}", strokeWidth: "{card.outline-width}", shadow: "{card.shadow}" }
-        stateLayer: { cornerRadius: "{md.comp.elevated-card.container-shape}", opacity: "{md.sys.opacity.zero}", fill: "{md.comp.elevated-card.hover-state-layer-color}" }
+        root:       { fill: "{card.container-color}", cornerRadius: "{card.container-shape}", strokeColor: "{card.outline-color}", strokeWidth: "{card.outline-width}", shadow: "{card.shadow}" }
+        stateLayer: { cornerRadius: "{card.container-shape}", opacity: "{card.enabled-state-layer-opacity}", fill: "{card.hover-state-layer-color}" }
       hovered:
         root:       { shadow: "{card.hover-shadow}" }
-        stateLayer: { opacity: "{md.comp.elevated-card.hover-state-layer-opacity}" }
+        stateLayer: { opacity: "{card.hover-state-layer-opacity}" }
       focused:
         root:       { strokeColor: "{card.focus-outline-color}" }
-        stateLayer: { opacity: "{md.comp.elevated-card.focus-state-layer-opacity}" }
+        stateLayer: { opacity: "{card.focus-state-layer-opacity}" }
       pressed:
-        stateLayer: { opacity: "{md.comp.elevated-card.pressed-state-layer-opacity}" }
+        stateLayer: { opacity: "{card.pressed-state-layer-opacity}" }
       disabled:
         root: { fill: "{card.disabled-container-color}", fillOpacity: "{card.disabled-container-opacity}", strokeColor: "{card.disabled-outline-color}", strokeOpacity: "{card.disabled-outline-opacity}" }

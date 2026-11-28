@@ -102,9 +102,3 @@ data:
   };
   expect(msgs((await loadProject(memoryIO(files))).diagnostics)).toContain("instance cycle: a → b → a");
 });
-
-test("tokens of a modifier chosen by a mode prop cannot be aliased from other collections", async () => {
-  const files = await conformance();
-  files["tokens/base.tokens.yaml"] += `derived: { $type: color, $value: "{button.container-color}" }\n`;
-  expect(msgs((await loadProject(memoryIO(files))).diagnostics)).toContain('aliases "{button.container-color}" of modifier "button-style"');
-});

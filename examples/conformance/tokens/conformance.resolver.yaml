@@ -1,8 +1,8 @@
 version: "2025.10"
 name: conformance
 description: >
-  Modes and when they apply. A context with a condition (org.openui.when) is picked by the environment;
-  one without (button-style) is picked explicitly, here by the button's `style` mode prop.
+  Modes and when they apply (org.openui.when). window, orientation and device hold no global tokens:
+  component tokens say what they are in each context with $when (spec §4.7).
 sets:
   base:
     sources: [{ $ref: base.tokens.yaml }]
@@ -26,9 +26,9 @@ modifiers:
   window:
     description: Window width class (breakpoints in dp)
     contexts:
-      compact: [{ $ref: window.compact.tokens.yaml }]
-      medium: [{ $ref: window.medium.tokens.yaml }]
-      expanded: [{ $ref: window.expanded.tokens.yaml }]
+      compact: []
+      medium: []
+      expanded: []
     default: compact
     $extensions:
       org.openui:
@@ -39,26 +39,20 @@ modifiers:
   orientation:
     description: Screen orientation
     contexts:
-      portrait: [{ $ref: orientation.portrait.tokens.yaml }]
-      landscape: [{ $ref: orientation.landscape.tokens.yaml }]
+      portrait: []
+      landscape: []
     default: portrait
     $extensions:
       org.openui: { when: { portrait: { orientation: portrait }, landscape: { orientation: landscape } } }
   device:
     description: Device type
     contexts:
-      phone: [{ $ref: device.phone.tokens.yaml }]
-      tablet: [{ $ref: device.tablet.tokens.yaml }]
-      desktop: [{ $ref: device.desktop.tokens.yaml }]
+      phone: []
+      tablet: []
+      desktop: []
     default: phone
     $extensions:
       org.openui: { when: { phone: { device: phone }, tablet: { device: tablet }, desktop: { device: desktop } } }
-  button-style:
-    description: "Button emphasis. No condition: each button instance picks it (mode prop `style`)."
-    contexts:
-      filled: [{ $ref: button-style.filled.tokens.yaml }]
-      outlined: [{ $ref: button-style.outlined.tokens.yaml }]
-    default: filled
 resolutionOrder:
   - { $ref: "#/sets/base" }
   - { $ref: "#/modifiers/theme" }
@@ -66,4 +60,3 @@ resolutionOrder:
   - { $ref: "#/modifiers/window" }
   - { $ref: "#/modifiers/orientation" }
   - { $ref: "#/modifiers/device" }
-  - { $ref: "#/modifiers/button-style" }

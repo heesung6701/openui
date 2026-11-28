@@ -1,24 +1,39 @@
 # yaml-language-server: $schema=../../../schema/component.schema.json
 kind: Component
-metadata: { id: card, name: Card, description: "Conformance: slot prop, column layout, absolute state layer, shadow, outside stroke" }
+metadata: { id: card, name: Card, description: "Conformance: slot prop, column layout, absolute state layer, shadow, outside stroke, window-dependent tokens" }
 data:
   props:
     title:   { type: text, default: "{text.card.title}" }
     content: { type: slot, min: 1, max: 3, preferred: [button], preferredOnly: true, description: Card actions }
   states: [enabled, hovered]
+  tokens:
+    width:   { $type: dimension, $value: { value: 280, unit: px }, $when: { window=medium: { value: 320, unit: px }, window=expanded: { value: 360, unit: px } } }
+    padding: { $type: dimension, $value: { value: 16, unit: px }, $when: { window=medium: { value: 24, unit: px }, window=expanded: { value: 24, unit: px } } }
+    padding-bottom: { $type: dimension, $value: "{space.inset}" }
+    gap:     { $type: dimension, $value: "{space.gap}" }
+    container-color: { $type: color, $value: "{color.surface}" }
+    corner-radius:   { $type: dimension, $value: "{radius.medium}" }
+    shadow:          { $type: shadow, $value: "{elevation.1}" }
+    outline-color:   { $type: color, $value: "{color.outline}" }
+    outline-width:   { $type: dimension, $value: "{stroke.thin}" }
+    state-layer-color: { $type: color, $value: "{color.on-surface}" }
+    state-layer-opacity: { $type: number, $value: "{opacity.none}" }
+    hover-state-layer-opacity: { $type: number, $value: "{opacity.hover}" }
+    heading-color: { $type: color, $value: "{color.on-surface}" }
+    heading-typography: { $type: typography, $value: "{type.body}" }
   anatomy:
     root:
       kind: frame
-      layout: { direction: column, gap: "{space.gap}", padding: ["{layout.card-padding}", "{layout.card-padding}", "{space.inset}", "{layout.card-padding}"], width: "{layout.card-width}", height: hug }
+      layout: { direction: column, gap: "{card.gap}", padding: ["{card.padding}", "{card.padding}", "{card.padding-bottom}", "{card.padding}"], width: "{card.width}", height: hug }
       children:
         stateLayer: { kind: frame, layout: { position: absolute, width: fill, height: fill } }
         heading:    { kind: text, text: { prop: title } }
-        body:       { kind: slot, prop: content, layout: { direction: row, gap: "{space.gap}", width: fill } }
+        body:       { kind: slot, prop: content, layout: { direction: row, gap: "{card.gap}", width: fill } }
   styles:
     base:
       enabled:
-        root:       { fill: "{color.surface}", cornerRadius: "{radius.medium}", shadow: "{elevation.1}", strokeColor: "{color.outline}", strokeWidth: "{stroke.thin}", strokeAlign: outside }
-        stateLayer: { fill: "{color.on-surface}", opacity: "{opacity.none}", cornerRadius: "{radius.medium}" }
-        heading:    { color: "{color.on-surface}", typography: "{type.body}" }
+        root:       { fill: "{card.container-color}", cornerRadius: "{card.corner-radius}", shadow: "{card.shadow}", strokeColor: "{card.outline-color}", strokeWidth: "{card.outline-width}", strokeAlign: outside }
+        stateLayer: { fill: "{card.state-layer-color}", opacity: "{card.state-layer-opacity}", cornerRadius: "{card.corner-radius}" }
+        heading:    { color: "{card.heading-color}", typography: "{card.heading-typography}" }
       hovered:
-        stateLayer: { opacity: "{opacity.hover}" }
+        stateLayer: { opacity: "{card.hover-state-layer-opacity}" }

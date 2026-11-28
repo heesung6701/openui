@@ -1,6 +1,7 @@
 import { runChecklist, type ItemResult, type Measure } from "../src/checklist/run";
 import type { Checklist } from "../src/checklist/schema";
 import type { Project } from "../src/project";
+import { modePropsOf } from "../src/component/tokens";
 import { buildComponent } from "../src/render/vnode";
 import { escapeHtml, hooks, state } from "./app";
 import { ouRoot, previewTarget, toDOM } from "./preview";
@@ -12,8 +13,11 @@ export function domMeasure(p: Project, id: string): Measure {
     const stage = document.body.appendChild(document.createElement("div"));
     stage.style.cssText = "position:fixed;left:-10000px;top:0;";
     const root = stage.appendChild(ouRoot(p, c.mode));
-    const top = root.appendChild(toDOM(buildComponent(p, id, { variant: c.variant, state: c.state, props: {}, modes: c.mode })));
+    const modeProps = Object.fromEntries(Object.entries(c.mode).filter(([k]) => k in modePropsOf(p.components.get(id)!.doc)));
+    const top = root.appendChild(toDOM(buildComponent(p, id, { variant: c.variant, state: c.state, props: modeProps, modes: c.mode })));
     const probe = root.appendChild(document.createElement("div"));
+    // same component scope as the root, so an expect may also name the component's own tokens
+    for (const a of [...top.attributes]) if (a.name === "data-component" || a.name.startsWith("data-mode-")) probe.setAttribute(a.name, a.value);
     try {
       // parts of nested instances also carry data-part; only match parts owned by the top component
       const el = c.part === "root" ? top : [...top.querySelectorAll(`[data-part="${CSS.escape(c.part)}"]`)].find((e) => e.closest("[data-component]") === top);

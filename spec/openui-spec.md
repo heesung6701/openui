@@ -16,6 +16,8 @@ OpenUI는 디자인 토큰과 UI 컴포넌트를 YAML 문서로 기술한다. **
 | 용어 | 뜻 |
 |---|---|
 | 토큰(token) | 이름이 붙은 디자인 값. DTCG 형식 |
+| 전역 토큰 | 여러 컴포넌트가 함께 쓰는 기반 토큰(팔레트, 시스템 색, 타입 스케일, 텍스트). 토큰 파일에 둔다(3장) |
+| 컴포넌트 토큰 | 한 컴포넌트가 쓰는 토큰. 그 컴포넌트 문서의 `data.tokens`에 둔다(4.7) |
 | 컬렉션(collection) | 토큰 묶음. 하나 이상의 모드를 가진다 |
 | 모드(mode) | 같은 토큰의 맥락별 값(예: light/dark, en/ko, compact/expanded). modifier의 context 하나가 모드 하나다 |
 | 조건(condition) | 어떤 모드가 언제 적용되는지. 창 너비, 방향, 단말 종류 등(3.6) |
@@ -48,7 +50,7 @@ rootage에서 `slot`은 part를 뜻하지만, OpenUI에서는 **part와 slot을 
 # yaml-language-server: $schema=../../schema/manifest.schema.json
 openui: "0.1"                         # 필수, 고정값
 info: { title: …, version: …, description?: … }
-tokens: tokens/<name>.resolver.yaml   # DTCG Resolver 문서 경로(루트 기준)
+tokens: tokens/<name>.resolver.yaml   # 전역 토큰의 DTCG Resolver 문서 경로(루트 기준). 컴포넌트 토큰은 컴포넌트 문서에(4.7)
 components: ["components/*.yaml"]     # 컴포넌트 문서 glob 목록(1개 이상)
 checklists?: ["checklists/*.yaml"]    # 체크리스트 문서 glob 목록(8장)
 ```
@@ -189,17 +191,14 @@ modifiers:
 ### 3.6 조건부 모드: 언제 어떤 값인가
 
 **값이 상황에 따라 달라지면 그 차이는 토큰 정의에 둔다.** 컴포넌트는 토큰만 가리키고(4.5), 토큰이 "언제 어떤 값인지"를 가진다.
-- **어떤 값**: modifier의 context마다 토큰 파일에 값을 둔다(3.3, 3.4).
-- **언제**: modifier에 `$extensions["org.openui"].when`으로 context마다 조건을 적는다. DTCG Resolver가 허용하는 확장 위치다.
+- **언제**: resolver의 modifier가 모드를 정의하고, `$extensions["org.openui"].when`으로 context마다 조건을 적는다. DTCG Resolver가 허용하는 확장 위치다.
+- **어떤 값**: 전역 토큰은 context마다 토큰 파일에 값을 둔다(3.3, 3.4). 컴포넌트 토큰은 자기 정의 안의 `$when`에 모드별 값을 둔다(4.7).
 
 ```yaml
 modifiers:
   window:
     description: Window width class (breakpoints in dp)
-    contexts:
-      compact:  [{ $ref: window.compact.tokens.yaml }]     # layout.card-padding: 16px
-      medium:   [{ $ref: window.medium.tokens.yaml }]      # layout.card-padding: 24px
-      expanded: [{ $ref: window.expanded.tokens.yaml }]    # layout.card-padding: 24px
+    contexts: { compact: [], medium: [], expanded: [] }   # 전역 토큰 없음: 값은 컴포넌트 토큰의 $when에
     default: compact
     $extensions:
       org.openui:
@@ -227,9 +226,9 @@ modifiers:
 - 빈틈은 허용한다. 어느 조건에도 맞지 않으면 기본 context를 쓴다.
 - 여러 축에 걸친 값은 alias로 잇는다. 예: device modifier의 토큰이 window modifier의 토큰을 가리키면, 각 토큰은 자기 컬렉션의 모드로 풀린다.
 
-**모드를 고르는 순서**: 명시적 선택(앱이 지정하거나 컴포넌트의 mode prop) → 조건이 맞는 context → 기본 context.
+**모드를 고르는 순서**: 명시적 선택(앱이 지정) → 조건이 맞는 context → 기본 context.
 
-**`when`이 없는 modifier**는 명시적으로만 고른다. 예: 버튼 강조 스타일(`button-style`). 컴포넌트 인스턴스는 mode prop(4.2)으로 이런 modifier의 context를 고른다.
+**`when`이 없는 modifier**는 앱이 명시적으로만 고른다(예: 브랜드). 컴포넌트 인스턴스가 고르는 값(버튼 강조 스타일 등)은 modifier가 아니라 그 컴포넌트의 mode prop이다(4.2, 4.7).
 
 ## 4. 컴포넌트
 
@@ -240,6 +239,7 @@ modifiers:
 kind: Component
 metadata: { id: button, name: Button, description?: … }   # id: ^[a-z][a-z0-9-]*$
 data:
+  tokens?:   …   # 이 컴포넌트가 쓰는 토큰(4.7)
   props?:    …
   variants?: …
   states?:   …
@@ -263,17 +263,15 @@ data:
 | `boolean` | `default: boolean` | part의 `visible: {prop}` |
 | `instance` | `default?: componentId`, `preferred?: componentId[]` | instance part의 `prop` |
 | `slot` | `min?: int≥0`, `max?: int≥1`, `preferred?: componentId[]`, `preferredOnly?: boolean` | slot part의 `prop` |
-| `mode` | `modifier: <when 없는 modifier 이름>` | 컴포넌트 루트(part에 바인딩하지 않음) |
+| `mode` | `values: string[]`(2개 이상), `default` | 컴포넌트 루트(part에 바인딩하지 않음). 컴포넌트 토큰의 `$when`이 이 값으로 갈린다 |
 
 - 모든 prop에 `description?`을 둘 수 있다.
 - 모든 prop은 최소 한 part에 바인딩되어야 한다.
 - slot prop은 정확히 한 slot part에 바인딩된다.
 - componentId는 프로젝트에 실제로 있는 `metadata.id`여야 한다.
-- **mode prop**은 인스턴스가 modifier의 context를 고르는 API다. 예: `style: { type: mode, modifier: button-style }`
-  - 기본값은 그 modifier의 `default`다.
-  - 조건(`when`)이 있는 modifier는 고를 수 없다: `modifier "window" is selected by conditions (when); …`
-  - 고른 context는 그 인스턴스와 자손에만 적용된다.
-  - 그래서 mode prop이 고르는 modifier의 토큰은 다른 컬렉션의 토큰이 alias할 수 없다. alias하면, 인스턴스가 모드를 바꿔도 그 토큰은 바깥 모드 값에 머문다. 오류: `token "x" aliases "{button.container-color}" of modifier "button-style", …`
+- **mode prop**은 인스턴스가 고르는 값이다. 예: `style: { type: mode, values: [filled, outlined, text], default: filled }`
+  - 값만 다르고 UI 트리는 같은 선택지를 표현한다(4.3). 각 값에서의 토큰 값은 컴포넌트 토큰의 `$when: { style=outlined: … }`에 둔다(4.7).
+  - 이름은 전역 modifier나 variant 축과 겹칠 수 없다: `mode prop "window" has the name of modifier "window"`
 
 ### 4.3 variants와 states
 
@@ -291,8 +289,8 @@ states: [enabled, hovered, pressed, disabled]   # 생략하면 [enabled]
 | 무엇이 다른가 | 표현 | 예 |
 |---|---|---|
 | part가 생기거나 없어짐, 배치 방향 | variant | `withIcon`(아이콘 part), `type`(체크/대시 아이콘) |
-| 값만 다름, 인스턴스가 고름 | mode prop + 조건 없는 modifier | 버튼 `style`(filled/outlined…), 체크박스 `error` |
-| 값만 다름, 환경에 따라 | 조건부 modifier(3.6) | 창 너비별 패딩, 단말별 높이, 언어별 텍스트 |
+| 값만 다름, 인스턴스가 고름 | mode prop + 컴포넌트 토큰 `$when` | 버튼 `style`(filled/outlined…), 체크박스 `error` |
+| 값만 다름, 환경에 따라 | 조건부 modifier(3.6) + 컴포넌트 토큰 `$when` | 창 너비별 패딩, 단말별 높이 |
 | 런타임 상호작용 | state | hovered, pressed |
 
 - 구조가 바뀌는 variant 블록에서도 값은 토큰이다. 예: `withIcon=true`는 다른 패딩 **토큰**을 가리킨다.
@@ -344,9 +342,10 @@ styles:
 
 - variantExpr의 축과 값은 선언된 것이어야 하고, 한 식 안에 같은 축이 두 번 나올 수 없다.
 - property는 4.6의 어휘만 쓸 수 있고, 그 part 종류에 허용된 것이어야 한다.
-- **모든 값은 토큰이다.** 치수, 색, 숫자(불투명도)는 리터럴로 쓸 수 없고 토큰 alias만 쓴다. 그래야 "언제 어떤 값인지"가 토큰 정의 한 곳에 모인다(3.6). 리터럴로 남는 것은 구조 값(키워드, 열거값, boolean, grid 개수)뿐이다.
-  - 오류: `value must be a token like "{space.inset}" (literal values are not allowed: every value is a token)`
-  - `0`, `transparent`도 토큰이다. 예: `{space.none}`, `{md.sys.color.transparent}`
+- **모든 값은 그 컴포넌트의 토큰이다.** 치수, 색, 숫자(불투명도)는 리터럴로 쓸 수 없고, 이 컴포넌트의 `data.tokens`에 정의한 토큰(`"{<id>.<이름>}"`)만 가리킨다. 그래야 "이 컴포넌트가 언제 어떤 값을 쓰는지"가 그 문서의 토큰 정의 한 곳에 모인다(4.7). 리터럴로 남는 것은 구조 값(키워드, 열거값, boolean, grid 개수)뿐이다.
+  - 리터럴: `value must be a token like "{space.inset}" (literal values are not allowed: every value is a token)`
+  - 전역 토큰을 직접 가리킴: `token "{md.sys.color.primary}" is not one of this component's tokens: define it under data.tokens …`
+  - 텍스트는 예외로 텍스트 토큰(전역 또는 컴포넌트의 string 토큰)을 가리킨다(3.5).
 
 ### 4.6 속성 어휘
 
@@ -389,6 +388,48 @@ styles:
 - 표의 dim, color, 0..1은 모두 그 타입의 **토큰 alias** `"{…}"`다. 리터럴 값은 토큰 파일(DTCG 객체 형식)에만 쓴다.
 - `width`/`height`는 `hug`, `fill` 또는 dimension 토큰이다.
 - alias는 반드시 따옴표로 감싼다.
+
+### 4.7 컴포넌트 토큰
+
+**컴포넌트가 쓰는 토큰은 그 컴포넌트 문서의 `data.tokens`에 둔다.** 토큰 파일에는 여러 컴포넌트가 함께 쓰는 전역 토큰만 남는다.
+
+```yaml
+data:
+  props:
+    style: { type: mode, values: [filled, outlined, text], default: filled }
+  tokens:                                   # "{button.<경로>}"로 가리킨다
+    container-color:
+      $type: color
+      $value: "{md.sys.color.primary}"      # 기본값
+      $when:                                # 언제 어떤 값인가
+        style=outlined: "{md.sys.color.transparent}"
+        style=text: "{md.sys.color.transparent}"
+    height:
+      $type: dimension
+      $value: { value: 40, unit: px }
+      $when:
+        device=desktop: { value: 32, unit: px }
+        style=text,device=desktop: { value: 28, unit: px }
+  styles:
+    base:
+      enabled:
+        root: { fill: "{button.container-color}", height: "{button.height}" }
+```
+
+**형식**
+- DTCG 토큰 트리다(3.1, 3.2). group, `$type` 상속, alias 규칙이 토큰 파일과 같다.
+- 경로는 `<컴포넌트 id>.<경로>`다. 예: button 문서의 `container-color` → `{button.container-color}`.
+- 값은 전역 토큰이나 같은 컴포넌트의 토큰을 alias할 수 있다. 다른 컴포넌트의 토큰은 가리킬 수 없다.
+- 전역 토큰은 컴포넌트 id로 시작하는 경로를 쓸 수 없다: `token "box.extra" is in the namespace of component "box" …`
+
+**`$when`: 언제 어떤 값인가**
+- 키는 `모드=값` 또는 `모드=값,모드=값`이다. 모드는 이 컴포넌트의 mode prop(4.2)이나 전역 modifier(3.6)다.
+- 어떤 키도 맞지 않으면 `$value`를 쓴다.
+- 여러 키가 맞으면 **모드가 적은 키부터, 같으면 문서 순서로** 덮어쓴다. 마지막에 덮어쓴 값이 이긴다. 위 예에서 text 스타일 + desktop이면 28px이다.
+- 값은 그 토큰 타입의 값이나 alias다. 모르는 모드나 값, 타입이 다른 값은 오류다.
+- `$when`은 group에 둘 수 없다.
+
+**모드 값이 정해지는 곳**: mode prop은 인스턴스(없으면 `default`), 전역 modifier는 3.6의 순서(명시 → 조건 → 기본값)를 따른다.
 
 ## 5. 스타일 해석
 
@@ -463,11 +504,11 @@ items:
 - item id는 고유하고, `check`와 `manual`은 정확히 하나만 둔다.
 - `property`는 CSS shorthand(`background`, `border`, `border-radius`, `padding`, `margin`, `font`, `gap`, `inset`, `outline`, `flex`, `grid`, `place-items`, `overflow`, `transition`, `animation`)가 아니어야 한다. shorthand의 computed 값은 비교하기 어렵기 때문.
 - 컴포넌트당 체크리스트는 최대 1개다.
-- mode prop으로 고르는 값도 `mode`로 지정한다. 예: `mode: { button-style: outlined }`
+- mode prop 값도 `mode`로 지정한다. 예: `mode: { style: outlined }`
 
 **케이스 전개**
-- 생략한 축과 state는 모든 값을 검사한다.
-- 생략한 modifier는 **컴포넌트가 의존하는 것만** 모든 context를 검사하고, 나머지는 기본 context로 고정한다. 의존 = 컴포넌트가 가리키는 토큰이 alias 사슬을 따라 그 modifier에 닿거나, mode prop이 그 modifier를 고르는 경우. 예: 버튼이 window 토큰을 쓰지 않으면 window는 compact 하나로만 검사한다.
+- 생략한 축, state, mode prop은 모든 값을 검사한다.
+- 생략한 modifier는 **컴포넌트가 의존하는 것만** 모든 context를 검사하고, 나머지는 기본 context로 고정한다. 의존 = 컴포넌트 토큰이 alias 사슬을 따라 그 modifier의 토큰에 닿거나, `$when` 키에 그 modifier가 있는 경우. 예: 버튼이 window 토큰을 쓰지 않으면 window는 compact 하나로만 검사한다.
 
 **판정**
 - 각 케이스(variant × state × mode)를 렌더하고 part의 computed `property` 값을 읽는다.
@@ -486,7 +527,7 @@ items:
 |---|---|---|
 | 컬렉션 / 모드 | `VariableCollection.modes`, `defaultModeId` | `figma.variables.createVariableCollection`, `addMode` |
 | 조건(`when`) | 대응 없음. Figma는 모드를 자동으로 고르지 않는다. 조건별 화면은 프레임에 explicit mode를 지정해 만든다. 조건은 `$extensions`로 보존한다 | `setExplicitVariableModeForCollection` |
-| mode prop | 인스턴스의 `explicitVariableModes`(컬렉션 → 모드). component set의 variant 축이 되지 않는다 | `instance.setExplicitVariableModeForCollection` |
+| 컴포넌트 토큰, mode prop | 컴포넌트마다 variable collection 하나, 모드 = mode prop 값. 인스턴스는 `explicitVariableModes`로 모드를 고른다. mode prop은 component set의 variant 축이 되지 않는다. 전역 modifier에 걸린 `$when` 값은 그 modifier 컬렉션의 variable로 두고 alias한다 | `createVariableCollection`, `instance.setExplicitVariableModeForCollection` |
 | 토큰(color/dimension/number) | `Variable.resolvedType`(`COLOR` / `FLOAT`), `valuesByMode` | `createVariable`, `setValueForMode` |
 | 텍스트 토큰(`string`) | `Variable.resolvedType` `STRING`, `scopes: ["TEXT_CONTENT"]`. 변수 이름 = ID | `createVariable(…, "STRING")` |
 | locale modifier | variable collection 하나, 언어마다 mode 하나 | `addMode("ko")` |
@@ -532,7 +573,8 @@ items:
 - **RTL**: 오른쪽에서 왼쪽으로 쓰는 언어의 레이아웃 반전(`start`/`end`)은 정의하지 않았다.
 - **조건 조합**: 한 context에 조건 하나만 둔다(`width`이면서 `landscape` 같은 AND가 없음). 축마다 modifier를 나누고 alias로 잇는다.
 - **조건 어휘 확장**: `pointer`(coarse/fine), `contrast`, `reducedMotion`, 폴더블 자세 등은 아직 없다.
-- **mode prop 기본값**: 컴포넌트별로 modifier 기본값과 다른 기본 context를 둘 수 없다.
+- **variant별 토큰 값**: `$when` 키에 variant 축은 쓸 수 없다. 구조가 바뀌는 variant 블록에서 다른 토큰을 가리킨다(예: `withIcon=true` → `with-icon-leading-space`).
+- **텍스트 토큰의 위치**: 번역 파일 연동을 위해 컴포넌트 라벨도 locale 토큰 파일(`text.*`)에 둔다. 컴포넌트의 string 토큰 + `$when: { locale=ko: … }`도 문법상 가능하다.
 - **variant 조합 제외**: 존재하지 않는 조합(예: 특정 style에는 없는 size)을 표현할 방법이 없다.
 - **리플·포커스 링 오프셋·모션**: 어휘가 없다. 체크리스트의 수동 항목으로 확인한다.
 - **variant 식의 OR**: `type=selected|indeterminate` 같은 표현이 없어서 같은 블록을 반복해야 한다(Material 3 checkbox).
@@ -557,7 +599,12 @@ items:
     - `orientation` → `@media (orientation: landscape)`, `colorScheme` → `@media (prefers-color-scheme: dark)`
     - `language` → `.ou-root:not([data-locale]):lang(ko)`
     - `device`는 CSS로 알 수 없다. 앱이 `data-device`를 지정한다.
-  - **명시 규칙**: context마다 `.ou-root[data-<m>="<c>"], .ou-root [data-<m>="<c>"]`. 앱은 `.ou-root`에, mode prop은 컴포넌트 루트에 `data-<m>`을 둔다. 명시가 조건보다 우선한다.
+  - **명시 규칙**: context마다 `.ou-root[data-<m>="<c>"]`. 앱이 `.ou-root`에 `data-<m>`을 둔다. 명시가 조건보다 우선한다.
+- **컴포넌트 토큰**: 컴포넌트 루트(`[data-component="<id>"]`)에 선언한다. mode prop 값은 루트의 `data-mode-<prop>`이다.
+  - `$value` → `:where([data-component="button"]) { --button-height: 40px; }`
+  - mode prop 키 → `:where([data-component="button"][data-mode-style="text"]) {…}`
+  - 전역 modifier 키 → 명시 `:where(.ou-root[data-device="desktop"]) :where([data-component="button"])`, 조건이 있으면 `@media (…) { :where(.ou-root:not([data-window])) :where(…) }`도
+  - 모든 규칙을 `:where()`로 감싸 명시도를 0으로 맞추고, 토큰마다 `$when` 우선순위 순서로 출력한다. 그래서 CSS 소스 순서가 곧 우선순위다.
 
 | `$type` | CSS 값 |
 |---|---|

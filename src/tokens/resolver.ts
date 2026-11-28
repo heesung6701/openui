@@ -15,11 +15,15 @@ export type Condition =
   | { colorScheme: "light" | "dark" }
   | { language: string };
 export type Collection = {
-  name: string; kind: "set" | "modifier"; modes: string[]; defaultMode: string;
+  name: string; kind: "set" | "modifier" | "component"; modes: string[]; defaultMode: string;
   /** Present when the context is selected by the environment rather than explicitly. */
   when?: Record<string, Condition>;
 };
-export type TokenEntry = { collection: string; type: TokenType; byMode: Record<string, TokenDef> };
+export type TokenEntry = {
+  collection: string; type: TokenType; byMode: Record<string, TokenDef>;
+  /** Component tokens: values for mode expressions, in precedence order (fewest modes first, then document order). */
+  when?: { expr: Record<string, string>; value: unknown }[];
+};
 export type TokenSet = { collections: Collection[]; tokens: Map<string, TokenEntry> };
 
 const Ref = z.object({ $ref: z.string() }, { error: "only {$ref: <file>} sources are supported in openui 0.1" });
@@ -274,13 +278,22 @@ export async function loadTokens(io: ProjectIO, resolverPath: string): Promise<{
 
 /** Final (non-alias) value of `path`: each collection uses `modes[collection]`, else its default mode. */
 export function resolveToken(set: TokenSet, path: string, modes: Record<string, string>): unknown {
-  const defaults = new Map(set.collections.map((c) => [c.name, c.defaultMode]));
-  for (let hop = 0; hop < 32; hop++) { // ponytail: hop cap; loadTokens already reports alias cycles
+  const byName = new Map(set.collections.map((c) => [c.name, c]));
+  const modeOf = (axis: string) => modes[axis] ?? byName.get(axis)?.defaultMode;
+  for (let hop = 0; hop < 32; hop++) { // ponytail: hop cap; loaders already report alias cycles
     const e = set.tokens.get(path);
-    const def = e?.byMode[modes[e.collection] ?? defaults.get(e.collection)!];
-    if (!def) return undefined;
-    const next = aliasTarget(def.value);
-    if (!next) return def.value;
+    if (!e) return undefined;
+    let value: unknown;
+    if (byName.get(e.collection)?.kind === "component") {
+      value = e.byMode.default?.value; // last matching $when entry wins (they are in precedence order)
+      for (const w of e.when ?? []) if (Object.entries(w.expr).every(([axis, v]) => modeOf(axis) === v)) value = w.value;
+    } else {
+      const def = e.byMode[modeOf(e.collection)!];
+      if (!def) return undefined;
+      value = def.value;
+    }
+    const next = aliasTarget(value);
+    if (!next) return value;
     path = next;
   }
   return undefined;
@@ -299,6 +312,10 @@ export function collectionsReachedBy(set: TokenSet, aliases: Iterable<string>): 
     if (!e) continue;
     out.add(e.collection);
     for (const d of Object.values(e.byMode)) stack.push(...collectAliases(d.value));
+    for (const w of e.when ?? []) {
+      stack.push(...collectAliases(w.value));
+      for (const axis of Object.keys(w.expr)) if (set.collections.some((c) => c.kind === "modifier" && c.name === axis)) out.add(axis);
+    }
   }
   return out;
 }

@@ -29,12 +29,13 @@ export function buildComponent(project: Project, id: string, opts: RenderOptions
     return d && "default" in d ? d.default ?? null : null;
   };
 
-  // Mode props: the instance picks a modifier context; it applies to this component's subtree (data attribute on the root).
+  // Mode props: the instance's value (or the default) marks the root, where the component's tokens pick their $when values.
   const modes = { ...(opts.modes ?? {}) };
   const modeAttrs: Record<string, string> = {};
   for (const [name, def] of Object.entries(props)) {
+    if (def.type !== "mode") continue;
     const v = opts.props[name];
-    if (def.type === "mode" && typeof v === "string") modeAttrs[`data-${def.modifier}`] = modes[def.modifier] = v;
+    modeAttrs[`data-mode-${name}`] = modes[name] = typeof v === "string" && def.values.includes(v) ? v : def.default;
   }
   /** Text tokens resolve in the selected locale; a literal runtime prop value (app data) renders as is. */
   const text = (v: unknown): string => {

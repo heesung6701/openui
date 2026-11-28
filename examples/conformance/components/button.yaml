@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=../../../schema/component.schema.json
 kind: Component
-metadata: { id: button, name: Button, description: "Conformance: props (incl. a mode prop), structural variants, states, token-only values" }
+metadata: { id: button, name: Button, description: "Conformance: component tokens with $when (mode prop + device), structural variants, states" }
 data:
   props:
     label:    { type: text, default: "{text.button.label}" }
     showIcon: { type: boolean, default: false }
     icon:     { type: instance, default: icon, preferred: [icon] }
-    style:    { type: mode, modifier: button-style, description: "Emphasis. Only token values differ, so it is a mode, not a variant" }
+    style:    { type: mode, values: [filled, outlined], default: filled, description: "Emphasis. Only token values differ, so it is a mode, not a variant" }
   variants:
     layout:
       values: { inline: { description: Icon and label side by side }, stacked: { description: Icon above the label } }
@@ -15,32 +15,55 @@ data:
       values: { "false": {}, "true": { description: Shows a notification dot } }
       default: "false"
   states: [enabled, pressed, disabled]
+  # The tokens this component uses ("{button.<name>}"). $when: the value that applies in that mode.
+  tokens:
+    container-color: { $type: color, $value: "{color.primary}", $when: { style=outlined: { colorSpace: srgb, components: [0, 0, 0], alpha: 0 } } }
+    content-color:   { $type: color, $value: "{color.on-primary}", $when: { style=outlined: "{color.primary}" } }
+    outline-color:   { $type: color, $value: { colorSpace: srgb, components: [0, 0, 0], alpha: 0 }, $when: { style=outlined: "{color.outline}" } }
+    outline-width:   { $type: dimension, $value: "{space.none}", $when: { style=outlined: "{stroke.thin}" } }
+    shadow:          { $type: shadow, $value: "{elevation.1}", $when: { style=outlined: "{elevation.0}" } }
+    height:          { $type: dimension, $value: { value: 40, unit: px }, $when: { device=desktop: { value: 32, unit: px } } }
+    padding-inline:  { $type: dimension, $value: { value: 24, unit: px }, $when: { device=desktop: { value: 16, unit: px } } }
+    padding-block:   { $type: dimension, $value: "{space.none}" }
+    stacked-padding: { $type: dimension, $value: "{space.sm}" }
+    gap:             { $type: dimension, $value: "{space.gap}" }
+    corner-radius:   { $type: dimension, $value: "{radius.full}" }
+    label-typography: { $type: typography, $value: "{type.label}" }
+    pressed-opacity: { $type: number, $value: "{opacity.pressed}" }
+    disabled-container-color:   { $type: color, $value: "{color.disabled}" }
+    disabled-container-opacity: { $type: number, $value: "{opacity.disabled-container}" }
+    disabled-content-color:     { $type: color, $value: "{color.on-disabled}" }
+    disabled-content-opacity:   { $type: number, $value: "{opacity.disabled-content}" }
+    dot-color:  { $type: color, $value: "{color.primary}" }
+    dot-size:   { $type: dimension, $value: { value: 8, unit: px } }
+    dot-offset: { $type: dimension, $value: "{space.xs}" }
+    stacked-dot-offset: { $type: dimension, $value: "{space.sm}" }
   anatomy:
     root:
       kind: frame
-      layout: { direction: row, gap: "{space.gap}", padding: ["{space.none}", "{space.button-inline}"], align: { main: center, cross: center }, width: hug, height: "{size.button-height}" }
+      layout: { direction: row, gap: "{button.gap}", padding: ["{button.padding-block}", "{button.padding-inline}"], align: { main: center, cross: center }, width: hug, height: "{button.height}" }
       children:
         icon:  { kind: instance, prop: icon, visible: { prop: showIcon } }
         label: { kind: text, text: { prop: label } }
-        dot:   { kind: frame, layout: { position: absolute, x: "{space.xs}", y: "{space.xs}", width: "{size.dot}", height: "{size.dot}" } }
+        dot:   { kind: frame, layout: { position: absolute, x: "{button.dot-offset}", y: "{button.dot-offset}", width: "{button.dot-size}", height: "{button.dot-size}" } }
   styles:
     base:
       enabled:
-        root:  { fill: "{button.container-color}", strokeColor: "{button.outline-color}", strokeWidth: "{button.outline-width}", cornerRadius: "{radius.full}", shadow: "{button.shadow}" }
-        label: { color: "{button.content-color}", typography: "{type.label}" }
+        root:  { fill: "{button.container-color}", strokeColor: "{button.outline-color}", strokeWidth: "{button.outline-width}", cornerRadius: "{button.corner-radius}", shadow: "{button.shadow}" }
+        label: { color: "{button.content-color}", typography: "{button.label-typography}" }
         icon:  { fill: "{button.content-color}" }
-        dot:   { fill: "{color.primary}", cornerRadius: "{radius.full}" }
+        dot:   { fill: "{button.dot-color}", cornerRadius: "{button.corner-radius}" }
       pressed:
-        root: { opacity: "{opacity.pressed}" }
+        root: { opacity: "{button.pressed-opacity}" }
       disabled:
-        root:  { fill: "{color.disabled}", fillOpacity: "{opacity.disabled-container}" }
-        label: { color: "{color.on-disabled}", opacity: "{opacity.disabled-content}" }
+        root:  { fill: "{button.disabled-container-color}", fillOpacity: "{button.disabled-container-opacity}" }
+        label: { color: "{button.disabled-content-color}", opacity: "{button.disabled-content-opacity}" }
     badge=false:
       enabled:
         dot: { visible: false }
     layout=stacked:
       enabled:
-        root: { direction: column, height: hug, padding: "{space.sm}" }
+        root: { direction: column, height: hug, padding: "{button.stacked-padding}" }
     layout=stacked,badge=true:
       enabled:
-        dot: { x: "{space.sm}" }
+        dot: { x: "{button.stacked-dot-offset}" }

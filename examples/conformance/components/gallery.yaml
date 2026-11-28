@@ -1,23 +1,40 @@
 # yaml-language-server: $schema=../../../schema/component.schema.json
 kind: Component
-metadata: { id: gallery, name: Gallery, description: "Conformance: grid, wrap, absolute badge, image, gradient fill, x-figma" }
+metadata: { id: gallery, name: Gallery, description: "Conformance: grid, wrap, absolute badge, image, gradient fill, x-figma, orientation- and window-dependent tokens" }
 data:
   props:
     caption: { type: text, default: "{text.gallery.caption}" }
+  tokens:
+    gap:        { $type: dimension, $value: { value: 12, unit: px }, $when: { orientation=landscape: { value: 16, unit: px } } }
+    grid-gap:   { $type: dimension, $value: { value: 8, unit: px }, $when: { orientation=landscape: { value: 12, unit: px } } }
+    padding:    { $type: dimension, $value: "{space.inset}" }
+    tags-gap:   { $type: dimension, $value: "{space.xs}" }
+    tags-width: { $type: dimension, $value: { value: 200, unit: px }, $when: { window=medium: { value: 280, unit: px }, window=expanded: { value: 360, unit: px } } }
+    container-color: { $type: color, $value: "{color.surface}" }
+    corner-radius:   { $type: dimension, $value: "{radius.medium}" }
+    corner-none:     { $type: dimension, $value: "{radius.none}" }
+    scrim:           { $type: gradient, $value: "{gradient.scrim}" }
+    thumb-size:      { $type: dimension, $value: { value: 96, unit: px } }
+    thumb-radius:    { $type: dimension, $value: "{radius.small}" }
+    badge-offset:    { $type: dimension, $value: "{space.xs}" }
+    badge-color:     { $type: color, $value: "{color.on-primary}" }
+    badge-typography: { $type: typography, $value: "{type.label}" }
+    caption-color:   { $type: color, $value: "{color.on-surface}" }
+    caption-typography: { $type: typography, $value: "{type.body}" }
   anatomy:
     root:
       kind: frame
-      layout: { direction: column, gap: "{layout.gallery-gap}", padding: "{space.inset}", width: hug, height: hug }
+      layout: { direction: column, gap: "{gallery.gap}", padding: "{gallery.padding}", width: hug, height: hug }
       children:
         grid:
           kind: frame
-          layout: { direction: grid, grid: { columns: 2, rows: 2 }, gap: "{layout.grid-gap}", crossGap: "{layout.grid-gap}" }
+          layout: { direction: grid, grid: { columns: 2, rows: 2 }, gap: "{gallery.grid-gap}", crossGap: "{gallery.grid-gap}" }
           children:
             photo: { kind: image, src: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='96' height='96' fill='%23d0bcff'/></svg>" }
             badge: { kind: text, text: "{text.gallery.badge}" }
         tags:
           kind: frame
-          layout: { direction: row, wrap: true, gap: "{space.xs}", crossGap: "{space.xs}", width: "{layout.tags-width}" }
+          layout: { direction: row, wrap: true, gap: "{gallery.tags-gap}", crossGap: "{gallery.tags-gap}", width: "{gallery.tags-width}" }
           children:
             tagA: { kind: text, text: "{text.gallery.tag-a}" }
             tagB: { kind: text, text: "{text.gallery.tag-b}" }
@@ -26,11 +43,11 @@ data:
   styles:
     base:
       enabled:
-        root:    { fill: "{color.surface}", cornerRadius: ["{radius.medium}", "{radius.medium}", "{radius.none}", "{radius.none}"] }
-        grid:    { fill: "{gradient.scrim}" }
-        photo:   { width: "{size.thumb}", height: "{size.thumb}", cornerRadius: "{radius.small}" }
-        badge:   { position: absolute, x: "{space.xs}", y: "{space.xs}", color: "{color.on-primary}", typography: "{type.label}" }
-        caption: { color: "{color.on-surface}", typography: "{type.body}", textAlign: center }
+        root:    { fill: "{gallery.container-color}", cornerRadius: ["{gallery.corner-radius}", "{gallery.corner-radius}", "{gallery.corner-none}", "{gallery.corner-none}"] }
+        grid:    { fill: "{gallery.scrim}" }
+        photo:   { width: "{gallery.thumb-size}", height: "{gallery.thumb-size}", cornerRadius: "{gallery.thumb-radius}" }
+        badge:   { position: absolute, x: "{gallery.badge-offset}", y: "{gallery.badge-offset}", color: "{gallery.badge-color}", typography: "{gallery.badge-typography}" }
+        caption: { color: "{gallery.caption-color}", typography: "{gallery.caption-typography}", textAlign: center }
   x-figma:
     parts:
       root: { blendMode: PASS_THROUGH, clipsContent: true }

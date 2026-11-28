@@ -21,17 +21,17 @@ test("expandCheck: omitted axes/states = all; omitted modifiers = all contexts o
   const { project } = await loadProject(fsIO("examples/conformance"));
   const doc = project!.components.get("button")!.doc;
   const cases = expandCheck({ variant: { layout: "inline" }, part: "root", property: "height", expect: "40px" }, doc, project!.tokens);
-  // badge × states × theme × locale × device × button-style; the button uses no window or orientation token
+  // badge × states × theme × locale × device × style (mode prop); the button's tokens use no window or orientation
   expect(cases.length).toBe(2 * 3 * 2 * 2 * 3 * 2);
   expect(cases[0]).toEqual({ variant: { layout: "inline", badge: "false" }, state: "enabled",
-    mode: { theme: "light", locale: "en", window: "compact", orientation: "portrait", device: "phone", "button-style": "filled" } });
+    mode: { theme: "light", locale: "en", window: "compact", orientation: "portrait", device: "phone", style: "filled" } });
   expect(cases.every((c) => c.mode.window === "compact" && c.mode.orientation === "portrait")).toBe(true);
 });
 test("expandCheck: explicit lists narrow (also for modifiers the component does not use)", async () => {
   const { project } = await loadProject(fsIO("examples/conformance"));
   const doc = project!.components.get("button")!.doc;
   const cases = expandCheck({ variant: { layout: ["stacked"] }, state: ["pressed", "disabled"], mode: { theme: "dark", device: ["desktop"], window: "expanded" }, part: "root", property: "height", expect: "40px" }, doc, project!.tokens);
-  expect(cases.length).toBe(2 /*badge*/ * 2 /*states*/ * 2 /*locale*/ * 2 /*button-style*/);
+  expect(cases.length).toBe(2 /*badge*/ * 2 /*states*/ * 2 /*locale*/ * 2 /*style*/);
   expect(cases.every((c) => c.variant.layout === "stacked" && c.mode.theme === "dark" && c.mode.device === "desktop" && c.mode.window === "expanded")).toBe(true);
 });
 test("expectToCss + sameCss", () => {
@@ -80,7 +80,7 @@ test("text check: expected text is the token resolved in each case's locale", as
   expect(diagnostics).toEqual([]);
   const doc = project!.components.get("button")!.doc;
   const cl = { kind: "Checklist" as const, metadata: { id: "t", component: "button" }, items: [
-    { id: "label", title: "label", check: { variant: { layout: "inline", badge: "false" }, state: "enabled", mode: { theme: "light", device: "phone", "button-style": "filled" }, part: "label", property: "text", expect: "{text.button.label}" } },
+    { id: "label", title: "label", check: { variant: { layout: "inline", badge: "false" }, state: "enabled", mode: { theme: "light", device: "phone", style: "filled" }, part: "label", property: "text", expect: "{text.button.label}" } },
   ] };
   const seen: string[] = [];
   const r = await runChecklist(cl, doc, project!.tokens, async (c) => (seen.push(`${c.mode.locale}:${c.expectCss}`), { actual: c.expectCss, expected: c.expectCss }));

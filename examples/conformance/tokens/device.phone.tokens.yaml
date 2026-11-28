@@ -1,5 +1,0 @@
-# Values of one modifier context. Which context applies when: see conformance.resolver.yaml (org.openui.when).
-size:
-  button-height: { $type: dimension, $value: { value: 40, unit: px } }
-space:
-  button-inline: { $type: dimension, $value: { value: 24, unit: px } }

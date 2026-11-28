@@ -82,9 +82,10 @@ export function conditionCss(c: Condition): { media?: string; lang?: string } | 
 }
 
 /**
- * `.ou-root` carries set tokens + each modifier's default context. Per modifier context: a conditional rule (media query /
- * `:lang`, only while no context is chosen explicitly) and an explicit rule on `.ou-root` or any element inside it
- * (mode props re-scope a component). Typography expands to `--x__font-size` etc.; text tokens are not CSS.
+ * Global tokens: `.ou-root` carries set tokens + each modifier's default context; per modifier context a conditional
+ * rule (media query / `:lang`, only while that modifier is not chosen explicitly) and an explicit `[data-<m>]` rule.
+ * Component tokens (§4.7): declared on the component root, then one rule per `$when` entry in precedence order;
+ * `:where()` keeps every component rule at zero specificity so source order decides. Text tokens are not CSS.
  */
 export function tokenSheet(set: TokenSet): string {
   const decls = (path: string, type: TokenType, value: unknown): string[] => {
@@ -94,12 +95,13 @@ export function tokenSheet(set: TokenSet): string {
       : Object.entries(css).map(([k, v]) => `${cssSubVar(path, k)}: ${v};`);
   };
   const rule = (selector: string, lines: string[], pad = "") => `${pad}${selector} {\n${lines.map((l) => `${pad}  ${l}`).join("\n")}\n${pad}}\n`;
+  const media = (m: string | undefined, body: string) => (m ? `@media ${m} {\n${body.replace(/^/gm, "  ")}}\n` : body);
   const kinds = new Map(set.collections.map((c) => [c.name, c]));
   const base: string[] = [];
   const contexts = new Map<string, { collection: string; mode: string; lines: string[] }>();
   for (const [path, e] of set.tokens) {
-    if (e.type === "string") continue; // text tokens become text content, not CSS
     const c = kinds.get(e.collection)!;
+    if (e.type === "string" || c.kind === "component") continue; // text → text content; component tokens below
     for (const [mode, def] of Object.entries(e.byMode)) {
       const lines = decls(path, e.type, def.value);
       if (mode === c.defaultMode) base.push(...lines);
@@ -115,9 +117,36 @@ export function tokenSheet(set: TokenSet): string {
   for (const { collection, mode, lines } of contexts.values()) {
     const cond = kinds.get(collection)!.when?.[mode];
     const css = cond ? conditionCss(cond) : null;
-    if (css?.media) conditional += `@media ${css.media} {\n${rule(`.ou-root:not([data-${collection}])`, lines, "  ")}}\n`;
+    if (css?.media) conditional += media(css.media, rule(`.ou-root:not([data-${collection}])`, lines));
     if (css?.lang) conditional += rule(`.ou-root:not([data-${collection}]):lang(${css.lang})`, lines);
-    explicit += rule(`.ou-root[data-${collection}="${mode}"], .ou-root [data-${collection}="${mode}"]`, lines);
+    explicit += rule(`.ou-root[data-${collection}="${mode}"]`, lines);
   }
-  return rule(".ou-root", base) + conditional + explicit;
+
+  // component tokens
+  let component = "";
+  for (const c of set.collections.filter((c) => c.kind === "component")) {
+    const own = [...set.tokens].filter(([, e]) => e.collection === c.name && e.type !== "string");
+    if (!own.length) continue;
+    const root = `[data-component="${c.name}"]`;
+    component += rule(`:where(${root})`, own.flatMap(([path, e]) => decls(path, e.type, e.byMode.default!.value)));
+    for (const [path, e] of own)
+      for (const w of e.when ?? []) {
+        const modeAttrs = Object.entries(w.expr).filter(([a]) => kinds.get(a)?.kind !== "modifier").map(([a, v]) => `[data-mode-${a}="${v}"]`).join("");
+        // each global modifier in the expression: chosen explicitly on .ou-root, or (when it has one) by its condition
+        let alts: { compound: string; media: string[] }[] = [{ compound: "", media: [] }];
+        for (const [m, v] of Object.entries(w.expr).filter(([a]) => kinds.get(a)?.kind === "modifier")) {
+          const cond = kinds.get(m)!.when?.[v];
+          const css = cond ? conditionCss(cond) : null;
+          const options = [{ compound: `[data-${m}="${v}"]`, media: [] as string[] }];
+          if (css?.media) options.push({ compound: `:not([data-${m}])`, media: [css.media] });
+          if (css?.lang) options.push({ compound: `:not([data-${m}]):lang(${css.lang})`, media: [] });
+          alts = alts.flatMap((a) => options.map((o) => ({ compound: a.compound + o.compound, media: [...a.media, ...o.media] })));
+        }
+        for (const a of alts) {
+          const sel = a.compound ? `:where(.ou-root${a.compound}) :where(${root}${modeAttrs})` : `:where(${root}${modeAttrs})`;
+          component += media(a.media.join(" and ") || undefined, rule(sel, decls(path, e.type, w.value)));
+        }
+      }
+  }
+  return rule(".ou-root", base) + conditional + explicit + component;
 }

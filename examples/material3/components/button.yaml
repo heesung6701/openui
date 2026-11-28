@@ -1,32 +1,150 @@
 # yaml-language-server: $schema=../../../schema/component.schema.json
 # M3 common buttons (filled / outlined / text / elevated / filled tonal), material-web v0.192 tokens.
-# The five styles share one UI tree, so `style` is a mode prop: every per-style value is a `button.*` token whose
-# value per style lives in tokens/button-style.*.tokens.yaml. Only withIcon (adds the icon part) is a variant.
+# The five styles share one UI tree, so `style` is a mode prop: per-style values are this component's tokens
+# (data.tokens, `$when: style=…`). Only withIcon (adds the icon part) is a variant.
 kind: Component
 metadata:
   id: button
   name: Button
-  description: M3 common button. Spacing values not in material-web v0.192 tokens are in tokens/extra.tokens.yaml and button-style.*.
+  description: M3 common button. Spacing values missing from material-web v0.192 tokens come from the M3 spec.
 data:
   props:
     label: { type: text, default: "{text.button.label}" }
-    style: { type: mode, modifier: button-style, description: "filled | outlined | text | elevated | tonal. Only token values differ, so it is a mode, not a variant" }
+    style: { type: mode, values: [filled, outlined, text, elevated, tonal], default: filled, description: "filled | outlined | text | elevated | tonal. Only token values differ, so it is a mode, not a variant" }
     icon:  { type: instance, default: icon-add, preferred: [icon-add, icon-star], description: Leading icon (withIcon=true) }
   variants:
     withIcon:
       values: { "false": {}, "true": { description: "Leading icon shown; leading padding shrinks" } }
       default: "false"
   states: [enabled, hovered, focused, pressed, disabled]
+  # The tokens this component uses ("{button.<name>}"), values from material-web v0.192 component tokens. $when = the value for that style.
+  tokens:
+    icon-label-space: { $type: dimension, $value: { value: 8, unit: px } }
+    block-space: { $type: dimension, $value: "{md.sys.space.zero}" }
+    trailing-space:
+      $type: dimension
+      $value: { value: 24, unit: px }
+      $when:
+        style=text: { value: 12, unit: px }
+    leading-space:
+      $type: dimension
+      $value: { value: 24, unit: px }
+      $when:
+        style=text: { value: 12, unit: px }
+    container-height: { $type: dimension, $value: { value: 40, unit: px } }
+    container-color:
+      $type: color
+      $value: "{md.sys.color.primary}"
+      $when:
+        style=outlined: "{md.sys.color.transparent}"
+        style=text: "{md.sys.color.transparent}"
+        style=elevated: "{md.sys.color.surface-container-low}"
+        style=tonal: "{md.sys.color.secondary-container}"
+    container-shape: { $type: dimension, $value: "{md.sys.shape.corner-full}" }
+    shadow:
+      $type: shadow
+      $value: "{md.sys.elevation-shadow.level0}"
+      $when:
+        style=elevated: "{md.sys.elevation-shadow.level1}"
+    outline-color:
+      $type: color
+      $value: "{md.sys.color.transparent}"
+      $when:
+        style=outlined: "{md.sys.color.outline}"
+    outline-width:
+      $type: dimension
+      $value: "{md.sys.space.zero}"
+      $when:
+        style=outlined: { value: 1, unit: px }
+    state-layer-color:
+      $type: color
+      $value: "{md.sys.color.on-primary}"
+      $when:
+        style=outlined: "{md.sys.color.primary}"
+        style=text: "{md.sys.color.primary}"
+        style=elevated: "{md.sys.color.primary}"
+        style=tonal: "{md.sys.color.on-secondary-container}"
+    enabled-state-layer-opacity: { $type: number, $value: "{md.sys.opacity.zero}" }
+    icon-color:
+      $type: color
+      $value: "{md.sys.color.on-primary}"
+      $when:
+        style=outlined: "{md.sys.color.primary}"
+        style=text: "{md.sys.color.primary}"
+        style=elevated: "{md.sys.color.primary}"
+        style=tonal: "{md.sys.color.on-secondary-container}"
+    with-icon-icon-size: { $type: dimension, $value: { value: 18, unit: px } }
+    label-color:
+      $type: color
+      $value: "{md.sys.color.on-primary}"
+      $when:
+        style=outlined: "{md.sys.color.primary}"
+        style=text: "{md.sys.color.primary}"
+        style=elevated: "{md.sys.color.primary}"
+        style=tonal: "{md.sys.color.on-secondary-container}"
+    label-text-typography: { $type: typography, $value: "{md.sys.typescale.label-large}" }
+    hover-shadow:
+      $type: shadow
+      $value: "{md.sys.elevation-shadow.level1}"
+      $when:
+        style=outlined: "{md.sys.elevation-shadow.level0}"
+        style=text: "{md.sys.elevation-shadow.level0}"
+        style=elevated: "{md.sys.elevation-shadow.level2}"
+    hover-state-layer-opacity: { $type: number, $value: "{md.sys.state.hover-state-layer-opacity}" }
+    focus-outline-color:
+      $type: color
+      $value: "{md.sys.color.transparent}"
+      $when:
+        style=outlined: "{md.sys.color.primary}"
+    focus-state-layer-opacity: { $type: number, $value: "{md.sys.state.focus-state-layer-opacity}" }
+    pressed-state-layer-opacity: { $type: number, $value: "{md.sys.state.pressed-state-layer-opacity}" }
+    disabled-container-color:
+      $type: color
+      $value: "{md.sys.color.on-surface}"
+      $when:
+        style=outlined: "{md.sys.color.transparent}"
+        style=text: "{md.sys.color.transparent}"
+    disabled-container-opacity:
+      $type: number
+      $value: 0.12
+      $when:
+        style=outlined: "{md.sys.opacity.zero}"
+        style=text: "{md.sys.opacity.zero}"
+    disabled-shadow: { $type: shadow, $value: "{md.sys.elevation-shadow.level0}" }
+    disabled-outline-color:
+      $type: color
+      $value: "{md.sys.color.transparent}"
+      $when:
+        style=outlined: "{md.sys.color.on-surface}"
+    disabled-outline-opacity:
+      $type: number
+      $value: "{md.sys.opacity.zero}"
+      $when:
+        style=outlined: 0.12
+    disabled-label-text-color: { $type: color, $value: "{md.sys.color.on-surface}" }
+    disabled-label-text-opacity: { $type: number, $value: 0.38 }
+    with-icon-disabled-icon-color: { $type: color, $value: "{md.sys.color.on-surface}" }
+    with-icon-disabled-icon-opacity: { $type: number, $value: 0.38 }
+    with-icon-trailing-space:
+      $type: dimension
+      $value: { value: 24, unit: px }
+      $when:
+        style=text: { value: 16, unit: px }
+    with-icon-leading-space:
+      $type: dimension
+      $value: { value: 16, unit: px }
+      $when:
+        style=text: { value: 12, unit: px }
   anatomy:
     root:
       kind: frame
       layout:
         direction: row
-        gap: "{md.comp.button.icon-label-space}"
-        padding: ["{md.sys.space.zero}", "{button.trailing-space}", "{md.sys.space.zero}", "{button.leading-space}"]
+        gap: "{button.icon-label-space}"
+        padding: ["{button.block-space}", "{button.trailing-space}", "{button.block-space}", "{button.leading-space}"]
         align: { main: center, cross: center }
         width: hug
-        height: "{md.comp.filled-button.container-height}"
+        height: "{button.container-height}"
       children:
         stateLayer: { kind: frame, layout: { position: absolute, width: fill, height: fill } }
         icon:       { kind: instance, prop: icon }
@@ -34,22 +152,22 @@ data:
   styles:
     base:
       enabled:
-        root:       { fill: "{button.container-color}", cornerRadius: "{md.comp.filled-button.container-shape}", shadow: "{button.shadow}", strokeColor: "{button.outline-color}", strokeWidth: "{button.outline-width}" }
-        stateLayer: { fill: "{button.state-layer-color}", cornerRadius: "{md.comp.filled-button.container-shape}", opacity: "{md.sys.opacity.zero}" }
-        icon:       { fill: "{button.icon-color}", width: "{md.comp.filled-button.with-icon-icon-size}", height: "{md.comp.filled-button.with-icon-icon-size}" }
-        label:      { color: "{button.label-color}", typography: "{md.sys.typescale.label-large}" }
+        root:       { fill: "{button.container-color}", cornerRadius: "{button.container-shape}", shadow: "{button.shadow}", strokeColor: "{button.outline-color}", strokeWidth: "{button.outline-width}" }
+        stateLayer: { fill: "{button.state-layer-color}", cornerRadius: "{button.container-shape}", opacity: "{button.enabled-state-layer-opacity}" }
+        icon:       { fill: "{button.icon-color}", width: "{button.with-icon-icon-size}", height: "{button.with-icon-icon-size}" }
+        label:      { color: "{button.label-color}", typography: "{button.label-text-typography}" }
       hovered:
         root:       { shadow: "{button.hover-shadow}" }
-        stateLayer: { opacity: "{md.comp.filled-button.hover-state-layer-opacity}" }
+        stateLayer: { opacity: "{button.hover-state-layer-opacity}" }
       focused:
         root:       { strokeColor: "{button.focus-outline-color}" }
-        stateLayer: { opacity: "{md.comp.filled-button.focus-state-layer-opacity}" }
+        stateLayer: { opacity: "{button.focus-state-layer-opacity}" }
       pressed:
-        stateLayer: { opacity: "{md.comp.filled-button.pressed-state-layer-opacity}" }
+        stateLayer: { opacity: "{button.pressed-state-layer-opacity}" }
       disabled:
         root:  { fill: "{button.disabled-container-color}", fillOpacity: "{button.disabled-container-opacity}", shadow: "{button.disabled-shadow}", strokeColor: "{button.disabled-outline-color}", strokeOpacity: "{button.disabled-outline-opacity}" }
-        label: { color: "{md.comp.filled-button.disabled-label-text-color}", opacity: "{md.comp.filled-button.disabled-label-text-opacity}" }
-        icon:  { fill: "{md.comp.filled-button.with-icon-disabled-icon-color}", fillOpacity: "{md.comp.filled-button.with-icon-disabled-icon-opacity}" }
+        label: { color: "{button.disabled-label-text-color}", opacity: "{button.disabled-label-text-opacity}" }
+        icon:  { fill: "{button.with-icon-disabled-icon-color}", fillOpacity: "{button.with-icon-disabled-icon-opacity}" }
 
     # withIcon changes the UI tree (the icon part), so it is a variant; its padding values are tokens too
     withIcon=false:
@@ -57,4 +175,4 @@ data:
         icon: { visible: false }
     withIcon=true:
       enabled:
-        root: { padding: ["{md.sys.space.zero}", "{button.with-icon-trailing-space}", "{md.sys.space.zero}", "{button.with-icon-leading-space}"] }
+        root: { padding: ["{button.block-space}", "{button.with-icon-trailing-space}", "{button.block-space}", "{button.with-icon-leading-space}"] }

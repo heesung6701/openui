@@ -3,13 +3,17 @@
 kind: Component
 metadata: { id: icon-add, name: "Icon / add" }
 data:
+  # The tokens this component uses ("{icon-add.<name>}"), values from material-web v0.192 component tokens.
+  tokens:
+    size: { $type: dimension, $value: { value: 24, unit: px } }
+    color: { $type: color, $value: "{md.sys.color.on-surface}" }
   anatomy:
     root:
       kind: frame
-      layout: { direction: none, width: "{md.comp.icon.size}", height: "{md.comp.icon.size}" }
+      layout: { direction: none, width: "{icon-add.size}", height: "{icon-add.size}" }
       children:
         glyph: { kind: vector, svg: { viewBox: "0 0 24 24", d: "M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" } }
   styles:
     base:
       enabled:
-        glyph: { width: fill, height: fill, fill: "{md.sys.color.on-surface}" }
+        glyph: { width: fill, height: fill, fill: "{icon-add.color}" }

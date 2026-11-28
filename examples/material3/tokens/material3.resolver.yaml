@@ -1,12 +1,11 @@
 version: "2025.10"
 name: Material 3 (material-web v0.192)
 description: >
-  Contexts with a condition (org.openui.when) are picked by the environment. Contexts without one are picked
-  explicitly: the *-style and checkbox-error modifiers by each component instance's mode prop.
+  Foundations only (ref, sys, theme colors, text). Component tokens live in each component's data.tokens;
+  per-instance choices (button style, checkbox error) are mode props there.
 sets:
   ref:   { sources: [{ $ref: ref.tokens.yaml }] }
   sys:   { sources: [{ $ref: sys.tokens.yaml }, { $ref: elevation.tokens.yaml }] }
-  comp:  { sources: [{ $ref: comp.tokens.yaml }] }
   extra: { sources: [{ $ref: extra.tokens.yaml }] }
 modifiers:
   theme:
@@ -25,44 +24,9 @@ modifiers:
     default: en
     $extensions:
       org.openui: { when: { en: { language: en }, ko: { language: ko } } }
-  button-style:
-    description: Button emphasis (mode prop `style` of button)
-    contexts:
-      filled:   [{ $ref: button-style.filled.tokens.yaml }]
-      outlined: [{ $ref: button-style.outlined.tokens.yaml }]
-      text:     [{ $ref: button-style.text.tokens.yaml }]
-      elevated: [{ $ref: button-style.elevated.tokens.yaml }]
-      tonal:    [{ $ref: button-style.tonal.tokens.yaml }]
-    default: filled
-  icon-button-style:
-    description: Icon button emphasis (mode prop `style` of icon-button)
-    contexts:
-      standard: [{ $ref: icon-button-style.standard.tokens.yaml }]
-      filled:   [{ $ref: icon-button-style.filled.tokens.yaml }]
-      tonal:    [{ $ref: icon-button-style.tonal.tokens.yaml }]
-      outlined: [{ $ref: icon-button-style.outlined.tokens.yaml }]
-    default: standard
-  card-style:
-    description: Card separation style (mode prop `style` of card)
-    contexts:
-      elevated: [{ $ref: card-style.elevated.tokens.yaml }]
-      filled:   [{ $ref: card-style.filled.tokens.yaml }]
-      outlined: [{ $ref: card-style.outlined.tokens.yaml }]
-    default: elevated
-  checkbox-error:
-    description: Checkbox error colors (mode prop `error` of checkbox)
-    contexts:
-      "false": [{ $ref: checkbox-error.false.tokens.yaml }]
-      "true":  [{ $ref: checkbox-error.true.tokens.yaml }]
-    default: "false"
 resolutionOrder:
   - { $ref: "#/sets/ref" }
   - { $ref: "#/sets/sys" }
   - { $ref: "#/modifiers/theme" }
-  - { $ref: "#/sets/comp" }
   - { $ref: "#/sets/extra" }
   - { $ref: "#/modifiers/locale" }
-  - { $ref: "#/modifiers/button-style" }
-  - { $ref: "#/modifiers/icon-button-style" }
-  - { $ref: "#/modifiers/card-style" }
-  - { $ref: "#/modifiers/checkbox-error" }

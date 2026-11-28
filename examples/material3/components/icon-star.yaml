@@ -3,13 +3,17 @@
 kind: Component
 metadata: { id: icon-star, name: "Icon / star" }
 data:
+  # The tokens this component uses ("{icon-star.<name>}"), values from material-web v0.192 component tokens.
+  tokens:
+    size: { $type: dimension, $value: { value: 24, unit: px } }
+    color: { $type: color, $value: "{md.sys.color.on-surface}" }
   anatomy:
     root:
       kind: frame
-      layout: { direction: none, width: "{md.comp.icon.size}", height: "{md.comp.icon.size}" }
+      layout: { direction: none, width: "{icon-star.size}", height: "{icon-star.size}" }
       children:
         glyph: { kind: vector, svg: { viewBox: "0 0 24 24", d: "M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" } }
   styles:
     base:
       enabled:
-        glyph: { width: fill, height: fill, fill: "{md.sys.color.on-surface}" }
+        glyph: { width: fill, height: fill, fill: "{icon-star.color}" }

@@ -67,7 +67,7 @@
       </figure>
 
       <h2 id="tokens">토큰</h2>
-      <p>토큰 파일은 W3C DTCG 2025.10 형식을 YAML로 그대로 쓴다. 외부 디자인 토큰 도구와 바로 호환하기 위해서다.</p>
+      <p>토큰 파일은 W3C DTCG 2025.10 형식을 YAML로 그대로 쓴다. 외부 디자인 토큰 도구와 바로 호환하기 위해서다. <strong>토큰 파일에는 여러 컴포넌트가 함께 쓰는 전역 토큰</strong>(팔레트, 시스템 색, 타입 스케일, 텍스트)만 둔다. 한 컴포넌트가 쓰는 토큰은 그 컴포넌트 문서 안에 둔다(<a href="#component">컴포넌트 토큰</a>).</p>
       <pre><code>md:
   sys:
     color:
@@ -88,8 +88,7 @@
           <tr><td>set <code>ref</code>, <code>sys</code>, <code>comp</code></td><td>같은 이름</td><td><code>default</code></td><td>팔레트, 모서리, comp 토큰</td></tr>
           <tr><td>modifier <code>theme</code></td><td><code>theme</code></td><td><code>light</code>, <code>dark</code></td><td>sys 색상</td></tr>
           <tr><td>modifier <code>locale</code></td><td><code>locale</code></td><td><code>en</code>, <code>ko</code></td><td>텍스트 토큰</td></tr>
-          <tr><td>modifier <code>window</code>, <code>orientation</code>, <code>device</code></td><td>같은 이름</td><td><code>compact</code>…, <code>portrait</code>…, <code>phone</code>…</td><td>창 크기·방향·단말별 치수</td></tr>
-          <tr><td>modifier <code>button-style</code></td><td><code>button-style</code></td><td><code>filled</code>, <code>outlined</code>, …</td><td>인스턴스가 고르는 버튼 색·그림자·패딩</td></tr>
+          <tr><td>modifier <code>window</code>, <code>orientation</code>, <code>device</code></td><td>같은 이름</td><td><code>compact</code>…, <code>portrait</code>…, <code>phone</code>…</td><td>조건만 정의. 값은 컴포넌트 토큰의 <code>$when</code></td></tr>
         </tbody>
       </table></div>
       <p>토큰 하나는 정확히 한 set, 또는 한 modifier의 모든 context에 있어야 한다. 이 규칙 덕분에 Figma variable 컬렉션/모드와 웹의 CSS 변수 + <code>data-theme</code> 속성으로 그대로 옮겨진다.</p>
@@ -120,22 +119,30 @@ anatomy:
       <h2 id="conditions">조건부 토큰</h2>
       <p><strong>값이 상황에 따라 달라지면 그 차이는 토큰 정의에 둔다.</strong> 컴포넌트에는 리터럴 값이 없고 토큰만 있다. 토큰이 "언제 어떤 값인지"를 가진다.</p>
       <ul>
-        <li><strong>어떤 값</strong>: modifier의 context마다 토큰 파일에 값을 둔다.</li>
-        <li><strong>언제</strong>: modifier에 context별 조건을 적는다(<code>$extensions["org.openui"].when</code>). DTCG Resolver가 허용하는 확장 위치라 다른 도구와도 호환된다.</li>
+        <li><strong>언제</strong>: resolver의 modifier가 모드를 정의하고, context별 조건을 적는다(<code>$extensions["org.openui"].when</code>). DTCG Resolver가 허용하는 확장 위치라 다른 도구와도 호환된다.</li>
+        <li><strong>어떤 값</strong>: 컴포넌트 토큰이 자기 정의 안의 <code>$when</code>에 모드별 값을 둔다. 전역 토큰이라면 context마다 토큰 파일에 둔다.</li>
       </ul>
-      <pre><code>modifiers:
+      <pre><code># tokens/*.resolver.yaml — 모드와 조건
+modifiers:
   window:
-    contexts:
-      compact:  [{ $ref: window.compact.tokens.yaml }]    # layout.card-padding: 16px
-      medium:   [{ $ref: window.medium.tokens.yaml }]     # layout.card-padding: 24px
-      expanded: [{ $ref: window.expanded.tokens.yaml }]   # layout.card-padding: 24px
+    contexts: { compact: [], medium: [], expanded: [] }
     default: compact
     $extensions:
       org.openui:
         when:
           compact:  { width: { max: 600 } }               # 너비 &lt; 600
           medium:   { width: { min: 600, max: 840 } }     # 600 ≤ 너비 &lt; 840
-          expanded: { width: { min: 840 } }</code></pre>
+          expanded: { width: { min: 840 } }
+
+# components/card.yaml — 카드 토큰이 창 크기별 값을 가진다
+data:
+  tokens:
+    padding:
+      $type: dimension
+      $value: { value: 16, unit: px }
+      $when:
+        window=medium: { value: 24, unit: px }
+        window=expanded: { value: 24, unit: px }</code></pre>
       <div class="table"><table>
         <thead><tr><th>조건</th><th>값</th><th>웹에서</th></tr></thead>
         <tbody>
@@ -149,15 +156,17 @@ anatomy:
       <ul>
         <li>한 modifier는 한 종류의 조건만 쓴다. 조건끼리 겹치면 오류이고, 어디에도 맞지 않으면 기본 context를 쓴다.</li>
         <li>모드를 고르는 순서는 <strong>명시적 선택 → 조건 → 기본값</strong>이다. 에디터 상단의 모드 선택은 명시적 선택이라, 조건을 무시하고 원하는 context를 미리 볼 수 있다.</li>
-        <li>조건이 없는 modifier(예: <code>button-style</code>)는 명시적으로만 고른다. 컴포넌트 인스턴스는 <strong>mode prop</strong>으로 고른다: <code>style: { type: mode, modifier: button-style }</code>.</li>
-        <li>Figma는 모드를 자동으로 고르지 않는다. 조건별 화면은 프레임에 explicit mode를 지정해 만들고, mode prop은 인스턴스의 <code>explicitVariableModes</code>가 된다.</li>
+        <li>인스턴스가 고르는 값(버튼 강조 스타일 등)은 modifier가 아니라 컴포넌트의 <strong>mode prop</strong>이다: <code>style: { type: mode, values: [filled, outlined, text], default: filled }</code>. 토큰은 <code>$when: { style=outlined: … }</code>로 그 값마다 다른 값을 가진다.</li>
+        <li><code>$when</code> 키가 여러 개 맞으면 모드가 적은 키부터, 같으면 문서 순서로 덮어쓴다. 예: <code>style=text,device=desktop</code>은 <code>device=desktop</code>보다 우선한다.</li>
+        <li>Figma는 모드를 자동으로 고르지 않는다. 조건별 화면은 프레임에 explicit mode를 지정해 만든다. 컴포넌트 토큰은 컴포넌트별 variable collection(모드 = mode prop 값)이 되고, 인스턴스는 <code>explicitVariableModes</code>로 모드를 고른다.</li>
       </ul>
 
       <h2 id="component">컴포넌트 문서</h2>
-      <p>컴포넌트 하나는 <code>kind: Component</code> YAML 파일 하나다. 다섯 부분으로 나뉘며, part(해부도 요소)와 slot(사용자가 콘텐츠를 넣는 자리)을 구분한다.</p>
+      <p>컴포넌트 하나는 <code>kind: Component</code> YAML 파일 하나다. 여섯 부분으로 나뉘며, part(해부도 요소)와 slot(사용자가 콘텐츠를 넣는 자리)을 구분한다.</p>
       <div class="table"><table>
         <thead><tr><th>부분</th><th>역할</th><th>Figma</th><th>코드</th></tr></thead>
         <tbody>
+          <tr><td><code>tokens</code></td><td><strong>이 컴포넌트가 쓰는 토큰</strong>. 모드별 값은 <code>$when</code></td><td>컴포넌트 variable collection</td><td>컴포넌트 루트의 CSS 변수</td></tr>
           <tr><td><code>props</code></td><td>공개 API: text / boolean / instance / slot / mode</td><td>component property, explicit mode</td><td>prop, 파라미터</td></tr>
           <tr><td><code>variants</code></td><td><strong>UI 트리를 바꾸는</strong> 축(<code>withIcon</code>: 아이콘 part가 생김)</td><td>VARIANT 축</td><td>enum prop, 다른 구조</td></tr>
           <tr><td><code>states</code></td><td>런타임 상호작용 상태. 첫 항목이 기본</td><td><code>state</code> VARIANT 축</td><td>hover, pressed 등</td></tr>
@@ -171,46 +180,52 @@ metadata: { id: button, name: Button }
 data:
   props:
     label: { type: text, default: "{text.button.label}" }
-    style: { type: mode, modifier: button-style }        # 값만 다름 → 토큰 모드
+    style: { type: mode, values: [filled, outlined, text, elevated, tonal], default: filled }   # 값만 다름
     icon:  { type: instance, default: icon-add }
   variants:
-    withIcon: { values: { "false": {}, "true": {} }, default: "false" }   # 구조가 바뀜
+    withIcon: { values: { "false": {}, "true": {} }, default: "false" }                        # 구조가 바뀜
   states: [enabled, hovered, focused, pressed, disabled]
+  tokens:                                   # 이 컴포넌트가 쓰는 토큰 = "{button.&lt;이름&gt;}"
+    container-color:
+      $type: color
+      $value: "{md.sys.color.primary}"
+      $when:
+        style=outlined: "{md.sys.color.transparent}"
+        style=text: "{md.sys.color.transparent}"
+        style=elevated: "{md.sys.color.surface-container-low}"
+        style=tonal: "{md.sys.color.secondary-container}"
+    leading-space:
+      $type: dimension
+      $value: { value: 24, unit: px }
+      $when: { style=text: { value: 12, unit: px } }
+    block-space: { $type: dimension, $value: "{md.sys.space.zero}" }
+    container-height: { $type: dimension, $value: { value: 40, unit: px } }
   anatomy:
     root:
       kind: frame
-      layout: { direction: row, gap: "{md.comp.button.icon-label-space}",
-                padding: ["{md.sys.space.zero}", "{button.trailing-space}", "{md.sys.space.zero}", "{button.leading-space}"],
-                width: hug, height: "{md.comp.filled-button.container-height}" }
+      layout: { direction: row, padding: ["{button.block-space}", "{button.trailing-space}", "{button.block-space}", "{button.leading-space}"],
+                width: hug, height: "{button.container-height}" }
       children:
-        stateLayer: { kind: frame, layout: { position: absolute, width: fill, height: fill } }
-        icon:       { kind: instance, prop: icon }
-        label:      { kind: text, text: { prop: label } }
+        icon:  { kind: instance, prop: icon }
+        label: { kind: text, text: { prop: label } }
   styles:
     base:
-      enabled:
-        root:  { fill: "{button.container-color}", shadow: "{button.shadow}" }
-        label: { color: "{button.label-color}" }
-      hovered:
-        root:       { shadow: "{button.hover-shadow}" }
-        stateLayer: { opacity: "{md.comp.filled-button.hover-state-layer-opacity}" }
+      enabled: { root: { fill: "{button.container-color}" } }
     withIcon=false:
-      enabled: { icon: { visible: false } }
-    withIcon=true:
-      enabled: { root: { padding: ["{md.sys.space.zero}", "{button.with-icon-trailing-space}", "{md.sys.space.zero}", "{button.with-icon-leading-space}"] } }</code></pre>
-      <p><code>button.container-color</code> 같은 토큰의 스타일별 값은 <code>tokens/button-style.filled.tokens.yaml</code> 등에 있다(filled면 primary, outlined면 transparent).</p>
+      enabled: { icon: { visible: false } }</code></pre>
+      <p><strong>컴포넌트 토큰</strong>: 스타일 값은 리터럴도, 전역 토큰도 아닌 <strong>이 컴포넌트의 토큰</strong>만 가리킨다. 그래서 "이 버튼이 언제 어떤 값을 쓰는지"가 버튼 문서의 <code>tokens</code> 한 곳에 모인다. 컴포넌트 토큰은 전역 토큰(<code>md.sys.*</code>)을 alias하거나 리터럴 값을 가진다.</p>
       <div class="table"><table>
         <thead><tr><th>무엇이 다른가</th><th>표현</th><th>예</th></tr></thead>
         <tbody>
           <tr><td>part가 생기거나 없어짐, 배치 방향</td><td>variant</td><td><code>withIcon</code>, 체크박스 <code>type</code></td></tr>
-          <tr><td>값만 다름, 인스턴스가 고름</td><td>mode prop</td><td>버튼 <code>style</code>, 체크박스 <code>error</code></td></tr>
-          <tr><td>값만 다름, 환경에 따라</td><td>조건부 토큰</td><td>창 너비별 패딩, 단말별 높이, 언어별 텍스트</td></tr>
+          <tr><td>값만 다름, 인스턴스가 고름</td><td>mode prop + 토큰 <code>$when</code></td><td>버튼 <code>style</code>, 체크박스 <code>error</code></td></tr>
+          <tr><td>값만 다름, 환경에 따라</td><td>조건 + 토큰 <code>$when</code></td><td>창 너비별 패딩, 단말별 높이</td></tr>
           <tr><td>런타임 상호작용</td><td>state</td><td>hovered, pressed</td></tr>
         </tbody>
       </table></div>
       <ul>
         <li><strong>variant는 UI 트리가 바뀔 때만 쓴다.</strong> 축의 값들 사이에 구조 값(<code>visible</code>, <code>direction</code>, <code>position</code>, <code>hug</code>/<code>fill</code> 등) 차이가 없으면 검증 오류다.</li>
-        <li><strong>모든 값은 토큰이다.</strong> 치수·색·불투명도에 <code>8px</code>, <code>#6750A4</code>, <code>0</code>, <code>transparent</code> 같은 리터럴을 쓰면 오류다. 리터럴로 남는 것은 키워드·열거값·boolean 같은 구조 값뿐이다.</li>
+        <li><strong>모든 값은 그 컴포넌트의 토큰이다.</strong> 치수·색·불투명도에 <code>8px</code>, <code>[0, 24px]</code>, <code>#6750A4</code> 같은 리터럴을 쓰거나 <code>{md.sys.color.primary}</code> 같은 전역 토큰을 직접 가리키면 오류다. 리터럴로 남는 것은 키워드·열거값·boolean 같은 구조 값뿐이다.</li>
         <li>part 종류는 여섯 가지다: <code>frame</code>, <code>text</code>, <code>instance</code>, <code>slot</code>, <code>vector</code>(svg path), <code>image</code>(src). 최상위는 항상 <code>root</code> frame이다.</li>
         <li><strong>state는 이름 하나만</strong> 쓴다. <code>data</code>와 part에는 <code>x-</code> 확장 키를 둘 수 있고, Figma 고유 정보는 <code>x-figma</code>에 둔다.</li>
       </ul>
@@ -274,7 +289,7 @@ items:
     title: "pressed 리플"
     manual: true</code></pre>
       <ul>
-        <li><strong>자동 항목</strong>: variant × state × 모드 조합마다 컴포넌트를 렌더하고 part의 computed CSS 값을 읽는다. 생략한 축·state는 모든 값을, 생략한 모드는 컴포넌트가 실제로 쓰는 modifier만 모든 context를 검사한다. mode prop 값도 <code>mode: { button-style: outlined }</code>로 지정한다.</li>
+        <li><strong>자동 항목</strong>: variant × state × 모드 조합마다 컴포넌트를 렌더하고 part의 computed CSS 값을 읽는다. 생략한 축·state는 모든 값을, 생략한 모드는 컴포넌트가 실제로 쓰는 modifier만 모든 context를 검사한다. mode prop 값도 <code>mode: { style: outlined }</code>로 지정한다.</li>
         <li><strong>텍스트 항목</strong>: <code>property: text</code>는 part에 렌더된 텍스트를 읽어, 그 케이스의 locale로 해석한 텍스트 토큰과 비교한다. 예: <code>expect: "{text.button.label}"</code>은 en에서 <code>Button</code>, ko에서 <code>버튼</code>이어야 통과한다.</li>
         <li><strong>판정</strong>: 기대값을 프로브 요소에 설정해 브라우저가 양쪽을 같은 방식으로 정규화하게 한 뒤 비교한다. px는 0.05px 오차를 허용하고, 측정값이 비어 있으면 실패다.</li>
         <li><strong>수동 항목</strong>: 포커스 링, 리플, 터치 타깃처럼 v0.1 어휘로 표현하지 못하는 것을 사람이 보고 체크한다.</li>
@@ -299,7 +314,7 @@ items:
         <tbody>
           <tr><td>토큰 / 모드</td><td>Variable / VariableCollection.modes</td><td><code>--md-sys-color-primary</code> / <code>.ou-root[data-theme="dark"]</code></td></tr>
           <tr><td>조건(<code>when</code>)</td><td>대응 없음. 프레임에 explicit mode 지정</td><td><code>@media</code>, <code>:lang()</code>, 앱이 지정하는 <code>data-device</code></td></tr>
-          <tr><td>mode prop</td><td>인스턴스의 <code>explicitVariableModes</code></td><td>컴포넌트 루트의 <code>data-button-style</code> 등</td></tr>
+          <tr><td>컴포넌트 토큰, mode prop</td><td>컴포넌트별 variable collection(모드 = mode prop 값), 인스턴스의 <code>explicitVariableModes</code></td><td>컴포넌트 루트의 CSS 변수와 <code>data-mode-style</code></td></tr>
           <tr><td>텍스트 토큰 / locale</td><td>STRING Variable, <code>boundVariables.characters</code> / 언어별 mode</td><td>선택된 locale로 해석한 텍스트, <code>lang</code> 속성</td></tr>
           <tr><td>typography 토큰</td><td>Text Style</td><td><code>--…__font-size</code> 등 하위 변수 5개</td></tr>
           <tr><td>shadow 토큰</td><td>Effect Style</td><td><code>box-shadow</code></td></tr>
@@ -318,7 +333,7 @@ items:
       <div class="table"><table>
         <thead><tr><th>도구</th><th>명령</th><th>하는 일</th></tr></thead>
         <tbody>
-          <tr><td>검증 CLI</td><td><code>bun src/cli.ts validate examples/material3</code></td><td>스키마와 의미 검증. 성공하면 <code>ok: 834 tokens, 9 components</code></td></tr>
+          <tr><td>검증 CLI</td><td><code>bun src/cli.ts validate examples/material3</code></td><td>스키마와 의미 검증. 성공하면 <code>ok: 409 tokens, 9 components</code></td></tr>
           <tr><td>로컬 에디터</td><td><code>bun editor/server.ts examples/material3</code></td><td>YAML 편집, 실시간 진단, variant×state 프리뷰, 체크리스트. ⌘S로 디스크에 저장</td></tr>
           <tr><td>웹 에디터</td><td><a href="./">이 사이트</a></td><td>예제는 Save 시 다운로드. Chrome의 Open folder로 로컬 YAML을 직접 수정</td></tr>
         </tbody>

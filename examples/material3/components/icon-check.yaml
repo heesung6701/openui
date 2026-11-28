@@ -3,13 +3,17 @@
 kind: Component
 metadata: { id: icon-check, name: "Icon / check" }
 data:
+  # The tokens this component uses ("{icon-check.<name>}"), values from material-web v0.192 component tokens.
+  tokens:
+    size: { $type: dimension, $value: { value: 24, unit: px } }
+    color: { $type: color, $value: "{md.sys.color.on-surface}" }
   anatomy:
     root:
       kind: frame
-      layout: { direction: none, width: "{md.comp.icon.size}", height: "{md.comp.icon.size}" }
+      layout: { direction: none, width: "{icon-check.size}", height: "{icon-check.size}" }
       children:
         glyph: { kind: vector, svg: { viewBox: "0 0 24 24", d: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" } }
   styles:
     base:
       enabled:
-        glyph: { width: fill, height: fill, fill: "{md.sys.color.on-surface}" }
+        glyph: { width: fill, height: fill, fill: "{icon-check.color}" }

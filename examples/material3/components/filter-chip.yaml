@@ -13,16 +13,52 @@ data:
       values: { "false": {}, "true": { description: "Selected: tonal container and leading check" } }
       default: "false"
   states: [enabled, hovered, focused, pressed, disabled]
+  # The tokens this component uses ("{filter-chip.<name>}"), values from material-web v0.192 component tokens.
+  tokens:
+    icon-label-space: { $type: dimension, $value: { value: 8, unit: px } }
+    block-space: { $type: dimension, $value: "{md.sys.space.zero}" }
+    trailing-space: { $type: dimension, $value: { value: 16, unit: px } }
+    leading-space: { $type: dimension, $value: { value: 16, unit: px } }
+    container-height: { $type: dimension, $value: { value: 32, unit: px } }
+    unselected-container-color: { $type: color, $value: "{md.sys.color.transparent}" }
+    container-shape: { $type: dimension, $value: "{md.sys.shape.corner-small}" }
+    flat-unselected-outline-color: { $type: color, $value: "{md.sys.color.outline}" }
+    flat-unselected-outline-width: { $type: dimension, $value: { value: 1, unit: px } }
+    enabled-state-layer-opacity: { $type: number, $value: "{md.sys.opacity.zero}" }
+    unselected-hover-state-layer-color: { $type: color, $value: "{md.sys.color.on-surface-variant}" }
+    with-icon-icon-size: { $type: dimension, $value: { value: 18, unit: px } }
+    with-leading-icon-selected-leading-icon-color: { $type: color, $value: "{md.sys.color.on-secondary-container}" }
+    label-text-typography: { $type: typography, $value: "{md.sys.typescale.label-large}" }
+    unselected-label-text-color: { $type: color, $value: "{md.sys.color.on-surface-variant}" }
+    unselected-hover-state-layer-opacity: { $type: number, $value: "{md.sys.state.hover-state-layer-opacity}" }
+    flat-unselected-focus-outline-color: { $type: color, $value: "{md.sys.color.on-surface-variant}" }
+    unselected-focus-state-layer-opacity: { $type: number, $value: "{md.sys.state.focus-state-layer-opacity}" }
+    unselected-pressed-state-layer-opacity: { $type: number, $value: "{md.sys.state.pressed-state-layer-opacity}" }
+    unselected-pressed-state-layer-color: { $type: color, $value: "{md.sys.color.on-secondary-container}" }
+    flat-disabled-unselected-outline-color: { $type: color, $value: "{md.sys.color.on-surface}" }
+    flat-disabled-unselected-outline-opacity: { $type: number, $value: 0.12 }
+    disabled-label-text-color: { $type: color, $value: "{md.sys.color.on-surface}" }
+    disabled-label-text-opacity: { $type: number, $value: 0.38 }
+    with-leading-icon-disabled-leading-icon-color: { $type: color, $value: "{md.sys.color.on-surface}" }
+    with-leading-icon-disabled-leading-icon-opacity: { $type: number, $value: 0.38 }
+    flat-selected-container-color: { $type: color, $value: "{md.sys.color.secondary-container}" }
+    flat-selected-outline-width: { $type: dimension, $value: { value: 0, unit: px } }
+    with-leading-icon-leading-space: { $type: dimension, $value: { value: 8, unit: px } }
+    selected-hover-state-layer-color: { $type: color, $value: "{md.sys.color.on-secondary-container}" }
+    selected-label-text-color: { $type: color, $value: "{md.sys.color.on-secondary-container}" }
+    selected-pressed-state-layer-color: { $type: color, $value: "{md.sys.color.on-surface-variant}" }
+    flat-disabled-selected-container-color: { $type: color, $value: "{md.sys.color.on-surface}" }
+    flat-disabled-selected-container-opacity: { $type: number, $value: 0.12 }
   anatomy:
     root:
       kind: frame
       layout:
         direction: row
-        gap: "{md.comp.filter-chip.icon-label-space}"
-        padding: ["{md.sys.space.zero}", "{md.comp.filter-chip.trailing-space}", "{md.sys.space.zero}", "{md.comp.filter-chip.leading-space}"]
+        gap: "{filter-chip.icon-label-space}"
+        padding: ["{filter-chip.block-space}", "{filter-chip.trailing-space}", "{filter-chip.block-space}", "{filter-chip.leading-space}"]
         align: { main: center, cross: center }
         width: hug
-        height: "{md.comp.filter-chip.container-height}"
+        height: "{filter-chip.container-height}"
       children:
         stateLayer: { kind: frame, layout: { position: absolute, width: fill, height: fill } }
         leading:    { kind: instance, component: icon-check }
@@ -30,28 +66,28 @@ data:
   styles:
     base:
       enabled:
-        root:       { fill: "{md.sys.color.transparent}", cornerRadius: "{md.comp.filter-chip.container-shape}", strokeColor: "{md.comp.filter-chip.flat-unselected-outline-color}", strokeWidth: "{md.comp.filter-chip.flat-unselected-outline-width}" }
-        stateLayer: { cornerRadius: "{md.comp.filter-chip.container-shape}", opacity: "{md.sys.opacity.zero}", fill: "{md.comp.filter-chip.unselected-hover-state-layer-color}" }
-        leading:    { visible: false, width: "{md.comp.filter-chip.with-icon-icon-size}", height: "{md.comp.filter-chip.with-icon-icon-size}", fill: "{md.comp.filter-chip.with-leading-icon-selected-leading-icon-color}" }
-        label:      { typography: "{md.sys.typescale.label-large}", color: "{md.comp.filter-chip.unselected-label-text-color}" }
+        root:       { fill: "{filter-chip.unselected-container-color}", cornerRadius: "{filter-chip.container-shape}", strokeColor: "{filter-chip.flat-unselected-outline-color}", strokeWidth: "{filter-chip.flat-unselected-outline-width}" }
+        stateLayer: { cornerRadius: "{filter-chip.container-shape}", opacity: "{filter-chip.enabled-state-layer-opacity}", fill: "{filter-chip.unselected-hover-state-layer-color}" }
+        leading:    { visible: false, width: "{filter-chip.with-icon-icon-size}", height: "{filter-chip.with-icon-icon-size}", fill: "{filter-chip.with-leading-icon-selected-leading-icon-color}" }
+        label:      { typography: "{filter-chip.label-text-typography}", color: "{filter-chip.unselected-label-text-color}" }
       hovered:
-        stateLayer: { opacity: "{md.comp.filter-chip.unselected-hover-state-layer-opacity}" }
+        stateLayer: { opacity: "{filter-chip.unselected-hover-state-layer-opacity}" }
       focused:
-        root:       { strokeColor: "{md.comp.filter-chip.flat-unselected-focus-outline-color}" }
-        stateLayer: { opacity: "{md.comp.filter-chip.unselected-focus-state-layer-opacity}" }
+        root:       { strokeColor: "{filter-chip.flat-unselected-focus-outline-color}" }
+        stateLayer: { opacity: "{filter-chip.unselected-focus-state-layer-opacity}" }
       pressed:
-        stateLayer: { opacity: "{md.comp.filter-chip.unselected-pressed-state-layer-opacity}", fill: "{md.comp.filter-chip.unselected-pressed-state-layer-color}" }
+        stateLayer: { opacity: "{filter-chip.unselected-pressed-state-layer-opacity}", fill: "{filter-chip.unselected-pressed-state-layer-color}" }
       disabled:
-        root:    { strokeColor: "{md.comp.filter-chip.flat-disabled-unselected-outline-color}", strokeOpacity: "{md.comp.filter-chip.flat-disabled-unselected-outline-opacity}" }
-        label:   { color: "{md.comp.filter-chip.disabled-label-text-color}", opacity: "{md.comp.filter-chip.disabled-label-text-opacity}" }
-        leading: { fill: "{md.comp.filter-chip.with-leading-icon-disabled-leading-icon-color}", fillOpacity: "{md.comp.filter-chip.with-leading-icon-disabled-leading-icon-opacity}" }
+        root:    { strokeColor: "{filter-chip.flat-disabled-unselected-outline-color}", strokeOpacity: "{filter-chip.flat-disabled-unselected-outline-opacity}" }
+        label:   { color: "{filter-chip.disabled-label-text-color}", opacity: "{filter-chip.disabled-label-text-opacity}" }
+        leading: { fill: "{filter-chip.with-leading-icon-disabled-leading-icon-color}", fillOpacity: "{filter-chip.with-leading-icon-disabled-leading-icon-opacity}" }
     selected=true:
       enabled:
-        root:       { fill: "{md.comp.filter-chip.flat-selected-container-color}", strokeWidth: "{md.comp.filter-chip.flat-selected-outline-width}", padding: ["{md.sys.space.zero}", "{md.comp.filter-chip.trailing-space}", "{md.sys.space.zero}", "{md.comp.filter-chip.with-leading-icon-leading-space}"] }
-        stateLayer: { fill: "{md.comp.filter-chip.selected-hover-state-layer-color}" }
+        root:       { fill: "{filter-chip.flat-selected-container-color}", strokeWidth: "{filter-chip.flat-selected-outline-width}", padding: ["{filter-chip.block-space}", "{filter-chip.trailing-space}", "{filter-chip.block-space}", "{filter-chip.with-leading-icon-leading-space}"] }
+        stateLayer: { fill: "{filter-chip.selected-hover-state-layer-color}" }
         leading:    { visible: true }
-        label:      { color: "{md.comp.filter-chip.selected-label-text-color}" }
+        label:      { color: "{filter-chip.selected-label-text-color}" }
       pressed:
-        stateLayer: { fill: "{md.comp.filter-chip.selected-pressed-state-layer-color}" }
+        stateLayer: { fill: "{filter-chip.selected-pressed-state-layer-color}" }
       disabled:
-        root: { fill: "{md.comp.filter-chip.flat-disabled-selected-container-color}", fillOpacity: "{md.comp.filter-chip.flat-disabled-selected-container-opacity}" }
+        root: { fill: "{filter-chip.flat-disabled-selected-container-color}", fillOpacity: "{filter-chip.flat-disabled-selected-container-opacity}" }

@@ -1,4 +1,5 @@
 import type { Component } from "../component/schema";
+import { modePropsOf } from "../component/tokens";
 import { statesOf, variantAxes } from "../component/validate";
 import { aliasesToVars } from "../render/css-var";
 import { collectionsReachedBy, resolveToken, type TokenSet } from "../tokens/resolver";
@@ -15,20 +16,22 @@ const list = (v: string | string[] | undefined): string[] | undefined => (v === 
 const product = (dims: [string, string[]][]): Record<string, string>[] =>
   dims.reduce<Record<string, string>[]>((acc, [k, vs]) => acc.flatMap((c) => vs.map((v) => ({ ...c, [k]: v }))), [{}]);
 
-/** Modifiers a component's look depends on: through its token references, or chosen by its mode props. */
-export function modifiersUsedBy(doc: Component, tokens: TokenSet): Set<string> {
-  const used = collectionsReachedBy(tokens, collectAliases(doc.data));
-  for (const p of Object.values(doc.data.props ?? {})) if (p.type === "mode") used.add(p.modifier);
-  return used;
-}
+/** Global modifiers a component's look depends on: through its token references and their `$when` keys. */
+export const modifiersUsedBy = (doc: Component, tokens: TokenSet): Set<string> => collectionsReachedBy(tokens, collectAliases(doc.data));
 
-/** Omitted axis / state = every value; omitted modifier = every context if the component uses it, else its default. */
+/**
+ * Omitted axis / state / mode prop = every value; omitted modifier = every context if the component uses it, else its
+ * default. Order: variant axes → state → modifiers → mode props.
+ */
 export function expandCheck(check: Check, doc: Component, tokens: TokenSet): Case[] {
   const variants = product(Object.entries(variantAxes(doc)).map(([axis, { values }]) => [axis, list(check.variant?.[axis]) ?? values]));
   const states = list(check.state) ?? statesOf(doc);
   const used = modifiersUsedBy(doc, tokens);
-  const modes = product(tokens.collections.filter((c) => c.kind === "modifier")
-    .map((c) => [c.name, list(check.mode?.[c.name]) ?? (used.has(c.name) ? c.modes : [c.defaultMode])]));
+  const modes = product([
+    ...tokens.collections.filter((c) => c.kind === "modifier")
+      .map((c): [string, string[]] => [c.name, list(check.mode?.[c.name]) ?? (used.has(c.name) ? c.modes : [c.defaultMode])]),
+    ...Object.entries(modePropsOf(doc)).map(([name, m]): [string, string[]] => [name, list(check.mode?.[name]) ?? m.values]),
+  ]);
   return variants.flatMap((variant) => states.flatMap((state) => modes.map((mode) => ({ variant, state, mode }))));
 }
 

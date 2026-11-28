@@ -50,7 +50,8 @@ export function validateComponent(doc: Component, file: string, ctx: ValidateCon
     if (!r.success) return err(path, `invalid value for "${prop}": ${r.error.issues[0]!.message}`);
     for (const alias of collectAliases(value)) {
       const t = ctx.tokens.tokens.get(alias);
-      if (!t) err(path, `unknown token "{${alias}}"`);
+      if (!alias.startsWith(`${doc.metadata.id}.`)) err(path, `token "{${alias}}" is not one of this component's tokens: define it under data.tokens and reference "{${doc.metadata.id}.<name>}"`);
+      else if (!t) err(path, `unknown token "{${alias}}"`);
       else if (!def.tokenTypes.includes(t.type)) err(path, `token "{${alias}}" is ${t.type}, "${prop}" expects ${def.tokenTypes.join(" | ") || "a literal"}`);
     }
   };
@@ -94,10 +95,10 @@ export function validateComponent(doc: Component, file: string, ctx: ValidateCon
   for (const [name, def] of Object.entries(props)) {
     const at = ["data", "props", name];
     if (def.type === "mode") {
-      const c = ctx.tokens.collections.find((c) => c.kind === "modifier" && c.name === def.modifier);
-      if (!c) err([...at, "modifier"], `unknown modifier "${def.modifier}"`);
-      else if (c.when) err([...at, "modifier"], `modifier "${def.modifier}" is selected by conditions (when); a mode prop needs a modifier without conditions`);
-      continue; // mode props bind to the component root, not to a part
+      // `$when` keys name mode props and global modifiers side by side, so the names must not collide
+      if (ctx.tokens.collections.some((c) => c.kind === "modifier" && c.name === name)) err(at, `mode prop "${name}" has the name of modifier "${name}"`);
+      if (axes[name]) err(at, `mode prop "${name}" has the name of a variant axis`);
+      continue; // mode props mark the component root, not a part
     }
     const n = bound.get(name) ?? 0;
     if (n === 0) err(at, `prop "${name}" is not bound to any part`);
@@ -155,7 +156,7 @@ export function validateComponent(doc: Component, file: string, ctx: ValidateCon
       const first = structure({ ...combo, [axis]: values[0]! }, s);
       return values.slice(1).some((v) => structure({ ...combo, [axis]: v }, s) !== first);
     }));
-    if (!changes) err(["data", "variants", axis], `variant axis "${axis}" does not change the UI tree (its values differ only in token values, or not at all): move the differences into tokens chosen by a mode prop or by conditions (§3.6)`);
+    if (!changes) err(["data", "variants", axis], `variant axis "${axis}" does not change the UI tree (its values differ only in token values, or not at all): make it a mode prop and put the values in the component tokens' $when (§4.7)`);
   }
 
   // x-figma

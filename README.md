@@ -6,7 +6,8 @@ UI 컴포넌트를 OpenAPI처럼 YAML로 기술하는 스펙(v0.1)과, 그 스�
   - 토큰은 DTCG 2025.10 형식이다.
   - 컴포넌트는 props / variants / states / anatomy(auto layout) / styles / slots로 기술한다.
   - **variant는 UI 트리가 바뀔 때만** 쓴다. 패딩·크기·색 등 값은 전부 토큰이고, 리터럴 값은 검증 오류다.
-  - 토큰 정의가 **언제 어떤 값인지**를 가진다. 창 너비(breakpoint), 방향, 단말 종류, 색 모드, 언어 조건으로 모드가 정해지고, 버튼 스타일처럼 인스턴스가 고르는 값은 mode prop으로 고른다.
+  - **컴포넌트가 쓰는 토큰은 그 컴포넌트 YAML의 `data.tokens`에** 둔다. 토큰 파일에는 여러 컴포넌트가 함께 쓰는 전역 토큰(팔레트, 시스템 색, 타입 스케일, 텍스트)만 남는다.
+  - 토큰 정의가 **언제 어떤 값인지**를 가진다(`$when`). 창 너비(breakpoint), 방향, 단말 종류, 색 모드, 언어 조건과, 버튼 스타일처럼 인스턴스가 고르는 mode prop 값에 따라 값이 정해진다.
   - 화면에 나오는 모든 텍스트는 **텍스트 토큰**이다. 토큰 경로가 텍스트 ID이고, 언어는 `locale` 모드(en/ko)다. 리터럴 텍스트와 번역 누락은 검증 오류다.
   - Figma 매핑과 웹(CSS) 매핑은 스펙 부록에 있다.
 - **웹 에디터**: <https://heesung6701.github.io/openui/>
@@ -22,7 +23,7 @@ UI 컴포넌트를 OpenAPI처럼 YAML로 기술하는 스펙(v0.1)과, 그 스�
 ```bash
 bun install
 bun test                                        # 단위 테스트
-bun src/cli.ts validate examples/material3      # 스키마·의미 검증 → ok: 834 tokens, 9 components
+bun src/cli.ts validate examples/material3      # 스키마·의미 검증 → ok: 409 tokens, 9 components
 bun editor/server.ts examples/material3         # 로컬 에디터 http://127.0.0.1:4173 (⌘S로 디스크에 저장)
 bun run deploy:pages                            # 정적 빌드 → gh-pages 브랜치 (GitHub Pages)
 ```

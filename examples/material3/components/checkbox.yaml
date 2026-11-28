@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../../schema/component.schema.json
 # M3 checkbox, material-web v0.192 tokens. `type` is a variant (it shows the check or dash icon);
-# error only changes colors, so it is a mode prop (tokens/checkbox-error.*.tokens.yaml).
+# error only changes colors, so it is a mode prop (data.tokens `$when: error=…`).
 kind: Component
 metadata:
   id: checkbox
@@ -8,7 +8,7 @@ metadata:
   description: "M3 checkbox. The check glyph uses Material Icons `check`, not M3's custom check-mark path."
 data:
   props:
-    error: { type: mode, modifier: checkbox-error, description: "\"true\" shows error colors (token mode; the UI tree is the same)" }
+    error: { type: mode, values: ["false", "true"], default: "false", description: "\"true\" shows error colors (token mode; the UI tree is the same)" }
   variants:
     type:
       values:
@@ -17,54 +17,123 @@ data:
         indeterminate: { description: "Partially selected (parent of mixed children)" }
       default: unselected
   states: [enabled, hovered, focused, pressed, disabled]
+  # The tokens this component uses ("{checkbox.<name>}"), values from material-web v0.192 component tokens. $when = the value for that error.
+  tokens:
+    state-layer-size: { $type: dimension, $value: { value: 40, unit: px } }
+    container-offset: { $type: dimension, $value: { value: 11, unit: px } }
+    container-size: { $type: dimension, $value: { value: 18, unit: px } }
+    state-layer-shape: { $type: dimension, $value: "{md.sys.shape.corner-full}" }
+    enabled-state-layer-opacity: { $type: number, $value: "{md.sys.opacity.zero}" }
+    unselected-hover-state-layer-color:
+      $type: color
+      $value: "{md.sys.color.on-surface}"
+      $when:
+        error=true: "{md.sys.color.error}"
+    container-shape: { $type: dimension, $value: { value: 2, unit: px } }
+    unselected-container-color: { $type: color, $value: "{md.sys.color.transparent}" }
+    unselected-outline-color:
+      $type: color
+      $value: "{md.sys.color.on-surface-variant}"
+      $when:
+        error=true: "{md.sys.color.error}"
+    unselected-outline-width: { $type: dimension, $value: { value: 2, unit: px } }
+    icon-size: { $type: dimension, $value: { value: 18, unit: px } }
+    selected-icon-color:
+      $type: color
+      $value: "{md.sys.color.on-primary}"
+      $when:
+        error=true: "{md.sys.color.on-error}"
+    unselected-hover-state-layer-opacity: { $type: number, $value: "{md.sys.state.hover-state-layer-opacity}" }
+    unselected-hover-outline-color:
+      $type: color
+      $value: "{md.sys.color.on-surface}"
+      $when:
+        error=true: "{md.sys.color.error}"
+    unselected-focus-state-layer-opacity: { $type: number, $value: "{md.sys.state.focus-state-layer-opacity}" }
+    unselected-focus-outline-color:
+      $type: color
+      $value: "{md.sys.color.on-surface}"
+      $when:
+        error=true: "{md.sys.color.error}"
+    unselected-pressed-state-layer-opacity: { $type: number, $value: "{md.sys.state.pressed-state-layer-opacity}" }
+    unselected-pressed-state-layer-color:
+      $type: color
+      $value: "{md.sys.color.primary}"
+      $when:
+        error=true: "{md.sys.color.error}"
+    unselected-pressed-outline-color:
+      $type: color
+      $value: "{md.sys.color.on-surface}"
+      $when:
+        error=true: "{md.sys.color.error}"
+    unselected-disabled-outline-color: { $type: color, $value: "{md.sys.color.on-surface}" }
+    unselected-disabled-container-opacity: { $type: number, $value: 0.38 }
+    selected-hover-state-layer-color:
+      $type: color
+      $value: "{md.sys.color.primary}"
+      $when:
+        error=true: "{md.sys.color.error}"
+    selected-container-color:
+      $type: color
+      $value: "{md.sys.color.primary}"
+      $when:
+        error=true: "{md.sys.color.error}"
+    selected-outline-width: { $type: dimension, $value: { value: 0, unit: px } }
+    selected-pressed-state-layer-color:
+      $type: color
+      $value: "{md.sys.color.on-surface}"
+      $when:
+        error=true: "{md.sys.color.error}"
+    selected-disabled-container-color: { $type: color, $value: "{md.sys.color.on-surface}" }
+    selected-disabled-container-opacity: { $type: number, $value: 0.38 }
+    selected-disabled-icon-color: { $type: color, $value: "{md.sys.color.surface}" }
   anatomy:
     root:
       kind: frame
-      layout: { direction: none, width: "{md.comp.checkbox.state-layer-size}", height: "{md.comp.checkbox.state-layer-size}" }
+      layout: { direction: none, width: "{checkbox.state-layer-size}", height: "{checkbox.state-layer-size}" }
       children:
         stateLayer: { kind: frame, layout: { position: absolute, width: fill, height: fill } }
-        container:  { kind: frame, layout: { x: "{md.comp.checkbox.container-offset}", y: "{md.comp.checkbox.container-offset}", width: "{md.comp.checkbox.container-size}", height: "{md.comp.checkbox.container-size}" } }
+        container:  { kind: frame, layout: { x: "{checkbox.container-offset}", y: "{checkbox.container-offset}", width: "{checkbox.container-size}", height: "{checkbox.container-size}" } }
         check:      { kind: instance, component: icon-check }
         dash:       { kind: instance, component: icon-remove }
   styles:
     # type changes the UI tree (check / dash icons); error colors come from the checkbox-error token mode
     base:
       enabled:
-        root:       { fill: "{md.sys.color.transparent}" }
-        stateLayer: { cornerRadius: "{md.comp.checkbox.state-layer-shape}", opacity: "{md.sys.opacity.zero}", fill: "{checkbox.unselected-hover-state-layer-color}" }
-        container:  { cornerRadius: "{md.comp.checkbox.container-shape}", fill: "{md.sys.color.transparent}", strokeColor: "{checkbox.unselected-outline-color}", strokeWidth: "{md.comp.checkbox.unselected-outline-width}" }
-        check:      { x: "{md.comp.checkbox.container-offset}", y: "{md.comp.checkbox.container-offset}", width: "{md.comp.checkbox.icon-size}", height: "{md.comp.checkbox.icon-size}", visible: false, fill: "{checkbox.selected-icon-color}" }
-        dash:       { x: "{md.comp.checkbox.container-offset}", y: "{md.comp.checkbox.container-offset}", width: "{md.comp.checkbox.icon-size}", height: "{md.comp.checkbox.icon-size}", visible: false, fill: "{checkbox.selected-icon-color}" }
+        stateLayer: { cornerRadius: "{checkbox.state-layer-shape}", opacity: "{checkbox.enabled-state-layer-opacity}", fill: "{checkbox.unselected-hover-state-layer-color}" }
+        container:  { cornerRadius: "{checkbox.container-shape}", fill: "{checkbox.unselected-container-color}", strokeColor: "{checkbox.unselected-outline-color}", strokeWidth: "{checkbox.unselected-outline-width}" }
+        check:      { x: "{checkbox.container-offset}", y: "{checkbox.container-offset}", width: "{checkbox.icon-size}", height: "{checkbox.icon-size}", visible: false, fill: "{checkbox.selected-icon-color}" }
+        dash:       { x: "{checkbox.container-offset}", y: "{checkbox.container-offset}", width: "{checkbox.icon-size}", height: "{checkbox.icon-size}", visible: false, fill: "{checkbox.selected-icon-color}" }
       hovered:
-        stateLayer: { opacity: "{md.comp.checkbox.unselected-hover-state-layer-opacity}" }
+        stateLayer: { opacity: "{checkbox.unselected-hover-state-layer-opacity}" }
         container:  { strokeColor: "{checkbox.unselected-hover-outline-color}" }
       focused:
-        stateLayer: { opacity: "{md.comp.checkbox.unselected-focus-state-layer-opacity}" }
+        stateLayer: { opacity: "{checkbox.unselected-focus-state-layer-opacity}" }
         container:  { strokeColor: "{checkbox.unselected-focus-outline-color}" }
       pressed:
-        stateLayer: { opacity: "{md.comp.checkbox.unselected-pressed-state-layer-opacity}", fill: "{checkbox.unselected-pressed-state-layer-color}" }
+        stateLayer: { opacity: "{checkbox.unselected-pressed-state-layer-opacity}", fill: "{checkbox.unselected-pressed-state-layer-color}" }
         container:  { strokeColor: "{checkbox.unselected-pressed-outline-color}" }
       disabled:
-        container: { strokeColor: "{md.comp.checkbox.unselected-disabled-outline-color}", strokeOpacity: "{md.comp.checkbox.unselected-disabled-container-opacity}" }
+        container: { strokeColor: "{checkbox.unselected-disabled-outline-color}", strokeOpacity: "{checkbox.unselected-disabled-container-opacity}" }
 
     # selected and indeterminate share container styling (spec v0.1 has no OR in variant expressions)
     type=selected:
       enabled:
         stateLayer: { fill: "{checkbox.selected-hover-state-layer-color}" }
-        container:  { fill: "{checkbox.selected-container-color}", strokeWidth: "{md.comp.checkbox.selected-outline-width}" }
+        container:  { fill: "{checkbox.selected-container-color}", strokeWidth: "{checkbox.selected-outline-width}" }
         check:      { visible: true }
       pressed:
         stateLayer: { fill: "{checkbox.selected-pressed-state-layer-color}" }
       disabled:
-        container: { fill: "{md.comp.checkbox.selected-disabled-container-color}", fillOpacity: "{md.comp.checkbox.selected-disabled-container-opacity}" }
-        check:     { fill: "{md.comp.checkbox.selected-disabled-icon-color}" }
+        container: { fill: "{checkbox.selected-disabled-container-color}", fillOpacity: "{checkbox.selected-disabled-container-opacity}" }
+        check:     { fill: "{checkbox.selected-disabled-icon-color}" }
     type=indeterminate:
       enabled:
         stateLayer: { fill: "{checkbox.selected-hover-state-layer-color}" }
-        container:  { fill: "{checkbox.selected-container-color}", strokeWidth: "{md.comp.checkbox.selected-outline-width}" }
+        container:  { fill: "{checkbox.selected-container-color}", strokeWidth: "{checkbox.selected-outline-width}" }
         dash:       { visible: true }
       pressed:
         stateLayer: { fill: "{checkbox.selected-pressed-state-layer-color}" }
       disabled:
-        container: { fill: "{md.comp.checkbox.selected-disabled-container-color}", fillOpacity: "{md.comp.checkbox.selected-disabled-container-opacity}" }
-        dash:      { fill: "{md.comp.checkbox.selected-disabled-icon-color}" }
+        container: { fill: "{checkbox.selected-disabled-container-color}", fillOpacity: "{checkbox.selected-disabled-container-opacity}" }
+        dash:      { fill: "{checkbox.selected-disabled-icon-color}" }

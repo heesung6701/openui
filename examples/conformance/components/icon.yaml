@@ -1,11 +1,14 @@
 # yaml-language-server: $schema=../../../schema/component.schema.json
 kind: Component
-metadata: { id: icon, name: Icon, description: "Conformance: vector part with a fill alias" }
+metadata: { id: icon, name: Icon, description: "Conformance: vector part with a fill token" }
 data:
+  tokens:
+    size:  { $type: dimension, $value: { value: 24, unit: px } }
+    color: { $type: color, $value: "{color.on-surface}" }
   anatomy:
     root:
       kind: frame
-      layout: { direction: none, width: "{size.icon}", height: "{size.icon}" }
+      layout: { direction: none, width: "{icon.size}", height: "{icon.size}" }
       children:
         glyph:
           kind: vector
@@ -13,4 +16,4 @@ data:
   styles:
     base:
       enabled:
-        glyph: { width: fill, height: fill, fill: "{color.on-surface}" }
+        glyph: { width: fill, height: fill, fill: "{icon.color}" }

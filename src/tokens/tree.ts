@@ -9,6 +9,8 @@ export type TokenDef = {
   value: unknown;
   description?: string;
   extensions?: Record<string, unknown>;
+  /** Component tokens only: mode expression → value (§4.7). */
+  when?: unknown;
   file: string;
 };
 
@@ -23,7 +25,7 @@ const UNSUPPORTED = new Set(["$extends", "$root", "$ref"]);
 
 const isObject = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 
-export function walkTokenTree(doc: unknown, file: string): { tokens: TokenDef[]; diagnostics: Diagnostic[] } {
+export function walkTokenTree(doc: unknown, file: string, opts: { allowWhen?: boolean } = {}): { tokens: TokenDef[]; diagnostics: Diagnostic[] } {
   const tokens: TokenDef[] = [];
   const diagnostics: Diagnostic[] = [];
   const err = (path: (string | number)[], message: string) => diagnostics.push({ file, path, message });
@@ -42,6 +44,10 @@ export function walkTokenTree(doc: unknown, file: string): { tokens: TokenDef[];
     }
     for (const k of Object.keys(node)) {
       if (!k.startsWith("$") || KNOWN.has(k)) continue;
+      if (k === "$when" && opts.allowWhen) {
+        if (!("$value" in node)) err([...path, k], "$when is only allowed on tokens");
+        continue;
+      }
       err([...path, k], UNSUPPORTED.has(k) ? `unsupported in openui 0.1: ${k}` : `unknown property ${k}`);
     }
     const children = Object.keys(node).filter((k) => !k.startsWith("$"));
@@ -83,6 +89,7 @@ export function walkTokenTree(doc: unknown, file: string): { tokens: TokenDef[];
         value,
         ...(typeof node.$description === "string" ? { description: node.$description } : {}),
         ...(isObject(ext) ? { extensions: ext } : {}),
+        ...("$when" in node && opts.allowWhen ? { when: node.$when } : {}),
         file,
       });
       return;

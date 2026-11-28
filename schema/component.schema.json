@@ -30,6 +30,13 @@
     "data": {
       "type": "object",
       "properties": {
+        "tokens": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {}
+        },
         "props": {
           "type": "object",
           "propertyNames": {
@@ -86,9 +93,16 @@
                     "type": "string",
                     "const": "mode"
                   },
-                  "modifier": {
-                    "type": "string",
-                    "minLength": 1
+                  "values": {
+                    "minItems": 2,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-z0-9][a-zA-Z0-9-]*$"
+                    }
+                  },
+                  "default": {
+                    "type": "string"
                   },
                   "description": {
                     "type": "string"
@@ -96,7 +110,8 @@
                 },
                 "required": [
                   "type",
-                  "modifier"
+                  "values",
+                  "default"
                 ],
                 "additionalProperties": false
               },

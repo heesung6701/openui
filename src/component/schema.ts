@@ -127,8 +127,11 @@ export type PartNode = {
 const PropDef = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("text"), default: TextToken, description: z.string().optional() }),
   z.strictObject({ type: z.literal("boolean"), default: z.boolean(), description: z.string().optional() }),
-  /** The instance picks a context of an explicitly selected modifier (no conditions), e.g. button style. */
-  z.strictObject({ type: z.literal("mode"), modifier: z.string().min(1), description: z.string().optional() }),
+  /** The instance picks one value (e.g. button style); the component's tokens vary by it in `$when` (§4.7). */
+  z.strictObject({
+    type: z.literal("mode"), values: z.array(VariantValue).min(2, "a mode needs at least two values"), default: z.string(),
+    description: z.string().optional(),
+  }).refine((v) => v.values.includes(v.default), { message: "default must be one of values", path: ["default"] }),
   z.strictObject({
     type: z.literal("instance"), default: ComponentId.optional(), preferred: z.array(ComponentId).optional(),
     description: z.string().optional(),
@@ -147,6 +150,8 @@ const Variant = z.strictObject({
 }).refine((v) => Object.hasOwn(v.values, v.default), { message: "default must be one of values", path: ["default"] });
 
 const Data = ext({
+  /** The tokens this component uses (DTCG tree + `$when`), referenced as "{<component id>.<path>}" (§4.7). */
+  tokens: z.record(z.string(), z.unknown()).optional(),
   props: z.record(Ident, PropDef).optional(),
   variants: z.record(Ident, Variant).optional(),
   states: z.array(Ident).min(1).refine((s) => new Set(s).size === s.length, "states must be unique").optional(),
