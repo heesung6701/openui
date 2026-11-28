@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../../schema/component.schema.json
 # M3 icon buttons (standard / filled / filled tonal / outlined), unselected (non-toggle) form, material-web v0.192 tokens.
-# One UI tree for all styles: `style` is a mode prop (data.tokens `$when: style=…`), not a variant.
+# One UI tree for all styles: `appearance` is a mode prop (data.tokens `$when: style=…`), not a variant.
 kind: Component
 metadata:
   id: icon-button
@@ -9,9 +9,19 @@ metadata:
 data:
   props:
     icon: { type: instance, default: icon-star, preferred: [icon-star, icon-add] }
-    style: { type: mode, values: [standard, filled, tonal, outlined], default: standard, description: "standard | filled | tonal | outlined (token mode)" }
+    label: { type: text, default: "{text.icon-button.label}", description: Accessible name (the button shows no text) }
+    disabled: { type: boolean, default: false }
+    appearance: { type: mode, values: [standard, filled, tonal, outlined], default: standard, description: "standard | filled | tonal | outlined (token mode)" }
+  behavior:
+    role: button
+    label: { prop: label }
+    states:
+      hovered: hover
+      focused: focus-visible
+      pressed: press
+      disabled: { prop: disabled, inert: true }
   states: [enabled, hovered, focused, pressed, disabled]
-  # The tokens this component uses ("{icon-button.<name>}"), values from material-web v0.192 component tokens. $when = the value for that style.
+  # The tokens this component uses ("{icon-button.<name>}"), values from material-web v0.192 component tokens. $when = the value for that appearance.
   tokens:
     container-width: { $type: dimension, $value: { value: 40, unit: px } }
     container-height: { $type: dimension, $value: { value: 40, unit: px } }
@@ -19,77 +29,77 @@ data:
       $type: color
       $value: "{md.sys.color.transparent}"
       $when:
-        style=filled: "{md.sys.color.primary}"
-        style=tonal: "{md.sys.color.secondary-container}"
+        appearance=filled: "{md.sys.color.primary}"
+        appearance=tonal: "{md.sys.color.secondary-container}"
     container-shape: { $type: dimension, $value: "{md.sys.shape.corner-full}" }
     outline-color:
       $type: color
       $value: "{md.sys.color.transparent}"
       $when:
-        style=outlined: "{md.sys.color.outline}"
+        appearance=outlined: "{md.sys.color.outline}"
     outline-width:
       $type: dimension
       $value: "{md.sys.space.zero}"
       $when:
-        style=outlined: { value: 1, unit: px }
+        appearance=outlined: { value: 1, unit: px }
     state-layer-color:
       $type: color
       $value: "{md.sys.color.on-surface-variant}"
       $when:
-        style=filled: "{md.sys.color.on-primary}"
-        style=tonal: "{md.sys.color.on-secondary-container}"
+        appearance=filled: "{md.sys.color.on-primary}"
+        appearance=tonal: "{md.sys.color.on-secondary-container}"
     state-layer-shape: { $type: dimension, $value: "{md.sys.shape.corner-full}" }
     enabled-state-layer-opacity: { $type: number, $value: "{md.sys.opacity.zero}" }
     icon-color:
       $type: color
       $value: "{md.sys.color.on-surface-variant}"
       $when:
-        style=filled: "{md.sys.color.on-primary}"
-        style=tonal: "{md.sys.color.on-secondary-container}"
+        appearance=filled: "{md.sys.color.on-primary}"
+        appearance=tonal: "{md.sys.color.on-secondary-container}"
     icon-size: { $type: dimension, $value: { value: 24, unit: px } }
     hover-state-layer-opacity: { $type: number, $value: "{md.sys.state.hover-state-layer-opacity}" }
     focus-state-layer-opacity:
       $type: number
       $value: "{md.sys.state.focus-state-layer-opacity}"
       $when:
-        style=outlined: "{md.sys.state.hover-state-layer-opacity}"
+        appearance=outlined: "{md.sys.state.hover-state-layer-opacity}"
     pressed-state-layer-opacity: { $type: number, $value: "{md.sys.state.pressed-state-layer-opacity}" }
     pressed-state-layer-color:
       $type: color
       $value: "{md.sys.color.on-surface-variant}"
       $when:
-        style=filled: "{md.sys.color.on-primary}"
-        style=tonal: "{md.sys.color.on-secondary-container}"
-        style=outlined: "{md.sys.color.on-surface}"
+        appearance=filled: "{md.sys.color.on-primary}"
+        appearance=tonal: "{md.sys.color.on-secondary-container}"
+        appearance=outlined: "{md.sys.color.on-surface}"
     pressed-icon-color:
       $type: color
       $value: "{md.sys.color.on-surface-variant}"
       $when:
-        style=filled: "{md.sys.color.on-primary}"
-        style=tonal: "{md.sys.color.on-secondary-container}"
-        style=outlined: "{md.sys.color.on-surface}"
+        appearance=filled: "{md.sys.color.on-primary}"
+        appearance=tonal: "{md.sys.color.on-secondary-container}"
+        appearance=outlined: "{md.sys.color.on-surface}"
     disabled-container-color:
       $type: color
       $value: "{md.sys.color.transparent}"
       $when:
-        style=filled: "{md.sys.color.on-surface}"
-        style=tonal: "{md.sys.color.on-surface}"
+        appearance=filled: "{md.sys.color.on-surface}"
+        appearance=tonal: "{md.sys.color.on-surface}"
     disabled-container-opacity:
       $type: number
       $value: "{md.sys.opacity.zero}"
       $when:
-        style=filled: 0.12
-        style=tonal: 0.12
+        appearance=filled: 0.12
+        appearance=tonal: 0.12
     disabled-outline-color:
       $type: color
       $value: "{md.sys.color.transparent}"
       $when:
-        style=outlined: "{md.sys.color.on-surface}"
+        appearance=outlined: "{md.sys.color.on-surface}"
     disabled-outline-opacity:
       $type: number
       $value: "{md.sys.opacity.zero}"
       $when:
-        style=outlined: 0.12
+        appearance=outlined: 0.12
     disabled-icon-color: { $type: color, $value: "{md.sys.color.on-surface}" }
     disabled-icon-opacity: { $type: number, $value: 0.38 }
   anatomy:

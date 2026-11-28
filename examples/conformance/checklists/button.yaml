@@ -3,7 +3,8 @@ kind: Checklist
 metadata: { id: button, component: button, source: conformance }
 items:
   - { id: height, title: "높이 40px (phone·tablet)", check: { variant: { layout: inline }, mode: { device: [phone, tablet] }, part: root, property: height, expect: 40px } }
-  - { id: filled-bg, title: "filled 배경", check: { state: enabled, mode: { style: filled }, part: root, property: background-color, expect: "{color.primary}" } }
+  - { id: filled-bg, title: "filled 배경", check: { state: enabled, mode: { appearance: filled }, part: root, property: background-color, expect: "{color.primary}" } }
   - { id: label-text, title: "라벨 = 텍스트 토큰 (로케일별)", check: { state: enabled, mode: { theme: light }, part: label, property: text, expect: "{text.button.label}" } }
   - { id: ripple, title: "리플", manual: true, hint: { state: pressed } }
   - { id: desktop-height, title: "desktop 높이 32px", check: { variant: { layout: inline }, mode: { device: desktop }, part: root, property: height, expect: 32px } }
+  - { id: activate, title: "클릭하면 activate", interact: { given: { disabled: false }, do: [click], expect: { events: [activate] } } }

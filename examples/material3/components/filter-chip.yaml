@@ -8,6 +8,21 @@ metadata:
 data:
   props:
     label: { type: text, default: "{text.filter-chip.label}" }
+    disabled: { type: boolean, default: false }
+  behavior:
+    role: button
+    label: { prop: label }
+    states:
+      hovered: hover
+      focused: focus-visible
+      pressed: press
+      disabled: { prop: disabled, inert: true }
+    aria:
+      pressed: { selected: { "false": "false", "true": "true" } }
+    on:
+      activate:
+        set: { selected: { "false": "true", "true": "false" } }
+        emit: change
   variants:
     selected:
       values: { "false": {}, "true": { description: "Selected: tonal container and leading check" } }

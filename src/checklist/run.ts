@@ -4,12 +4,13 @@ import { statesOf, variantAxes } from "../component/validate";
 import { aliasesToVars } from "../render/css-var";
 import { collectionsReachedBy, resolveToken, type TokenSet } from "../tokens/resolver";
 import { aliasTarget, collectAliases } from "../tokens/values";
+import type { Interact, InteractResult } from "./interact";
 import type { Check, Checklist } from "./schema";
 
 export type Case = { variant: Record<string, string>; state: string; mode: Record<string, string> };
 export type Measure = (c: Case & { part: string; property: string; expectCss: string }) => Promise<{ actual: string; expected: string }>;
 export type CaseResult = Case & { actual: string; expected: string; pass: boolean };
-export type ItemResult = { id: string; title: string; kind: "auto" | "manual"; pass: boolean | null; cases: CaseResult[] };
+export type ItemResult = { id: string; title: string; kind: "auto" | "interact" | "manual"; pass: boolean | null; cases: CaseResult[] };
 
 const list = (v: string | string[] | undefined): string[] | undefined => (v === undefined ? undefined : Array.isArray(v) ? v : [v]);
 
@@ -62,9 +63,16 @@ export function sameCss(a: string, b: string): boolean {
   return x.slice(0, 3).every((v, i) => Math.abs(v - y[i]!) < 1) && Math.abs(x[3]! - y[3]!) < 0.002;
 }
 
-export async function runChecklist(cl: Checklist, doc: Component, tokens: TokenSet, measure: Measure): Promise<ItemResult[]> {
+/** `act` runs interaction items (a live element in the editor); without it they are reported as not run (pass null). */
+export async function runChecklist(cl: Checklist, doc: Component, tokens: TokenSet, measure: Measure, act?: (i: Interact) => Promise<InteractResult>): Promise<ItemResult[]> {
   const out: ItemResult[] = [];
   for (const item of cl.items) {
+    if (item.interact) {
+      const r = act ? await act(item.interact as Interact) : null;
+      out.push({ id: item.id, title: item.title, kind: "interact", pass: r ? r.pass : null,
+        cases: r ? [{ variant: {}, state: "", mode: {}, actual: r.actual, expected: r.expected, pass: r.pass }] : [] });
+      continue;
+    }
     if (!item.check) {
       out.push({ id: item.id, title: item.title, kind: "manual", pass: null, cases: [] });
       continue;

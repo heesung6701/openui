@@ -1,4 +1,6 @@
+import { runInteract, type Actor, type Interact } from "../src/checklist/interact";
 import { runChecklist, type ItemResult, type Measure } from "../src/checklist/run";
+import { OuElement } from "../src/runtime/element";
 import type { Checklist } from "../src/checklist/schema";
 import type { Project } from "../src/project";
 import { modePropsOf } from "../src/component/tokens";
@@ -34,13 +36,65 @@ export function domMeasure(p: Project, id: string): Measure {
   };
 }
 
+/** Drive a live runtime element (`ou-live`) with real DOM events: interaction items check the web runtime itself. */
+export function domActor(p: Project, id: string): Actor & { dispose(): void } {
+  let stage: HTMLElement | null = null;
+  let el: OuElement;
+  let events: string[] = [];
+  const dispose = () => { stage?.remove(); stage = null; };
+  const key = (k: string) => {
+    el.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true }));
+    el.dispatchEvent(new KeyboardEvent("keyup", { key: k, bubbles: true }));
+  };
+  return {
+    dispose,
+    async start(given) {
+      dispose();
+      stage = document.body.appendChild(document.createElement("div"));
+      stage.style.cssText = "position:fixed;left:-10000px;top:0;";
+      el = stage.appendChild(ouRoot(p, {})).appendChild(document.createElement("ou-live")) as OuElement;
+      el.reset(p, id, given);
+      events = [];
+      const b = p.components.get(id)!.doc.data.behavior;
+      for (const name of new Set(["activate", ...(b?.on?.activate?.emit ? [b.on.activate.emit] : [])])) el.addEventListener(name, () => events.push(name));
+    },
+    async step(s) {
+      if (s === "hover") el.dispatchEvent(new PointerEvent("pointerenter"));
+      else if (s === "unhover") el.dispatchEvent(new PointerEvent("pointerleave"));
+      else if (s === "press") el.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      else if (s === "release") el.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+      else if (s === "click") {
+        el.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+        el.dispatchEvent(new PointerEvent("pointerup", { bubbles: true }));
+        el.click();
+      } else if (s === "focus") {
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "Tab" })); // keyboard modality → focus-visible
+        el.focus();
+      } else if (s === "blur") el.blur();
+      else key(s === "key:Enter" ? "Enter" : " ");
+    },
+    snapshot() {
+      const attrs = Object.fromEntries([...el.attributes].filter((a) => a.name === "role" || a.name === "tabindex" || a.name.startsWith("aria-")).map((a) => [a.name, a.value]));
+      return { values: el.values, state: el.state, attrs, events: [...events] };
+    },
+  };
+}
+const act = (p: Project, id: string) => async (i: Interact) => {
+  const actor = domActor(p, id);
+  try {
+    return await runInteract(i, actor);
+  } finally {
+    actor.dispose();
+  }
+};
+
 export async function runAll(): Promise<Record<string, ItemResult[]>> {
   const p = state.project;
   const out: Record<string, ItemResult[]> = {};
   if (!p) return out;
   for (const [id, { doc }] of p.checklists) {
     const comp = p.components.get(id);
-    if (comp) out[id] = await runChecklist(doc, comp.doc, p.tokens, domMeasure(p, id));
+    if (comp) out[id] = await runChecklist(doc, comp.doc, p.tokens, domMeasure(p, id), act(p, id));
   }
   return out;
 }
@@ -76,13 +130,18 @@ function render() {
     return;
   }
   const { cl, results } = current;
-  const auto = results.filter((r) => r.kind === "auto");
+  const auto = results.filter((r) => r.kind === "auto" || r.kind === "interact");
   const manual = results.filter((r) => r.kind === "manual");
   const ticked = manual.filter((r) => getTick(key(cl, r.id))).length;
   host.innerHTML = (current.paused ? `<div class="pv-error">Checklist paused: fix the errors in this file to re-run it.</div>` : "") + `<h3>Checklist · <span class="${auto.every((r) => r.pass) ? "ok" : "err"}">auto ${auto.filter((r) => r.pass).length}/${auto.length}</span> · manual ${ticked}/${manual.length}</h3>` +
     results.map((r) => {
       if (r.kind === "manual") {
         return `<div class="ck-item" data-item="${r.id}"><label><input type="checkbox" data-tick="${r.id}"${getTick(key(cl, r.id)) ? " checked" : ""}> ✋ ${escapeHtml(r.title)}</label></div>`;
+      }
+      if (r.kind === "interact") {
+        const c = r.cases[0];
+        return `<div class="ck-item" data-item="${r.id}"><span class="${r.pass ? "ok" : "err"}">${r.pass ? "✓" : "✗"}</span> 👆 ${escapeHtml(r.title)}` +
+          (c && !c.pass ? `<ul><li>${escapeHtml(c.actual)} ≠ ${escapeHtml(c.expected)}</li></ul>` : "") + "</div>";
       }
       const fails = r.cases.filter((c) => !c.pass);
       return `<div class="ck-item" data-item="${r.id}"><span class="${r.pass ? "ok" : "err"}">${r.pass ? "✓" : "✗"}</span> ${escapeHtml(r.title)} <span class="muted">(${r.cases.length - fails.length}/${r.cases.length})</span>` +
@@ -131,7 +190,7 @@ async function refresh() {
     render();
     return;
   }
-  const results = await runChecklist(entry.doc, comp.doc, p.tokens, domMeasure(p, id));
+  const results = await runChecklist(entry.doc, comp.doc, p.tokens, domMeasure(p, id), act(p, id));
   if (gen !== generation) return;
   current = { cl: entry.doc, results, file: state.current };
   render();

@@ -82,7 +82,7 @@ const find = (n: VNode, part: string): VNode | undefined =>
   n.attrs["data-part"] === part ? n : n.children.map((c) => find(c, part)).find(Boolean);
 test("buildComponent: conformance button", async () => {
   const { project } = await loadProject(fsIO("examples/conformance"));
-  const v = buildComponent(project!, "button", { variant: { layout: "inline" }, state: "enabled", props: { label: "Go", showIcon: true, style: "outlined" } });
+  const v = buildComponent(project!, "button", { variant: { layout: "inline" }, state: "enabled", props: { label: "Go", showIcon: true, appearance: "outlined" } });
   expect(v.attrs["data-component"]).toBe("button");
   expect(v.attrs["data-part"]).toBe("root");
   expect(find(v, "label")!.text).toBe("Go");
@@ -142,8 +142,8 @@ test("text tokens: text parts and text prop defaults render the selected locale"
 
 test("mode prop: the instance's choice (or the default) marks the component root", async () => {
   const { project } = await loadProject(fsIO("examples/conformance"));
-  expect(buildComponent(project!, "button", { variant: {}, state: "enabled", props: { style: "outlined" } }).attrs["data-mode-style"]).toBe("outlined");
-  expect(buildComponent(project!, "button", { variant: {}, state: "enabled", props: {} }).attrs["data-mode-style"]).toBe("filled");
+  expect(buildComponent(project!, "button", { variant: {}, state: "enabled", props: { appearance: "outlined" } }).attrs["data-mode-appearance"]).toBe("outlined");
+  expect(buildComponent(project!, "button", { variant: {}, state: "enabled", props: {} }).attrs["data-mode-appearance"]).toBe("filled");
 });
 test("token sheet: component tokens follow conditions (media queries) and mode props; device has no media feature", async () => {
   const { project } = await loadProject(fsIO("examples/conformance"));
@@ -153,6 +153,6 @@ test("token sheet: component tokens follow conditions (media queries) and mode p
   expect(css).toContain('@media (width >= 840px) {');
   expect(css).toContain('@media (orientation: landscape) {\n  :where(.ou-root:not([data-orientation])) :where([data-component="gallery"]) {');
   expect(css).toContain(':where(.ou-root[data-device="desktop"]) :where([data-component="button"]) {\n  --button-height: 32px;');
-  expect(css).toContain(':where([data-component="button"][data-mode-style="outlined"]) {');
+  expect(css).toContain(':where([data-component="button"][data-mode-appearance="outlined"]) {');
   expect(css).not.toContain(":not([data-device])"); // no CSS media feature for device type: the app sets data-device
 });

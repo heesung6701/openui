@@ -9,24 +9,27 @@ items:
   - { id: size-h, title: "컨테이너 높이 40dp", check: { part: root, property: height, expect: 40px } }
   - { id: shape, title: "원형(corner-full)", check: { part: root, property: border-top-left-radius, expect: "{md.sys.shape.corner-full}" } }
   - { id: icon-size, title: "아이콘 24dp", check: { part: icon, property: width, expect: 24px } }
-  - { id: standard-transparent, title: "Standard·Outlined 컨테이너 없음", check: { mode: { style: [standard, outlined] }, part: root, property: background-color, expect: transparent } }
-  - { id: standard-icon, title: "Standard 아이콘 = on-surface-variant", check: { state: [enabled, hovered, focused, pressed], mode: { style: standard }, part: icon, property: --ou-icon-fill, expect: "{md.sys.color.on-surface-variant}" } }
-  - { id: filled-container, title: "Filled 컨테이너 = primary", check: { state: [enabled, hovered, focused, pressed], mode: { style: filled }, part: root, property: background-color, expect: "{md.sys.color.primary}" } }
-  - { id: filled-icon, title: "Filled 아이콘 = on-primary", check: { state: enabled, mode: { style: filled }, part: icon, property: --ou-icon-fill, expect: "{md.sys.color.on-primary}" } }
-  - { id: tonal-container, title: "Tonal 컨테이너 = secondary-container", check: { state: enabled, mode: { style: tonal }, part: root, property: background-color, expect: "{md.sys.color.secondary-container}" } }
-  - { id: tonal-icon, title: "Tonal 아이콘 = on-secondary-container", check: { state: enabled, mode: { style: tonal }, part: icon, property: --ou-icon-fill, expect: "{md.sys.color.on-secondary-container}" } }
-  - { id: outlined-outline, title: "Outlined 1dp outline", check: { state: [enabled, hovered, focused, pressed], mode: { style: outlined }, part: root, property: box-shadow, expect: "inset 0 0 0 1px {md.sys.color.outline}" } }
-  - { id: outlined-disabled-outline, title: "Outlined disabled outline = on-surface 12%", check: { state: disabled, mode: { style: outlined }, part: root, property: box-shadow, expect: "inset 0 0 0 1px color-mix(in srgb, {md.sys.color.on-surface} 12%, transparent)" } }
-  - { id: outlined-pressed-icon, title: "Outlined pressed 아이콘 = on-surface", check: { state: pressed, mode: { style: outlined }, part: icon, property: --ou-icon-fill, expect: "{md.sys.color.on-surface}" } }
-  - { id: disabled-container, title: "Filled·Tonal disabled 컨테이너 on-surface 12%", check: { state: disabled, mode: { style: [filled, tonal] }, part: root, property: background-color, expect: "color-mix(in srgb, {md.sys.color.on-surface} 12%, transparent)" } }
+  - { id: standard-transparent, title: "Standard·Outlined 컨테이너 없음", check: { mode: { appearance: [standard, outlined] }, part: root, property: background-color, expect: transparent } }
+  - { id: standard-icon, title: "Standard 아이콘 = on-surface-variant", check: { state: [enabled, hovered, focused, pressed], mode: { appearance: standard }, part: icon, property: --ou-icon-fill, expect: "{md.sys.color.on-surface-variant}" } }
+  - { id: filled-container, title: "Filled 컨테이너 = primary", check: { state: [enabled, hovered, focused, pressed], mode: { appearance: filled }, part: root, property: background-color, expect: "{md.sys.color.primary}" } }
+  - { id: filled-icon, title: "Filled 아이콘 = on-primary", check: { state: enabled, mode: { appearance: filled }, part: icon, property: --ou-icon-fill, expect: "{md.sys.color.on-primary}" } }
+  - { id: tonal-container, title: "Tonal 컨테이너 = secondary-container", check: { state: enabled, mode: { appearance: tonal }, part: root, property: background-color, expect: "{md.sys.color.secondary-container}" } }
+  - { id: tonal-icon, title: "Tonal 아이콘 = on-secondary-container", check: { state: enabled, mode: { appearance: tonal }, part: icon, property: --ou-icon-fill, expect: "{md.sys.color.on-secondary-container}" } }
+  - { id: outlined-outline, title: "Outlined 1dp outline", check: { state: [enabled, hovered, focused, pressed], mode: { appearance: outlined }, part: root, property: box-shadow, expect: "inset 0 0 0 1px {md.sys.color.outline}" } }
+  - { id: outlined-disabled-outline, title: "Outlined disabled outline = on-surface 12%", check: { state: disabled, mode: { appearance: outlined }, part: root, property: box-shadow, expect: "inset 0 0 0 1px color-mix(in srgb, {md.sys.color.on-surface} 12%, transparent)" } }
+  - { id: outlined-pressed-icon, title: "Outlined pressed 아이콘 = on-surface", check: { state: pressed, mode: { appearance: outlined }, part: icon, property: --ou-icon-fill, expect: "{md.sys.color.on-surface}" } }
+  - { id: disabled-container, title: "Filled·Tonal disabled 컨테이너 on-surface 12%", check: { state: disabled, mode: { appearance: [filled, tonal] }, part: root, property: background-color, expect: "color-mix(in srgb, {md.sys.color.on-surface} 12%, transparent)" } }
   - { id: disabled-icon, title: "Disabled 아이콘 on-surface 38%", check: { state: disabled, part: icon, property: --ou-icon-fill-opacity, expect: 0.38 } }
   - { id: enabled-layer, title: "Enabled state layer 없음", check: { state: enabled, part: stateLayer, property: opacity, expect: 0 } }
   - { id: hover-layer, title: "Hover state layer 8%", check: { state: hovered, part: stateLayer, property: opacity, expect: "{md.sys.state.hover-state-layer-opacity}" } }
-  - { id: focus-layer, title: "Focus state layer 10% (Outlined는 토큰상 8%)", check: { state: focused, mode: { style: [standard, filled, tonal] }, part: stateLayer, property: opacity, expect: "{md.sys.state.focus-state-layer-opacity}" } }
-  - { id: outlined-focus-layer, title: "Outlined focus state layer 8% (v0.192 토큰 그대로)", check: { state: focused, mode: { style: outlined }, part: stateLayer, property: opacity, expect: 0.08 } }
+  - { id: focus-layer, title: "Focus state layer 10% (Outlined는 토큰상 8%)", check: { state: focused, mode: { appearance: [standard, filled, tonal] }, part: stateLayer, property: opacity, expect: "{md.sys.state.focus-state-layer-opacity}" } }
+  - { id: outlined-focus-layer, title: "Outlined focus state layer 8% (v0.192 토큰 그대로)", check: { state: focused, mode: { appearance: outlined }, part: stateLayer, property: opacity, expect: 0.08 } }
   - { id: pressed-layer, title: "Pressed state layer 10%", check: { state: pressed, part: stateLayer, property: opacity, expect: "{md.sys.state.pressed-state-layer-opacity}" } }
   - { id: layer-shape, title: "State layer 원형", check: { part: stateLayer, property: border-top-left-radius, expect: "{md.sys.shape.corner-full}" } }
   - { id: focus-ring, title: "포커스 링 — v0.1 어휘로 미표현임을 확인", manual: true, hint: { state: focused } }
   - { id: ripple, title: "pressed 리플 — 정적 프리뷰는 state layer만 표시", manual: true, hint: { state: pressed } }
   - { id: touch-target, title: "터치 타깃 48dp 확보", manual: true }
   - { id: tooltip, title: "아이콘 의미를 툴팁/접근성 라벨로 보완", manual: true }
+  - { id: accessible-name, title: "텍스트가 없어도 접근성 이름이 있음", interact: { do: [focus], expect: { attrs: { role: button, aria-label: Favorite } } } }
+  - { id: activate-click, title: "클릭하면 activate 이벤트", interact: { do: [click], expect: { events: [activate] } } }
+  - { id: disabled-inert, title: "disabled면 반응 없음", interact: { given: { disabled: true }, do: [click], expect: { events: [], attrs: { aria-disabled: "true" } } } }

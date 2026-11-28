@@ -8,7 +8,23 @@ metadata:
   description: "M3 checkbox. The check glyph uses Material Icons `check`, not M3's custom check-mark path."
 data:
   props:
+    label: { type: text, default: "{text.checkbox.label}", description: Accessible name }
+    disabled: { type: boolean, default: false }
     error: { type: mode, values: ["false", "true"], default: "false", description: "\"true\" shows error colors (token mode; the UI tree is the same)" }
+  behavior:
+    role: checkbox
+    label: { prop: label }
+    states:
+      hovered: hover
+      focused: focus-visible
+      pressed: press
+      disabled: { prop: disabled, inert: true }
+    aria:
+      checked: { type: { unselected: "false", selected: "true", indeterminate: mixed } }
+    on:
+      activate:
+        set: { type: { unselected: selected, selected: unselected, indeterminate: selected } }
+        emit: change
   variants:
     type:
       values:

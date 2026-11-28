@@ -181,6 +181,140 @@
             ]
           }
         },
+        "behavior": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "type": "string",
+              "enum": [
+                "button",
+                "checkbox",
+                "switch",
+                "radio",
+                "link",
+                "img",
+                "group",
+                "none"
+              ]
+            },
+            "label": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "prop": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-zA-Z0-9]*$"
+                    }
+                  },
+                  "required": [
+                    "prop"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
+                }
+              ]
+            },
+            "states": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "hover",
+                      "focus-visible",
+                      "press"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "prop": {
+                        "type": "string",
+                        "pattern": "^[a-z][a-zA-Z0-9]*$"
+                      },
+                      "inert": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "prop"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            },
+            "aria": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string"
+                  },
+                  "additionalProperties": {
+                    "type": "string",
+                    "enum": [
+                      "true",
+                      "false",
+                      "mixed"
+                    ]
+                  }
+                }
+              }
+            },
+            "on": {
+              "type": "object",
+              "properties": {
+                "activate": {
+                  "type": "object",
+                  "properties": {
+                    "set": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "emit": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-zA-Z0-9]*$"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
         "variants": {
           "type": "object",
           "propertyNames": {

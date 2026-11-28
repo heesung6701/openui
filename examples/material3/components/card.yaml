@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../../schema/component.schema.json
 # M3 cards (elevated / filled / outlined), material-web v0.192 tokens. Content is a slot.
-# One UI tree for all styles: `style` is a mode prop (data.tokens `$when: style=…`), not a variant.
+# One UI tree for all styles: `appearance` is a mode prop (data.tokens `$when: style=…`), not a variant.
 kind: Component
 metadata:
   id: card
@@ -9,9 +9,13 @@ metadata:
 data:
   props:
     content: { type: slot, min: 1, description: "Card content (media, text, actions)" }
-    style:   { type: mode, values: [elevated, filled, outlined], default: elevated, description: "elevated | filled | outlined (token mode)" }
+    appearance: { type: mode, values: [elevated, filled, outlined], default: elevated, description: "elevated | filled | outlined (token mode)" }
+  behavior:
+    role: group
+    states:
+      hovered: hover
   states: [enabled, hovered, focused, pressed, disabled]
-  # The tokens this component uses ("{card.<name>}"), values from material-web v0.192 component tokens. $when = the value for that style.
+  # The tokens this component uses ("{card.<name>}"), values from material-web v0.192 component tokens. $when = the value for that appearance.
   tokens:
     content-gap: { $type: dimension, $value: { value: 8, unit: px } }
     padding: { $type: dimension, $value: { value: 16, unit: px } }
@@ -20,61 +24,61 @@ data:
       $type: color
       $value: "{md.sys.color.surface-container-low}"
       $when:
-        style=filled: "{md.sys.color.surface-container-highest}"
-        style=outlined: "{md.sys.color.surface}"
+        appearance=filled: "{md.sys.color.surface-container-highest}"
+        appearance=outlined: "{md.sys.color.surface}"
     container-shape: { $type: dimension, $value: "{md.sys.shape.corner-medium}" }
     outline-color:
       $type: color
       $value: "{md.sys.color.transparent}"
       $when:
-        style=outlined: "{md.sys.color.outline-variant}"
+        appearance=outlined: "{md.sys.color.outline-variant}"
     outline-width:
       $type: dimension
       $value: "{md.sys.space.zero}"
       $when:
-        style=outlined: { value: 1, unit: px }
+        appearance=outlined: { value: 1, unit: px }
     shadow:
       $type: shadow
       $value: "{md.sys.elevation-shadow.level1}"
       $when:
-        style=filled: "{md.sys.elevation-shadow.level0}"
-        style=outlined: "{md.sys.elevation-shadow.level0}"
+        appearance=filled: "{md.sys.elevation-shadow.level0}"
+        appearance=outlined: "{md.sys.elevation-shadow.level0}"
     enabled-state-layer-opacity: { $type: number, $value: "{md.sys.opacity.zero}" }
     hover-state-layer-color: { $type: color, $value: "{md.sys.color.on-surface}" }
     hover-shadow:
       $type: shadow
       $value: "{md.sys.elevation-shadow.level2}"
       $when:
-        style=filled: "{md.sys.elevation-shadow.level1}"
-        style=outlined: "{md.sys.elevation-shadow.level1}"
+        appearance=filled: "{md.sys.elevation-shadow.level1}"
+        appearance=outlined: "{md.sys.elevation-shadow.level1}"
     hover-state-layer-opacity: { $type: number, $value: "{md.sys.state.hover-state-layer-opacity}" }
     focus-outline-color:
       $type: color
       $value: "{md.sys.color.transparent}"
       $when:
-        style=outlined: "{md.sys.color.on-surface}"
+        appearance=outlined: "{md.sys.color.on-surface}"
     focus-state-layer-opacity: { $type: number, $value: "{md.sys.state.focus-state-layer-opacity}" }
     pressed-state-layer-opacity: { $type: number, $value: "{md.sys.state.pressed-state-layer-opacity}" }
     disabled-container-color:
       $type: color
       $value: "{md.sys.color.surface}"
       $when:
-        style=filled: "{md.sys.color.surface-variant}"
+        appearance=filled: "{md.sys.color.surface-variant}"
     disabled-container-opacity:
       $type: number
       $value: 0.38
       $when:
-        style=outlined: "{md.sys.opacity.full}"
+        appearance=outlined: "{md.sys.opacity.full}"
     disabled-outline-color:
       $type: color
       $value: "{md.sys.color.transparent}"
       $when:
-        style=outlined: "{md.sys.color.outline}"
+        appearance=outlined: "{md.sys.color.outline}"
     disabled-outline-opacity:
       $type: number
       $value: "{md.sys.opacity.zero}"
       $when:
-        style=outlined: 0.12
+        appearance=outlined: 0.12
   anatomy:
     root:
       kind: frame

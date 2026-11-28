@@ -142,6 +142,25 @@ const PropDef = z.discriminatedUnion("type", [
   }),
 ]);
 
+/** §4.8 behavior: how the component works at runtime (role, state triggers, ARIA, actions). */
+export const ROLES = ["button", "checkbox", "switch", "radio", "link", "img", "group", "none"] as const;
+export const ARIA_STATES = ["checked", "pressed", "selected", "expanded"] as const;
+const Trigger = z.union([
+  z.enum(["hover", "focus-visible", "press"]),
+  z.strictObject({ prop: Ident, inert: z.boolean().optional() }),
+], { error: "trigger must be hover, focus-visible, press or { prop: <boolean prop>, inert?: true }" });
+const ValueMap = z.record(z.string(), z.record(z.string(), z.string()));
+const Behavior = z.strictObject({
+  role: z.enum(ROLES, { error: `role must be one of ${ROLES.join(", ")}` }),
+  label: z.union([PropRef, TextToken], { error: "label must be { prop: <text prop> } or a text token" }).optional(),
+  states: z.record(z.string(), Trigger).optional(),
+  aria: z.record(z.string(), z.record(z.string(), z.record(z.string(), z.enum(["true", "false", "mixed"])))).optional(),
+  on: z.strictObject({
+    activate: z.strictObject({ set: ValueMap.optional(), emit: Ident.optional() }).optional(),
+  }).optional(),
+});
+export type Behavior = z.infer<typeof Behavior>;
+
 const Variant = z.strictObject({
   values: z.record(VariantValue, z.strictObject({ description: z.string().optional() }))
     .refine((v) => Object.keys(v).length > 0, "variant needs at least one value"),
@@ -153,6 +172,7 @@ const Data = ext({
   /** The tokens this component uses (DTCG tree + `$when`), referenced as "{<component id>.<path>}" (§4.7). */
   tokens: z.record(z.string(), z.unknown()).optional(),
   props: z.record(Ident, PropDef).optional(),
+  behavior: Behavior.optional(),
   variants: z.record(Ident, Variant).optional(),
   states: z.array(Ident).min(1).refine((s) => new Set(s).size === s.length, "states must be unique").optional(),
   anatomy: z.strictObject({ root: Part }),

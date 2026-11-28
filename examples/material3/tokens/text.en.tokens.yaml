@@ -2,4 +2,6 @@
 text:
   $type: string
   button:      { label: { $value: Button } }
+  icon-button: { label: { $value: Favorite } }
+  checkbox:    { label: { $value: Option } }
   filter-chip: { label: { $value: Filter } }

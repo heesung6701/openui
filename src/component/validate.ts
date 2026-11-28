@@ -2,9 +2,12 @@ import type { Diagnostic } from "../diagnostics";
 import type { TokenSet } from "../tokens/resolver";
 import { aliasTarget, collectAliases } from "../tokens/values";
 import { resolveStyles, variantCombos } from "./resolve";
-import { Ident, STYLE_PROPERTIES, type Component, type PartKind, type PartNode } from "./schema";
+import { ARIA_STATES, Ident, STYLE_PROPERTIES, type Component, type PartKind, type PartNode } from "./schema";
 
 export type ValidateContext = { tokens: TokenSet; componentIds: Set<string> };
+
+/** Props and variant axes become attributes / props on runtime platforms: these names are taken there (HTML, React). */
+export const RESERVED_NAMES = new Set(["style", "class", "className", "id", "title", "hidden", "lang", "dir", "slot", "part", "role", "tabindex", "key", "ref", "children", "is", "inert"]);
 
 export function variantAxes(doc: Component): Record<string, { values: string[]; default: string }> {
   return Object.fromEntries(
@@ -90,6 +93,52 @@ export function validateComponent(doc: Component, file: string, ctx: ValidateCon
     for (const [child, p] of Object.entries(part.children ?? {})) walk(child, p, [...path, "children", child]);
   };
   walk("root", root, ["data", "anatomy", "root"]);
+
+  for (const name of [...Object.keys(props), ...Object.keys(axes)])
+    if (RESERVED_NAMES.has(name)) err(props[name] ? ["data", "props", name] : ["data", "variants", name], `name "${name}" is reserved on runtime platforms (HTML attributes, React props); pick another name`);
+
+  // behavior (§4.8): props it reads count as bound
+  const b = doc.data.behavior;
+  if (b) {
+    const at = ["data", "behavior"];
+    const propIs = (p: string, type: string, path: (string | number)[]) => {
+      const def = props[p];
+      if (!def) err(path, `unknown prop "${p}"`);
+      else if (def.type !== type) err(path, `prop "${p}" is ${def.type}, expected a ${type} prop`);
+      else bind(p);
+    };
+    if (b.label && typeof b.label === "object") propIs(b.label.prop, "text", [...at, "label"]);
+    if (typeof b.label === "string") textToken(b.label, [...at, "label"]);
+    let inert = 0;
+    for (const [state, trig] of Object.entries(b.states ?? {})) {
+      const p = [...at, "states", state];
+      if (!states.includes(state)) err(p, `unknown state "${state}" (declared: ${states.join(", ")})`);
+      else if (state === states[0]) err(p, `default state "${state}" is the absence of triggers; it cannot have one`);
+      if (typeof trig === "object") {
+        propIs(trig.prop, "boolean", [...p, "prop"]);
+        if (trig.inert) inert++;
+      }
+    }
+    if (inert > 1) err([...at, "states"], "at most one state can be inert");
+    // a value space: a variant axis, a mode prop or a boolean prop
+    const space = (name: string): string[] | null => {
+      const def = props[name];
+      return axes[name]?.values ?? (def?.type === "mode" ? def.values : def?.type === "boolean" ? ["true", "false"] : null);
+    };
+    const checkMap = (name: string, keys: string[], values: string[] | null, p: (string | number)[]) => {
+      const vs = space(name);
+      if (!vs) return err(p, `unknown variant axis, mode prop or boolean prop "${name}"`);
+      if (props[name]) bind(name);
+      for (const v of [...keys, ...(values ?? [])]) if (!vs.includes(v)) err(p, `unknown value "${v}" for "${name}" (${vs.join(", ")})`);
+    };
+    for (const [attr, byName] of Object.entries(b.aria ?? {})) {
+      const p = [...at, "aria", attr];
+      if (!(ARIA_STATES as readonly string[]).includes(attr)) err(p, `unknown aria state "${attr}" (${ARIA_STATES.join(", ")})`);
+      if (Object.keys(byName).length !== 1) err(p, `aria "${attr}" maps exactly one axis or prop`);
+      for (const [name, map] of Object.entries(byName)) checkMap(name, Object.keys(map), null, [...p, name]);
+    }
+    for (const [name, map] of Object.entries(b.on?.activate?.set ?? {})) checkMap(name, Object.keys(map), Object.values(map), [...at, "on", "activate", "set", name]);
+  }
 
   // props
   for (const [name, def] of Object.entries(props)) {

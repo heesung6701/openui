@@ -58,6 +58,28 @@ export function validateChecklist(cl: Checklist, file: string, project: Project)
         }
       }
     }
+    if (item.interact) {
+      const i = item.interact;
+      const p = [...at, "interact"];
+      const props = comp.doc.data.props ?? {};
+      const space = (name: string): string[] | null => {
+        const def = props[name];
+        return axes[name]?.values ?? (def?.type === "mode" ? def.values : def?.type === "boolean" ? ["true", "false"] : null);
+      };
+      const checkValues = (vals: Record<string, string | boolean> | undefined, where: string) => {
+        for (const [k, v] of Object.entries(vals ?? {})) {
+          const def = props[k];
+          if (def?.type === "text") continue; // any text
+          const vs = space(k);
+          if (!vs) err([...p, where, k], `unknown variant axis or prop "${k}"`);
+          else if (!vs.includes(String(v))) err([...p, where, k], `unknown value "${v}" for "${k}" (${vs.join(", ")})`);
+        }
+      };
+      checkValues(i.given, "given");
+      checkValues(i.expect.values, "expect");
+      if (i.expect.state !== undefined && !states.includes(i.expect.state)) err([...p, "expect", "state"], `unknown state "${i.expect.state}" (declared: ${states.join(", ")})`);
+      if (!comp.doc.data.behavior) err(p, `component "${cl.metadata.component}" has no behavior (data.behavior) to interact with`);
+    }
     if (item.hint) {
       checkVariant(item.hint.variant, [...at, "hint", "variant"]);
       checkStates(item.hint.state, [...at, "hint", "state"]);

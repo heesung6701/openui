@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../../schema/component.schema.json
 # M3 common buttons (filled / outlined / text / elevated / filled tonal), material-web v0.192 tokens.
-# The five styles share one UI tree, so `style` is a mode prop: per-style values are this component's tokens
-# (data.tokens, `$when: style=…`). Only withIcon (adds the icon part) is a variant.
+# The five styles share one UI tree, so `appearance` is a mode prop: per-style values are this component's tokens
+# (data.tokens, `$when: appearance=…`). Only withIcon (adds the icon part) is a variant.
 kind: Component
 metadata:
   id: button
@@ -10,14 +10,23 @@ metadata:
 data:
   props:
     label: { type: text, default: "{text.button.label}" }
-    style: { type: mode, values: [filled, outlined, text, elevated, tonal], default: filled, description: "filled | outlined | text | elevated | tonal. Only token values differ, so it is a mode, not a variant" }
+    disabled: { type: boolean, default: false }
+    appearance: { type: mode, values: [filled, outlined, text, elevated, tonal], default: filled, description: "filled | outlined | text | elevated | tonal. Only token values differ, so it is a mode, not a variant" }
     icon:  { type: instance, default: icon-add, preferred: [icon-add, icon-star], description: Leading icon (withIcon=true) }
+  behavior:
+    role: button
+    label: { prop: label }
+    states:
+      hovered: hover
+      focused: focus-visible
+      pressed: press
+      disabled: { prop: disabled, inert: true }
   variants:
     withIcon:
       values: { "false": {}, "true": { description: "Leading icon shown; leading padding shrinks" } }
       default: "false"
   states: [enabled, hovered, focused, pressed, disabled]
-  # The tokens this component uses ("{button.<name>}"), values from material-web v0.192 component tokens. $when = the value for that style.
+  # The tokens this component uses ("{button.<name>}"), values from material-web v0.192 component tokens. $when = the value for that appearance.
   tokens:
     icon-label-space: { $type: dimension, $value: { value: 8, unit: px } }
     block-space: { $type: dimension, $value: "{md.sys.space.zero}" }
@@ -25,102 +34,102 @@ data:
       $type: dimension
       $value: { value: 24, unit: px }
       $when:
-        style=text: { value: 12, unit: px }
+        appearance=text: { value: 12, unit: px }
     leading-space:
       $type: dimension
       $value: { value: 24, unit: px }
       $when:
-        style=text: { value: 12, unit: px }
+        appearance=text: { value: 12, unit: px }
     container-height: { $type: dimension, $value: { value: 40, unit: px } }
     container-color:
       $type: color
       $value: "{md.sys.color.primary}"
       $when:
-        style=outlined: "{md.sys.color.transparent}"
-        style=text: "{md.sys.color.transparent}"
-        style=elevated: "{md.sys.color.surface-container-low}"
-        style=tonal: "{md.sys.color.secondary-container}"
+        appearance=outlined: "{md.sys.color.transparent}"
+        appearance=text: "{md.sys.color.transparent}"
+        appearance=elevated: "{md.sys.color.surface-container-low}"
+        appearance=tonal: "{md.sys.color.secondary-container}"
     container-shape: { $type: dimension, $value: "{md.sys.shape.corner-full}" }
     shadow:
       $type: shadow
       $value: "{md.sys.elevation-shadow.level0}"
       $when:
-        style=elevated: "{md.sys.elevation-shadow.level1}"
+        appearance=elevated: "{md.sys.elevation-shadow.level1}"
     outline-color:
       $type: color
       $value: "{md.sys.color.transparent}"
       $when:
-        style=outlined: "{md.sys.color.outline}"
+        appearance=outlined: "{md.sys.color.outline}"
     outline-width:
       $type: dimension
       $value: "{md.sys.space.zero}"
       $when:
-        style=outlined: { value: 1, unit: px }
+        appearance=outlined: { value: 1, unit: px }
     state-layer-color:
       $type: color
       $value: "{md.sys.color.on-primary}"
       $when:
-        style=outlined: "{md.sys.color.primary}"
-        style=text: "{md.sys.color.primary}"
-        style=elevated: "{md.sys.color.primary}"
-        style=tonal: "{md.sys.color.on-secondary-container}"
+        appearance=outlined: "{md.sys.color.primary}"
+        appearance=text: "{md.sys.color.primary}"
+        appearance=elevated: "{md.sys.color.primary}"
+        appearance=tonal: "{md.sys.color.on-secondary-container}"
     enabled-state-layer-opacity: { $type: number, $value: "{md.sys.opacity.zero}" }
     icon-color:
       $type: color
       $value: "{md.sys.color.on-primary}"
       $when:
-        style=outlined: "{md.sys.color.primary}"
-        style=text: "{md.sys.color.primary}"
-        style=elevated: "{md.sys.color.primary}"
-        style=tonal: "{md.sys.color.on-secondary-container}"
+        appearance=outlined: "{md.sys.color.primary}"
+        appearance=text: "{md.sys.color.primary}"
+        appearance=elevated: "{md.sys.color.primary}"
+        appearance=tonal: "{md.sys.color.on-secondary-container}"
     with-icon-icon-size: { $type: dimension, $value: { value: 18, unit: px } }
     label-color:
       $type: color
       $value: "{md.sys.color.on-primary}"
       $when:
-        style=outlined: "{md.sys.color.primary}"
-        style=text: "{md.sys.color.primary}"
-        style=elevated: "{md.sys.color.primary}"
-        style=tonal: "{md.sys.color.on-secondary-container}"
+        appearance=outlined: "{md.sys.color.primary}"
+        appearance=text: "{md.sys.color.primary}"
+        appearance=elevated: "{md.sys.color.primary}"
+        appearance=tonal: "{md.sys.color.on-secondary-container}"
     label-text-typography: { $type: typography, $value: "{md.sys.typescale.label-large}" }
     hover-shadow:
       $type: shadow
       $value: "{md.sys.elevation-shadow.level1}"
       $when:
-        style=outlined: "{md.sys.elevation-shadow.level0}"
-        style=text: "{md.sys.elevation-shadow.level0}"
-        style=elevated: "{md.sys.elevation-shadow.level2}"
+        appearance=outlined: "{md.sys.elevation-shadow.level0}"
+        appearance=text: "{md.sys.elevation-shadow.level0}"
+        appearance=elevated: "{md.sys.elevation-shadow.level2}"
     hover-state-layer-opacity: { $type: number, $value: "{md.sys.state.hover-state-layer-opacity}" }
     focus-outline-color:
       $type: color
       $value: "{md.sys.color.transparent}"
       $when:
-        style=outlined: "{md.sys.color.primary}"
+        appearance=outlined: "{md.sys.color.primary}"
     focus-state-layer-opacity: { $type: number, $value: "{md.sys.state.focus-state-layer-opacity}" }
     pressed-state-layer-opacity: { $type: number, $value: "{md.sys.state.pressed-state-layer-opacity}" }
     disabled-container-color:
       $type: color
       $value: "{md.sys.color.on-surface}"
       $when:
-        style=outlined: "{md.sys.color.transparent}"
-        style=text: "{md.sys.color.transparent}"
+        appearance=outlined: "{md.sys.color.transparent}"
+        appearance=text: "{md.sys.color.transparent}"
     disabled-container-opacity:
       $type: number
       $value: 0.12
       $when:
-        style=outlined: "{md.sys.opacity.zero}"
-        style=text: "{md.sys.opacity.zero}"
+        appearance=outlined: "{md.sys.opacity.zero}"
+        appearance=text: "{md.sys.opacity.zero}"
     disabled-shadow: { $type: shadow, $value: "{md.sys.elevation-shadow.level0}" }
     disabled-outline-color:
       $type: color
       $value: "{md.sys.color.transparent}"
       $when:
-        style=outlined: "{md.sys.color.on-surface}"
+        appearance=outlined: "{md.sys.color.on-surface}"
     disabled-outline-opacity:
       $type: number
       $value: "{md.sys.opacity.zero}"
       $when:
-        style=outlined: 0.12
+        appearance=outlined: 0.12
     disabled-label-text-color: { $type: color, $value: "{md.sys.color.on-surface}" }
     disabled-label-text-opacity: { $type: number, $value: 0.38 }
     with-icon-disabled-icon-color: { $type: color, $value: "{md.sys.color.on-surface}" }
@@ -129,12 +138,12 @@ data:
       $type: dimension
       $value: { value: 24, unit: px }
       $when:
-        style=text: { value: 16, unit: px }
+        appearance=text: { value: 16, unit: px }
     with-icon-leading-space:
       $type: dimension
       $value: { value: 16, unit: px }
       $when:
-        style=text: { value: 12, unit: px }
+        appearance=text: { value: 12, unit: px }
   anatomy:
     root:
       kind: frame

@@ -7,17 +7,17 @@ metadata:
 items:
   - { id: shape, title: "모서리 corner-medium 12dp", check: { part: root, property: border-top-left-radius, expect: "{md.sys.shape.corner-medium}" } }
   - { id: padding, title: "내부 패딩 16dp", check: { part: root, property: padding-top, expect: 16px } }
-  - { id: elevated-container, title: "Elevated 컨테이너 = surface-container-low", check: { state: [enabled, hovered, focused, pressed], mode: { style: elevated }, part: root, property: background-color, expect: "{md.sys.color.surface-container-low}" } }
-  - { id: elevated-shadow, title: "Elevated level1 (hover level2)", check: { state: [enabled, focused, pressed], mode: { style: elevated }, part: root, property: box-shadow, expect: "inset 0 0 0 0px transparent, {md.sys.elevation-shadow.level1}" } }
-  - { id: elevated-hover-shadow, title: "Elevated hover level2", check: { state: hovered, mode: { style: elevated }, part: root, property: box-shadow, expect: "inset 0 0 0 0px transparent, {md.sys.elevation-shadow.level2}" } }
-  - { id: filled-container, title: "Filled 컨테이너 = surface-container-highest", check: { state: [enabled, hovered, focused, pressed], mode: { style: filled }, part: root, property: background-color, expect: "{md.sys.color.surface-container-highest}" } }
-  - { id: filled-hover-shadow, title: "Filled hover level1", check: { state: hovered, mode: { style: filled }, part: root, property: box-shadow, expect: "inset 0 0 0 0px transparent, {md.sys.elevation-shadow.level1}" } }
-  - { id: outlined-container, title: "Outlined 컨테이너 = surface", check: { state: enabled, mode: { style: outlined }, part: root, property: background-color, expect: "{md.sys.color.surface}" } }
-  - { id: outlined-outline, title: "Outlined 1dp outline-variant", check: { state: enabled, mode: { style: outlined }, part: root, property: box-shadow, expect: "inset 0 0 0 1px {md.sys.color.outline-variant}, {md.sys.elevation-shadow.level0}" } }
-  - { id: outlined-focus-outline, title: "Outlined focus outline = on-surface", check: { state: focused, mode: { style: outlined }, part: root, property: box-shadow, expect: "inset 0 0 0 1px {md.sys.color.on-surface}, {md.sys.elevation-shadow.level0}" } }
-  - { id: disabled-elevated, title: "Elevated disabled 컨테이너 surface 38%", check: { state: disabled, mode: { style: elevated }, part: root, property: background-color, expect: "color-mix(in srgb, {md.sys.color.surface} 38%, transparent)" } }
-  - { id: disabled-filled, title: "Filled disabled 컨테이너 surface-variant 38%", check: { state: disabled, mode: { style: filled }, part: root, property: background-color, expect: "color-mix(in srgb, {md.sys.color.surface-variant} 38%, transparent)" } }
-  - { id: disabled-outlined, title: "Outlined disabled outline = outline 12%", check: { state: disabled, mode: { style: outlined }, part: root, property: box-shadow, expect: "inset 0 0 0 1px color-mix(in srgb, {md.sys.color.outline} 12%, transparent), {md.sys.elevation-shadow.level0}" } }
+  - { id: elevated-container, title: "Elevated 컨테이너 = surface-container-low", check: { state: [enabled, hovered, focused, pressed], mode: { appearance: elevated }, part: root, property: background-color, expect: "{md.sys.color.surface-container-low}" } }
+  - { id: elevated-shadow, title: "Elevated level1 (hover level2)", check: { state: [enabled, focused, pressed], mode: { appearance: elevated }, part: root, property: box-shadow, expect: "inset 0 0 0 0px transparent, {md.sys.elevation-shadow.level1}" } }
+  - { id: elevated-hover-shadow, title: "Elevated hover level2", check: { state: hovered, mode: { appearance: elevated }, part: root, property: box-shadow, expect: "inset 0 0 0 0px transparent, {md.sys.elevation-shadow.level2}" } }
+  - { id: filled-container, title: "Filled 컨테이너 = surface-container-highest", check: { state: [enabled, hovered, focused, pressed], mode: { appearance: filled }, part: root, property: background-color, expect: "{md.sys.color.surface-container-highest}" } }
+  - { id: filled-hover-shadow, title: "Filled hover level1", check: { state: hovered, mode: { appearance: filled }, part: root, property: box-shadow, expect: "inset 0 0 0 0px transparent, {md.sys.elevation-shadow.level1}" } }
+  - { id: outlined-container, title: "Outlined 컨테이너 = surface", check: { state: enabled, mode: { appearance: outlined }, part: root, property: background-color, expect: "{md.sys.color.surface}" } }
+  - { id: outlined-outline, title: "Outlined 1dp outline-variant", check: { state: enabled, mode: { appearance: outlined }, part: root, property: box-shadow, expect: "inset 0 0 0 1px {md.sys.color.outline-variant}, {md.sys.elevation-shadow.level0}" } }
+  - { id: outlined-focus-outline, title: "Outlined focus outline = on-surface", check: { state: focused, mode: { appearance: outlined }, part: root, property: box-shadow, expect: "inset 0 0 0 1px {md.sys.color.on-surface}, {md.sys.elevation-shadow.level0}" } }
+  - { id: disabled-elevated, title: "Elevated disabled 컨테이너 surface 38%", check: { state: disabled, mode: { appearance: elevated }, part: root, property: background-color, expect: "color-mix(in srgb, {md.sys.color.surface} 38%, transparent)" } }
+  - { id: disabled-filled, title: "Filled disabled 컨테이너 surface-variant 38%", check: { state: disabled, mode: { appearance: filled }, part: root, property: background-color, expect: "color-mix(in srgb, {md.sys.color.surface-variant} 38%, transparent)" } }
+  - { id: disabled-outlined, title: "Outlined disabled outline = outline 12%", check: { state: disabled, mode: { appearance: outlined }, part: root, property: box-shadow, expect: "inset 0 0 0 1px color-mix(in srgb, {md.sys.color.outline} 12%, transparent), {md.sys.elevation-shadow.level0}" } }
   - { id: layer-color, title: "State layer = on-surface", check: { state: hovered, part: stateLayer, property: background-color, expect: "{md.sys.color.on-surface}" } }
   - { id: enabled-layer, title: "Enabled state layer 없음", check: { state: enabled, part: stateLayer, property: opacity, expect: 0 } }
   - { id: hover-layer, title: "Hover state layer 8%", check: { state: hovered, part: stateLayer, property: opacity, expect: "{md.sys.state.hover-state-layer-opacity}" } }
@@ -26,3 +26,4 @@ items:
   - { id: slot-fill, title: "콘텐츠 slot이 카드 폭을 채움", check: { part: body, property: align-self, expect: stretch } }
   - { id: slot-content, title: "slot에 실제 콘텐츠(미디어·텍스트·액션)를 넣었을 때 레이아웃 — 프리뷰는 placeholder만 표시", manual: true }
   - { id: dragged, title: "Dragged 상태(level3/4) — 파일럿 범위 밖", manual: true }
+  - { id: hover-state, title: "포인터를 올리면 hovered (그룹, 탭 순서에 없음)", interact: { do: [hover], expect: { state: hovered, attrs: { role: group, tabindex: "(none)" } } } }

@@ -123,6 +123,82 @@
             ],
             "additionalProperties": false
           },
+          "interact": {
+            "type": "object",
+            "properties": {
+              "given": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": [
+                    "string",
+                    "boolean"
+                  ]
+                }
+              },
+              "do": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "hover",
+                    "unhover",
+                    "press",
+                    "release",
+                    "click",
+                    "focus",
+                    "blur",
+                    "key:Enter",
+                    "key:Space"
+                  ]
+                }
+              },
+              "expect": {
+                "type": "object",
+                "properties": {
+                  "values": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": [
+                        "string",
+                        "boolean"
+                      ]
+                    }
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "attrs": {
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "events": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "do",
+              "expect"
+            ],
+            "additionalProperties": false
+          },
           "manual": {
             "type": "boolean",
             "const": true

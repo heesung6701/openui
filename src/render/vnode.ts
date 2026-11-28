@@ -8,7 +8,11 @@ import { partStyle } from "./style";
 
 export type VNode = { tag: string; attrs: Record<string, string>; style: Record<string, string>; text?: string; children: VNode[] };
 /** `modes`: selected context per modifier (e.g. `{theme: "dark", locale: "ko"}`); omitted = the modifier's default. */
-export type RenderOptions = { variant: Record<string, string>; state: string; props: Record<string, string | boolean | null>; modes?: Record<string, string> };
+export type RenderOptions = {
+  variant: Record<string, string>; state: string; props: Record<string, string | boolean | null>; modes?: Record<string, string>;
+  /** Slot props that receive real content (runtime): rendered as an empty `data-slot` container instead of a placeholder. */
+  slotted?: Set<string>;
+};
 
 const MAX_DEPTH = 8;
 const note = (text: string): VNode => ({ tag: "div", attrs: {}, style: {}, text, children: [] });
@@ -56,6 +60,7 @@ export function buildComponent(project: Project, id: string, opts: RenderOptions
       case "frame":
         return { tag: "div", attrs, style, children: kids() };
       case "slot":
+        if (part.prop && opts.slotted?.has(part.prop)) return { tag: "div", attrs: { ...attrs, "data-slot": part.prop }, style, children: [] };
         if (part.children && Object.keys(part.children).length) return { tag: "div", attrs, style, children: kids() };
         Object.assign(style, { outline: "1px dashed currentColor", "outline-offset": "-1px", "min-width": style["min-width"] ?? "24px", "min-height": style["min-height"] ?? "24px", font: "12px/1.4 monospace", opacity: style.opacity ?? "0.6" });
         return { tag: "div", attrs, style, text: part.prop, children: [] };

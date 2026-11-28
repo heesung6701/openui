@@ -5,8 +5,15 @@ data:
   props:
     label:    { type: text, default: "{text.button.label}" }
     showIcon: { type: boolean, default: false }
+    disabled: { type: boolean, default: false }
     icon:     { type: instance, default: icon, preferred: [icon] }
-    style:    { type: mode, values: [filled, outlined], default: filled, description: "Emphasis. Only token values differ, so it is a mode, not a variant" }
+    appearance: { type: mode, values: [filled, outlined], default: filled, description: "Emphasis. Only token values differ, so it is a mode, not a variant" }
+  behavior:
+    role: button
+    label: { prop: label }
+    states:
+      pressed: press
+      disabled: { prop: disabled, inert: true }
   variants:
     layout:
       values: { inline: { description: Icon and label side by side }, stacked: { description: Icon above the label } }
@@ -17,11 +24,11 @@ data:
   states: [enabled, pressed, disabled]
   # The tokens this component uses ("{button.<name>}"). $when: the value that applies in that mode.
   tokens:
-    container-color: { $type: color, $value: "{color.primary}", $when: { style=outlined: { colorSpace: srgb, components: [0, 0, 0], alpha: 0 } } }
-    content-color:   { $type: color, $value: "{color.on-primary}", $when: { style=outlined: "{color.primary}" } }
-    outline-color:   { $type: color, $value: { colorSpace: srgb, components: [0, 0, 0], alpha: 0 }, $when: { style=outlined: "{color.outline}" } }
-    outline-width:   { $type: dimension, $value: "{space.none}", $when: { style=outlined: "{stroke.thin}" } }
-    shadow:          { $type: shadow, $value: "{elevation.1}", $when: { style=outlined: "{elevation.0}" } }
+    container-color: { $type: color, $value: "{color.primary}", $when: { appearance=outlined: { colorSpace: srgb, components: [0, 0, 0], alpha: 0 } } }
+    content-color:   { $type: color, $value: "{color.on-primary}", $when: { appearance=outlined: "{color.primary}" } }
+    outline-color:   { $type: color, $value: { colorSpace: srgb, components: [0, 0, 0], alpha: 0 }, $when: { appearance=outlined: "{color.outline}" } }
+    outline-width:   { $type: dimension, $value: "{space.none}", $when: { appearance=outlined: "{stroke.thin}" } }
+    shadow:          { $type: shadow, $value: "{elevation.1}", $when: { appearance=outlined: "{elevation.0}" } }
     height:          { $type: dimension, $value: { value: 40, unit: px }, $when: { device=desktop: { value: 32, unit: px } } }
     padding-inline:  { $type: dimension, $value: { value: 24, unit: px }, $when: { device=desktop: { value: 16, unit: px } } }
     padding-block:   { $type: dimension, $value: "{space.none}" }

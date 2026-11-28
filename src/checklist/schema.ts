@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { STEPS } from "./interact";
 
 /** CSS shorthands are rejected: computed values of shorthands are not reliably comparable. */
 export const SHORTHANDS = new Set([
@@ -19,14 +20,28 @@ const Check = z.strictObject({
   expect: z.union([z.string(), z.number()]),
 });
 
+const Scalar = z.union([z.string(), z.boolean()]);
+/** §8 interaction check: initial values → steps → expected values / state / host attributes / events. */
+const Interact = z.strictObject({
+  given: z.record(z.string(), Scalar).optional(),
+  do: z.array(z.enum(STEPS, { error: `step must be one of ${STEPS.join(", ")}` })).min(1),
+  expect: z.strictObject({
+    values: z.record(z.string(), Scalar).optional(),
+    state: z.string().optional(),
+    attrs: z.record(z.string(), z.string()).optional(),
+    events: z.array(z.string()).optional(),
+  }).refine((e) => Object.keys(e).length > 0, "expect needs at least one of values, state, attrs, events"),
+});
+
 const Item = z.strictObject({
   id: z.string().regex(/^[a-z0-9][a-z0-9-]*$/, "item id must be kebab-case"),
   title: z.string().min(1),
   check: Check.optional(),
+  interact: Interact.optional(),
   manual: z.literal(true).optional(),
   hint: z.strictObject({ variant: z.record(z.string(), z.string()).optional(), state: z.string().optional() }).optional(),
 }).superRefine((v, ctx) => {
-  if ((v.check === undefined) === (v.manual === undefined)) ctx.addIssue({ code: "custom", message: "item needs exactly one of check or manual" });
+  if ([v.check, v.interact, v.manual].filter((x) => x !== undefined).length !== 1) ctx.addIssue({ code: "custom", message: "item needs exactly one of check, interact or manual" });
 });
 
 export const Checklist = z.strictObject({

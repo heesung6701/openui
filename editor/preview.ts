@@ -3,20 +3,16 @@ import { statesOf } from "../src/component/validate";
 import type { Project } from "../src/project";
 import { tokenSheet } from "../src/render/tokens";
 import { resolveToken } from "../src/tokens/resolver";
-import { buildComponent, type RenderOptions, type VNode } from "../src/render/vnode";
+import { toDOM } from "../src/render/dom";
+import { buildComponent, type RenderOptions } from "../src/render/vnode";
 import { escapeHtml, hooks, state } from "./app";
 import { describeCondition, previewMode } from "./support";
+import { OuElement } from "../src/runtime/element";
 
-const SVG_NS = "http://www.w3.org/2000/svg";
+/** The editor's live element: any component of the current project, re-bound when the YAML changes. */
+if (!customElements.get("ou-live")) customElements.define("ou-live", class extends OuElement {});
 
-export function toDOM(v: VNode): Element {
-  const el = v.tag === "svg" || v.tag === "path" ? document.createElementNS(SVG_NS, v.tag) : document.createElement(v.tag);
-  for (const [k, val] of Object.entries(v.attrs)) el.setAttribute(k, val);
-  for (const [k, val] of Object.entries(v.style)) (el as HTMLElement).style.setProperty(k, val);
-  if (v.text !== undefined) el.textContent = v.text;
-  for (const c of v.children) el.appendChild(toDOM(c));
-  return el;
-}
+export { toDOM };
 
 /** Per-viewer UI choices: prop values per component, selected context per modifier. */
 export const ui = { props: {} as Record<string, RenderOptions["props"]>, modes: {} as Record<string, string> };
@@ -129,6 +125,30 @@ export function renderGrid(p: Project, id: string) {
   lastGood = { file: state.current, id, grid };
 }
 
+/** Live row: the web runtime running this component (hover, click, Tab/Space/Enter). One instance per mode prop value. */
+function renderLive(p: Project, id: string) {
+  const doc = p.components.get(id)!.doc;
+  const slot = host.querySelector(".pv-live-slot")!;
+  if (!doc.data.behavior) return;
+  const rows = Object.entries(doc.data.props ?? {}).reduce<Record<string, string>[]>((acc, [name, d]) =>
+    d.type === "mode" ? acc.flatMap((r) => d.values.map((v) => ({ ...r, [name]: v }))) : acc, [{}]);
+  const dark = Object.values(currentModes(p)).some((m) => m.includes("dark"));
+  const wrap = document.createElement("div");
+  wrap.className = `pv-live${dark ? " dark" : ""}`;
+  wrap.innerHTML = `<div class="pv-live-title">Live · hover, click, Tab → Space/Enter <span class="pv-events muted"></span></div>`;
+  const root = wrap.appendChild(ouRoot(p));
+  root.classList.add("pv-live-stage");
+  const log = wrap.querySelector<HTMLElement>(".pv-events")!;
+  const emit = doc.data.behavior.on?.activate?.emit;
+  for (const name of new Set(["activate", ...(emit ? [emit] : [])]))
+    root.addEventListener(name, (e) => { log.textContent = `${name} ${JSON.stringify((e as CustomEvent).detail)}`; });
+  for (const values of rows) {
+    const el = root.appendChild(document.createElement("ou-live")) as OuElement;
+    el.reset(p, id, { ...(ui.props[id] ?? {}), ...values });
+  }
+  slot.replaceChildren(wrap);
+}
+
 export function renderPreview() {
   const p = state.project;
   if (!p) return;
@@ -150,7 +170,12 @@ export function renderPreview() {
     lastGood = null;
     return;
   }
-  host.innerHTML = `<h3>${escapeHtml(p.components.get(id)!.doc.metadata.name)}</h3>${propsPanel(p, id)}<div class="pv-error" hidden></div><div class="pv-grid-slot"></div>`;
+  host.innerHTML = `<h3>${escapeHtml(p.components.get(id)!.doc.metadata.name)}</h3>${propsPanel(p, id)}<div class="pv-live-slot"></div><div class="pv-error" hidden></div><div class="pv-grid-slot"></div>`;
+  try {
+    renderLive(p, id);
+  } catch (e) {
+    console.error("live preview failed", e);
+  }
   try {
     renderGrid(p, id);
   } catch (e) {
