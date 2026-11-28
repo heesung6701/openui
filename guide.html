@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OpenUI 스펙 해설</title>
+    
+  <link rel="stylesheet" crossorigin href="./chunk-rj4x61w4.css"><script type="module" crossorigin src="./chunk-bw563fqb.js"></script></head>
+  <body>
+    <header class="top">
+      <a href="./">← 웹 에디터</a>
+      <span>OpenUI YAML 스펙 v0.1</span>
+    </header>
+    <main>
+      <h1>OpenUI YAML 스펙 해설</h1>
+      <p class="lead">OpenUI는 UI 컴포넌트를 OpenAPI처럼 YAML로 기술하는 스펙이다. YAML 문서가 단일 원천(SSOT)이고, Figma 컴포넌트와 웹·Compose·React 구현은 이 문서에서 파생되거나 이 문서와 대조된다.</p>
+      <a class="cta" href="./">웹 에디터에서 직접 열어 보기</a>
+
+      <nav class="toc" aria-label="목차">
+        <a href="#overview">한눈에 보기</a><a href="#tokens">토큰</a><a href="#text">텍스트 토큰</a><a href="#conditions">조건부 토큰</a><a href="#component">컴포넌트 문서</a><a href="#vocabulary">속성 어휘</a><a href="#resolution">스타일 해석 규칙</a><a href="#checklist">체크리스트</a><a href="#mapping">Figma · 웹 매핑</a><a href="#tools">도구</a><a href="#limits">v0.1의 한계</a>
+      </nav>
+
+      <h2 id="overview">한눈에 보기</h2>
+      <figure>
+        <svg viewBox="0 0 760 472" role="img" aria-label="YAML 하나가 에디터·Figma·코드 렌더러의 원천이다">
+          <defs><marker id="ou-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="dg-arrow" d="M0 0L10 5L0 10z" /></marker></defs>
+          <text class="dg-title" x="24" y="34">YAML 하나가 에디터·Figma·코드 렌더러의 원천이다</text>
+          <rect class="dg-ssot" x="24" y="56" width="712" height="176" rx="8" />
+          <text class="dg-name" x="40" y="78">YAML 프로젝트 — 단일 원천(SSOT)</text>
+          <rect class="dg-box" x="40" y="88" width="332" height="56" rx="8" />
+          <text class="dg-name" x="56" y="112">openui.yaml · 매니페스트</text>
+          <text class="dg-body" x="56" y="128">토큰·컴포넌트·체크리스트 파일 위치</text>
+          <rect class="dg-box" x="388" y="88" width="332" height="56" rx="8" />
+          <text class="dg-name" x="404" y="112">토큰 · DTCG 2025.10</text>
+          <text class="dg-body" x="404" y="128">resolver가 테마·언어 모드를 정의</text>
+          <rect class="dg-box" x="40" y="160" width="332" height="56" rx="8" />
+          <text class="dg-name" x="56" y="184">컴포넌트 · kind: Component</text>
+          <text class="dg-body" x="56" y="200">props·variants·states·anatomy·styles</text>
+          <rect class="dg-box" x="388" y="160" width="332" height="56" rx="8" />
+          <text class="dg-name" x="404" y="184">체크리스트 · kind: Checklist</text>
+          <text class="dg-body" x="404" y="200">자동 측정 항목 + 수동 확인 항목</text>
+          <g class="dg-edge">
+            <path d="M380 232V263" marker-end="url(#ou-arrow)" />
+            <path d="M380 336V356H137V375" marker-end="url(#ou-arrow)" />
+            <path d="M380 336V375" marker-end="url(#ou-arrow)" />
+            <path d="M380 336V356H623V375" marker-end="url(#ou-arrow)" />
+          </g>
+          <text class="dg-body" x="392" y="252">검증 · 해석</text>
+          <rect class="dg-box" x="190" y="264" width="380" height="72" rx="8" />
+          <text class="dg-name" x="206" y="288">검증기 + 스타일 해석</text>
+          <text class="dg-body" x="206" y="304">zod 스키마 · 참조·순환·모드·오타 검사</text>
+          <text class="dg-body" x="206" y="320">resolveStyles: base → 기본 state → 현재 state</text>
+          <rect class="dg-box" x="24" y="376" width="226" height="72" rx="8" />
+          <text class="dg-name" x="40" y="400">웹 에디터 · 프리뷰</text>
+          <text class="dg-body" x="40" y="416">CSS 변수 + flex/grid로 렌더</text>
+          <text class="dg-body" x="40" y="432">체크리스트를 DOM에서 측정</text>
+          <rect class="dg-box" x="267" y="376" width="226" height="72" rx="8" />
+          <text class="dg-name" x="283" y="400">Figma</text>
+          <text class="dg-body" x="283" y="416">variable·component set·SLOT</text>
+          <text class="dg-body" x="283" y="432">매핑 정의 (v0.1은 문서 기준)</text>
+          <rect class="dg-box future" x="510" y="376" width="226" height="72" rx="8" />
+          <text class="dg-name" x="526" y="400">Compose · React 렌더러</text>
+          <text class="dg-body" x="526" y="416">exchange JSON(v0.2)을 읽을 예정</text>
+          <text class="dg-body" x="526" y="432">다음 단계</text>
+        </svg>
+        <figcaption>YAML 프로젝트가 유일한 원천이다. 검증기와 스타일 해석기가 이를 읽고, 웹 에디터는 지금 동작하며 Figma 매핑과 플랫폼 렌더러도 같은 규칙을 따른다.</figcaption>
+      </figure>
+
+      <h2 id="tokens">토큰</h2>
+      <p>토큰 파일은 W3C DTCG 2025.10 형식을 YAML로 그대로 쓴다. 외부 디자인 토큰 도구와 바로 호환하기 위해서다. <strong>토큰 파일에는 여러 컴포넌트가 함께 쓰는 전역 토큰</strong>(팔레트, 시스템 색, 타입 스케일, 텍스트)만 둔다. 한 컴포넌트가 쓰는 토큰은 그 컴포넌트 문서 안에 둔다(<a href="#component">컴포넌트 토큰</a>).</p>
+      <pre><code>md:
+  sys:
+    color:
+      $type: color
+      primary: { $value: "{md.ref.palette.primary40}" }   # alias: 반드시 따옴표
+    shape:
+      corner-full: { $type: dimension, $value: { value: 9999, unit: px } }</code></pre>
+      <ul>
+        <li><code>$value</code>가 있으면 토큰, 없으면 그룹이다. <code>$type</code>은 직접 쓰거나, alias 대상이나 부모 그룹에서 물려받는다.</li>
+        <li>지원 타입은 11종이다: color, dimension, number, duration, cubicBezier, fontFamily, fontWeight, shadow, typography, gradient, 그리고 텍스트용 string.</li>
+        <li>color는 <code>{colorSpace: srgb, components: [r, g, b]}</code> 객체로만 쓴다. hex 문자열 단독은 DTCG 2025.10에서 허용되지 않는다.</li>
+        <li>alias <code>"{a.b.c}"</code>는 그룹이 아닌 토큰을 가리켜야 하고 타입이 맞아야 한다. 순환 참조는 오류다.</li>
+      </ul>
+      <p><strong>모드는 Resolver 문서로 정의한다.</strong> set은 모드가 하나(<code>default</code>)인 컬렉션이고, modifier는 context 이름들이 모드가 된다.</p>
+      <div class="table"><table>
+        <thead><tr><th>resolver</th><th>컬렉션</th><th>모드</th><th>예</th></tr></thead>
+        <tbody>
+          <tr><td>set <code>ref</code>, <code>sys</code>, <code>comp</code></td><td>같은 이름</td><td><code>default</code></td><td>팔레트, 모서리, comp 토큰</td></tr>
+          <tr><td>modifier <code>theme</code></td><td><code>theme</code></td><td><code>light</code>, <code>dark</code></td><td>sys 색상</td></tr>
+          <tr><td>modifier <code>locale</code></td><td><code>locale</code></td><td><code>en</code>, <code>ko</code></td><td>텍스트 토큰</td></tr>
+          <tr><td>modifier <code>window</code>, <code>orientation</code>, <code>device</code></td><td>같은 이름</td><td><code>compact</code>…, <code>portrait</code>…, <code>phone</code>…</td><td>조건만 정의. 값은 컴포넌트 토큰의 <code>$when</code></td></tr>
+        </tbody>
+      </table></div>
+      <p>토큰 하나는 정확히 한 set, 또는 한 modifier의 모든 context에 있어야 한다. 이 규칙 덕분에 Figma variable 컬렉션/모드와 웹의 CSS 변수 + <code>data-theme</code> 속성으로 그대로 옮겨진다.</p>
+
+      <h2 id="text">텍스트 토큰</h2>
+      <p><strong>화면에 나오는 모든 텍스트는 텍스트 토큰이다.</strong> 텍스트 토큰은 <code>$type: string</code>인 토큰이고, 토큰 경로가 그 텍스트의 ID다. 다국어 시스템은 이 ID를 번역 키로 쓴다.</p>
+      <pre><code># tokens/text.en.tokens.yaml          # tokens/text.ko.tokens.yaml
+text:                                 text:
+  $type: string                         $type: string
+  button:                               button:
+    label: { $value: Button }             label: { $value: 버튼 }</code></pre>
+      <p>언어 하나가 <code>locale</code> modifier의 context 하나다. 컴포넌트는 리터럴 대신 ID를 쓴다.</p>
+      <pre><code>props:
+  label: { type: text, default: "{text.button.label}" }
+anatomy:
+  root:
+    children:
+      badge: { kind: text, text: "{text.gallery.badge}" }</code></pre>
+      <ul>
+        <li><strong>리터럴 텍스트는 오류다.</strong> text part의 <code>text</code>와 text prop의 <code>default</code>는 텍스트 토큰이어야 한다. 다른 타입의 토큰을 가리켜도 오류다.</li>
+        <li><strong>번역 누락도 오류다.</strong> 한 언어에 ID가 빠지면 <code>token "text.button.label" missing in context "ko" of modifier "locale"</code>가 난다.</li>
+        <li>ID 이름은 <code>text.&lt;컴포넌트&gt;.&lt;이름&gt;</code>을 권장한다. 공통 문구는 <code>text.common.*</code>에 두고 alias로 재사용한다. 브랜드명처럼 언어와 상관없는 텍스트는 set에 둔다.</li>
+        <li>렌더러는 선택된 locale로 값을 해석해 텍스트로 넣는다. 에디터 상단에서 <code>locale</code>을 바꾸면 프리뷰가 바로 그 언어로 바뀐다.</li>
+        <li>앱이 런타임에 넘기는 사용자 데이터(이름 등)는 리터럴이어도 된다. 문서용 문자열(<code>name</code>, <code>description</code>)은 화면에 그려지지 않으므로 대상이 아니다.</li>
+      </ul>
+      <p>Figma에서는 STRING 변수(scope <code>TEXT_CONTENT</code>)가 되고, locale 컬렉션의 mode가 언어다. 텍스트 레이어의 <code>characters</code>에 변수를 바인딩한다. 언어 하나를 풀면 <code>{ID: 문자열}</code> 평면 맵이라 JSON, <code>strings.xml</code>, <code>.strings</code> 같은 번역 파일로 그대로 옮길 수 있다.</p>
+
+      <h2 id="conditions">조건부 토큰</h2>
+      <p><strong>값이 상황에 따라 달라지면 그 차이는 토큰 정의에 둔다.</strong> 컴포넌트에는 리터럴 값이 없고 토큰만 있다. 토큰이 "언제 어떤 값인지"를 가진다.</p>
+      <ul>
+        <li><strong>언제</strong>: resolver의 modifier가 모드를 정의하고, context별 조건을 적는다(<code>$extensions["org.openui"].when</code>). DTCG Resolver가 허용하는 확장 위치라 다른 도구와도 호환된다.</li>
+        <li><strong>어떤 값</strong>: 컴포넌트 토큰이 자기 정의 안의 <code>$when</code>에 모드별 값을 둔다. 전역 토큰이라면 context마다 토큰 파일에 둔다.</li>
+      </ul>
+      <pre><code># tokens/*.resolver.yaml — 모드와 조건
+modifiers:
+  window:
+    contexts: { compact: [], medium: [], expanded: [] }
+    default: compact
+    $extensions:
+      org.openui:
+        when:
+          compact:  { width: { max: 600 } }               # 너비 &lt; 600
+          medium:   { width: { min: 600, max: 840 } }     # 600 ≤ 너비 &lt; 840
+          expanded: { width: { min: 840 } }
+
+# components/card.yaml — 카드 토큰이 창 크기별 값을 가진다
+data:
+  tokens:
+    padding:
+      $type: dimension
+      $value: { value: 16, unit: px }
+      $when:
+        window=medium: { value: 24, unit: px }
+        window=expanded: { value: 24, unit: px }</code></pre>
+      <div class="table"><table>
+        <thead><tr><th>조건</th><th>값</th><th>웹에서</th></tr></thead>
+        <tbody>
+          <tr><td><code>width</code>, <code>height</code></td><td><code>{min?, max?}</code> px(dp). <code>min ≤ 값 &lt; max</code></td><td><code>@media (600px &lt;= width &lt; 840px)</code></td></tr>
+          <tr><td><code>orientation</code></td><td>portrait, landscape</td><td><code>@media (orientation: landscape)</code></td></tr>
+          <tr><td><code>device</code></td><td>phone, tablet, desktop, tv, watch</td><td>앱이 <code>data-device</code> 지정</td></tr>
+          <tr><td><code>colorScheme</code></td><td>light, dark</td><td><code>prefers-color-scheme</code></td></tr>
+          <tr><td><code>language</code></td><td>BCP 47 태그</td><td><code>:lang(ko)</code></td></tr>
+        </tbody>
+      </table></div>
+      <ul>
+        <li>한 modifier는 한 종류의 조건만 쓴다. 조건끼리 겹치면 오류이고, 어디에도 맞지 않으면 기본 context를 쓴다.</li>
+        <li>모드를 고르는 순서는 <strong>명시적 선택 → 조건 → 기본값</strong>이다. 에디터 상단의 모드 선택은 명시적 선택이라, 조건을 무시하고 원하는 context를 미리 볼 수 있다.</li>
+        <li>인스턴스가 고르는 값(버튼 강조 스타일 등)은 modifier가 아니라 컴포넌트의 <strong>mode prop</strong>이다: <code>style: { type: mode, values: [filled, outlined, text], default: filled }</code>. 토큰은 <code>$when: { style=outlined: … }</code>로 그 값마다 다른 값을 가진다.</li>
+        <li><code>$when</code> 키가 여러 개 맞으면 모드가 적은 키부터, 같으면 문서 순서로 덮어쓴다. 예: <code>style=text,device=desktop</code>은 <code>device=desktop</code>보다 우선한다.</li>
+        <li>Figma는 모드를 자동으로 고르지 않는다. 조건별 화면은 프레임에 explicit mode를 지정해 만든다. 컴포넌트 토큰은 컴포넌트별 variable collection(모드 = mode prop 값)이 되고, 인스턴스는 <code>explicitVariableModes</code>로 모드를 고른다.</li>
+      </ul>
+
+      <h2 id="component">컴포넌트 문서</h2>
+      <p>컴포넌트 하나는 <code>kind: Component</code> YAML 파일 하나다. 여섯 부분으로 나뉘며, part(해부도 요소)와 slot(사용자가 콘텐츠를 넣는 자리)을 구분한다.</p>
+      <div class="table"><table>
+        <thead><tr><th>부분</th><th>역할</th><th>Figma</th><th>코드</th></tr></thead>
+        <tbody>
+          <tr><td><code>tokens</code></td><td><strong>이 컴포넌트가 쓰는 토큰</strong>. 모드별 값은 <code>$when</code></td><td>컴포넌트 variable collection</td><td>컴포넌트 루트의 CSS 변수</td></tr>
+          <tr><td><code>props</code></td><td>공개 API: text / boolean / instance / slot / mode</td><td>component property, explicit mode</td><td>prop, 파라미터</td></tr>
+          <tr><td><code>variants</code></td><td><strong>UI 트리를 바꾸는</strong> 축(<code>withIcon</code>: 아이콘 part가 생김)</td><td>VARIANT 축</td><td>enum prop, 다른 구조</td></tr>
+          <tr><td><code>states</code></td><td>런타임 상호작용 상태. 첫 항목이 기본</td><td><code>state</code> VARIANT 축</td><td>hover, pressed 등</td></tr>
+          <tr><td><code>anatomy</code></td><td>part 트리와 레이아웃(auto layout)</td><td>레이어 트리</td><td>요소 구조</td></tr>
+          <tr><td><code>styles</code></td><td>variant 식 → state → part → 속성 표</td><td>variant별 노드 속성</td><td>스타일</td></tr>
+        </tbody>
+      </table></div>
+      <p>Material 3 Button을 줄이면 이렇다. 다섯 스타일(filled, outlined, text, elevated, tonal)은 UI 트리가 같으므로 variant가 아니라 mode prop이고, 아이콘 part를 보이는 <code>withIcon</code>만 variant다.</p>
+      <pre><code>kind: Component
+metadata: { id: button, name: Button }
+data:
+  props:
+    label: { type: text, default: "{text.button.label}" }
+    style: { type: mode, values: [filled, outlined, text, elevated, tonal], default: filled }   # 값만 다름
+    icon:  { type: instance, default: icon-add }
+  variants:
+    withIcon: { values: { "false": {}, "true": {} }, default: "false" }                        # 구조가 바뀜
+  states: [enabled, hovered, focused, pressed, disabled]
+  tokens:                                   # 이 컴포넌트가 쓰는 토큰 = "{button.&lt;이름&gt;}"
+    container-color:
+      $type: color
+      $value: "{md.sys.color.primary}"
+      $when:
+        style=outlined: "{md.sys.color.transparent}"
+        style=text: "{md.sys.color.transparent}"
+        style=elevated: "{md.sys.color.surface-container-low}"
+        style=tonal: "{md.sys.color.secondary-container}"
+    leading-space:
+      $type: dimension
+      $value: { value: 24, unit: px }
+      $when: { style=text: { value: 12, unit: px } }
+    block-space: { $type: dimension, $value: "{md.sys.space.zero}" }
+    container-height: { $type: dimension, $value: { value: 40, unit: px } }
+  anatomy:
+    root:
+      kind: frame
+      layout: { direction: row, padding: ["{button.block-space}", "{button.trailing-space}", "{button.block-space}", "{button.leading-space}"],
+                width: hug, height: "{button.container-height}" }
+      children:
+        icon:  { kind: instance, prop: icon }
+        label: { kind: text, text: { prop: label } }
+  styles:
+    base:
+      enabled: { root: { fill: "{button.container-color}" } }
+    withIcon=false:
+      enabled: { icon: { visible: false } }</code></pre>
+      <p><strong>컴포넌트 토큰</strong>: 스타일 값은 리터럴도, 전역 토큰도 아닌 <strong>이 컴포넌트의 토큰</strong>만 가리킨다. 그래서 "이 버튼이 언제 어떤 값을 쓰는지"가 버튼 문서의 <code>tokens</code> 한 곳에 모인다. 컴포넌트 토큰은 전역 토큰(<code>md.sys.*</code>)을 alias하거나 리터럴 값을 가진다.</p>
+      <div class="table"><table>
+        <thead><tr><th>무엇이 다른가</th><th>표현</th><th>예</th></tr></thead>
+        <tbody>
+          <tr><td>part가 생기거나 없어짐, 배치 방향</td><td>variant</td><td><code>withIcon</code>, 체크박스 <code>type</code></td></tr>
+          <tr><td>값만 다름, 인스턴스가 고름</td><td>mode prop + 토큰 <code>$when</code></td><td>버튼 <code>style</code>, 체크박스 <code>error</code></td></tr>
+          <tr><td>값만 다름, 환경에 따라</td><td>조건 + 토큰 <code>$when</code></td><td>창 너비별 패딩, 단말별 높이</td></tr>
+          <tr><td>런타임 상호작용</td><td>state</td><td>hovered, pressed</td></tr>
+        </tbody>
+      </table></div>
+      <ul>
+        <li><strong>variant는 UI 트리가 바뀔 때만 쓴다.</strong> 축의 값들 사이에 구조 값(<code>visible</code>, <code>direction</code>, <code>position</code>, <code>hug</code>/<code>fill</code> 등) 차이가 없으면 검증 오류다.</li>
+        <li><strong>모든 값은 그 컴포넌트의 토큰이다.</strong> 치수·색·불투명도에 <code>8px</code>, <code>[0, 24px]</code>, <code>#6750A4</code> 같은 리터럴을 쓰거나 <code>{md.sys.color.primary}</code> 같은 전역 토큰을 직접 가리키면 오류다. 리터럴로 남는 것은 키워드·열거값·boolean 같은 구조 값뿐이다.</li>
+        <li>part 종류는 여섯 가지다: <code>frame</code>, <code>text</code>, <code>instance</code>, <code>slot</code>, <code>vector</code>(svg path), <code>image</code>(src). 최상위는 항상 <code>root</code> frame이다.</li>
+        <li><strong>state는 이름 하나만</strong> 쓴다. <code>data</code>와 part에는 <code>x-</code> 확장 키를 둘 수 있고, Figma 고유 정보는 <code>x-figma</code>에 둔다.</li>
+      </ul>
+
+      <h2 id="vocabulary">속성 어휘</h2>
+      <p>스타일 속성은 29개로 고정된다. Figma auto layout과 paint 개념을 플랫폼 중립적인 이름으로 옮긴 것이고, part 종류에 맞지 않는 속성은 검증 오류다. layout 열이 ✓인 속성만 anatomy의 <code>layout</code>에 쓸 수 있다. 표의 치수·색·0..1은 모두 그 타입의 토큰이다.</p>
+      <div class="table"><table>
+        <thead><tr><th>묶음</th><th>속성</th><th>값</th><th>허용 part</th><th>layout</th></tr></thead>
+        <tbody>
+          <tr><td>레이아웃</td><td><code>direction</code></td><td>row, column, grid, none</td><td>frame, slot</td><td>✓</td></tr>
+          <tr><td>레이아웃</td><td><code>gap</code>, <code>crossGap</code>, <code>padding</code></td><td>치수(padding은 1·2·4개)</td><td>frame, slot</td><td>✓</td></tr>
+          <tr><td>레이아웃</td><td><code>align</code>, <code>wrap</code>, <code>grid</code></td><td>main/cross 정렬, 줄바꿈, 열·행 수</td><td>frame, slot</td><td>✓</td></tr>
+          <tr><td>크기</td><td><code>width</code>, <code>height</code></td><td>hug, fill, 치수</td><td>전부</td><td>✓</td></tr>
+          <tr><td>크기</td><td><code>minWidth</code>, <code>maxWidth</code>, <code>minHeight</code>, <code>maxHeight</code></td><td>치수</td><td>전부</td><td>✓</td></tr>
+          <tr><td>위치</td><td><code>position</code>, <code>x</code>, <code>y</code></td><td>auto/absolute, 치수</td><td>전부</td><td>✓</td></tr>
+          <tr><td>칠</td><td><code>fill</code>, <code>fillOpacity</code></td><td>색·gradient 토큰, 0..1</td><td>frame, slot, vector, instance(아이콘 색)</td><td></td></tr>
+          <tr><td>선</td><td><code>strokeColor</code>, <code>strokeWidth</code>, <code>strokeAlign</code>, <code>strokeOpacity</code></td><td>색, 치수, inside/outside/center, 0..1</td><td>frame, slot, vector</td><td></td></tr>
+          <tr><td>모양</td><td><code>cornerRadius</code></td><td>치수 또는 네 모서리</td><td>frame, slot, image</td><td></td></tr>
+          <tr><td>효과</td><td><code>opacity</code>, <code>shadow</code>, <code>visible</code></td><td>0..1, shadow 토큰만, boolean</td><td>전부(shadow는 frame, slot)</td><td></td></tr>
+          <tr><td>텍스트</td><td><code>color</code>, <code>typography</code>, <code>textAlign</code></td><td>색, typography 토큰만, left/center/right/justified</td><td>text</td><td></td></tr>
+        </tbody>
+      </table></div>
+      <p><code>hug</code>는 내용 크기에 맞추고 <code>fill</code>은 부모의 남는 공간을 채운다. <code>position: absolute</code> + <code>fill</code>은 부모를 덮는 오버레이다. Material 3의 state layer가 이 방식을 쓴다.</p>
+
+      <h2 id="resolution">스타일 해석 규칙</h2>
+      <p><strong>state 계층이 variant 구체성보다 우선한다.</strong> 그래서 "pressed면 이 색" 같은 공통 규칙을 <code>base</code>에 한 번만 쓰면 모든 variant에 적용된다. variant 조합 V와 state s에 대해 part별 속성을 다음 순서로 덮어쓴다.</p>
+      <ol>
+        <li>anatomy의 <code>layout</code> 값에서 시작한다.</li>
+        <li>V에 맞는 styles 항목만 고른다. <code>base</code>는 항상 포함하고, 축 개수가 적은 것부터(같으면 문서 순서) 정렬한다.</li>
+        <li>정렬된 항목마다 기본 state(states의 첫 항목) 블록을 덮어쓴다.</li>
+        <li>s가 기본 state가 아니면, 다시 처음부터 s 블록을 덮어쓴다.</li>
+      </ol>
+      <p>V에 없는 축은 그 축의 <code>default</code>를 쓴다. 예를 들어 다음 스타일이 있을 때:</p>
+      <pre><code>styles:
+  base:
+    enabled: { root: { fill: "{c.one}" } }
+    pressed: { root: { fill: "{c.two}" } }
+  layout=stacked:
+    enabled: { root: { direction: column, fill: "{c.three}" } }
+  layout=stacked,badge=true:
+    enabled: { root: { fill: "{c.four}" } }</code></pre>
+      <div class="table"><table>
+        <thead><tr><th>variant</th><th>state</th><th>root.fill</th><th>이유</th></tr></thead>
+        <tbody>
+          <tr><td>layout=stacked</td><td>enabled</td><td><code>{c.three}</code></td><td>같은 state 안에서는 더 구체적인 variant가 이긴다</td></tr>
+          <tr><td>layout=stacked</td><td>pressed</td><td><code>{c.two}</code></td><td>pressed 계층이 enabled 계층 뒤에 적용된다</td></tr>
+          <tr><td>layout=stacked, badge=true</td><td>enabled</td><td><code>{c.four}</code></td><td>축 2개 식이 축 1개 식을 이긴다(문서 위치 무관)</td></tr>
+        </tbody>
+      </table></div>
+
+      <h2 id="checklist">체크리스트</h2>
+      <p>체크리스트(<code>kind: Checklist</code>)는 컴포넌트가 의도대로 구현됐는지 확인하는 항목 목록이다. 컴포넌트당 파일 하나를 두고, 항목은 자동과 수동 두 종류다.</p>
+      <pre><code>kind: Checklist
+metadata: { id: button, component: button }
+items:
+  - id: filled-container
+    title: "Filled 컨테이너 = primary"
+    check: { variant: { style: filled }, state: [enabled, hovered], part: root,
+             property: background-color, expect: "{md.sys.color.primary}" }
+  - id: ripple
+    title: "pressed 리플"
+    manual: true</code></pre>
+      <ul>
+        <li><strong>자동 항목</strong>: variant × state × 모드 조합마다 컴포넌트를 렌더하고 part의 computed CSS 값을 읽는다. 생략한 축·state는 모든 값을, 생략한 모드는 컴포넌트가 실제로 쓰는 modifier만 모든 context를 검사한다. mode prop 값도 <code>mode: { style: outlined }</code>로 지정한다.</li>
+        <li><strong>텍스트 항목</strong>: <code>property: text</code>는 part에 렌더된 텍스트를 읽어, 그 케이스의 locale로 해석한 텍스트 토큰과 비교한다. 예: <code>expect: "{text.button.label}"</code>은 en에서 <code>Button</code>, ko에서 <code>버튼</code>이어야 통과한다.</li>
+        <li><strong>판정</strong>: 기대값을 프로브 요소에 설정해 브라우저가 양쪽을 같은 방식으로 정규화하게 한 뒤 비교한다. px는 0.05px 오차를 허용하고, 측정값이 비어 있으면 실패다.</li>
+        <li><strong>수동 항목</strong>: 포커스 링, 리플, 터치 타깃처럼 v0.1 어휘로 표현하지 못하는 것을 사람이 보고 체크한다.</li>
+        <li><strong>기대값 원칙</strong>: 컴포넌트가 쓰는 comp 토큰이 아니라 sys 토큰이나 공식 스펙의 리터럴을 쓴다. 그래야 YAML 작성, comp→sys 연결, 렌더러가 한꺼번에 교차 검증된다.</li>
+      </ul>
+      <p>Material 3 파일럿 5종의 자동 항목은 모두 통과한다.</p>
+      <div class="table"><table>
+        <thead><tr><th>컴포넌트</th><th>자동 항목</th></tr></thead>
+        <tbody>
+          <tr><td>Button</td><td>34/34</td></tr>
+          <tr><td>Checkbox</td><td>27/27</td></tr>
+          <tr><td>Filter chip</td><td>25/25</td></tr>
+          <tr><td>Icon button</td><td>21/21</td></tr>
+          <tr><td>Card</td><td>19/19</td></tr>
+        </tbody>
+      </table></div>
+
+      <h2 id="mapping">Figma · 웹 매핑</h2>
+      <p>같은 YAML이 Figma 개념과 CSS로 각각 이렇게 옮겨진다.</p>
+      <div class="table"><table>
+        <thead><tr><th>OpenUI</th><th>Figma</th><th>CSS</th></tr></thead>
+        <tbody>
+          <tr><td>토큰 / 모드</td><td>Variable / VariableCollection.modes</td><td><code>--md-sys-color-primary</code> / <code>.ou-root[data-theme="dark"]</code></td></tr>
+          <tr><td>조건(<code>when</code>)</td><td>대응 없음. 프레임에 explicit mode 지정</td><td><code>@media</code>, <code>:lang()</code>, 앱이 지정하는 <code>data-device</code></td></tr>
+          <tr><td>컴포넌트 토큰, mode prop</td><td>컴포넌트별 variable collection(모드 = mode prop 값), 인스턴스의 <code>explicitVariableModes</code></td><td>컴포넌트 루트의 CSS 변수와 <code>data-mode-style</code></td></tr>
+          <tr><td>텍스트 토큰 / locale</td><td>STRING Variable, <code>boundVariables.characters</code> / 언어별 mode</td><td>선택된 locale로 해석한 텍스트, <code>lang</code> 속성</td></tr>
+          <tr><td>typography 토큰</td><td>Text Style</td><td><code>--…__font-size</code> 등 하위 변수 5개</td></tr>
+          <tr><td>shadow 토큰</td><td>Effect Style</td><td><code>box-shadow</code></td></tr>
+          <tr><td>Component(variant × state)</td><td>COMPONENT_SET 안의 COMPONENT</td><td>variant×state 조합마다 렌더</td></tr>
+          <tr><td>prop text / boolean / instance / slot</td><td>TEXT / BOOLEAN / INSTANCE_SWAP / SLOT</td><td>텍스트, <code>display:none</code>, 중첩 컴포넌트, slot 자리</td></tr>
+          <tr><td><code>direction</code>, <code>gap</code>, <code>padding</code></td><td><code>layoutMode</code>, <code>itemSpacing</code>, <code>padding*</code></td><td>flex/grid, <code>gap</code>, <code>padding</code></td></tr>
+          <tr><td><code>width: hug / fill</code></td><td><code>layoutSizing*</code>: HUG / FILL</td><td><code>max-content</code> / <code>flex:1 1 0</code> 또는 <code>align-self:stretch</code></td></tr>
+          <tr><td><code>fill</code>, <code>fillOpacity</code></td><td><code>fills[]</code>, paint opacity</td><td><code>background</code> / <code>color-mix()</code></td></tr>
+          <tr><td><code>strokeColor</code> + <code>strokeAlign</code></td><td><code>strokes[]</code>, <code>strokeAlign</code></td><td><code>box-shadow</code> inset / outset</td></tr>
+          <tr><td>토큰 참조</td><td><code>boundVariables</code></td><td><code>var(--…)</code></td></tr>
+        </tbody>
+      </table></div>
+
+      <h2 id="tools">도구</h2>
+      <p>검증기와 에디터는 같은 코드를 쓴다. CLI에서 통과하면 에디터에서도 오류가 없다.</p>
+      <div class="table"><table>
+        <thead><tr><th>도구</th><th>명령</th><th>하는 일</th></tr></thead>
+        <tbody>
+          <tr><td>검증 CLI</td><td><code>bun src/cli.ts validate examples/material3</code></td><td>스키마와 의미 검증. 성공하면 <code>ok: 409 tokens, 9 components</code></td></tr>
+          <tr><td>로컬 에디터</td><td><code>bun editor/server.ts examples/material3</code></td><td>YAML 편집, 실시간 진단, variant×state 프리뷰, 체크리스트. ⌘S로 디스크에 저장</td></tr>
+          <tr><td>웹 에디터</td><td><a href="./">이 사이트</a></td><td>예제는 Save 시 다운로드. Chrome의 Open folder로 로컬 YAML을 직접 수정</td></tr>
+        </tbody>
+      </table></div>
+      <p>검증기는 자주 하는 실수에 힌트를 준다. 따옴표 없는 토큰 참조 <code>{a.b}</code>, <code>{ }</code> 안 따옴표 없는 쉼표, YAML 중복 키, 스타일 키 오타가 그것이다.</p>
+
+      <h2 id="limits">v0.1의 한계와 다음 단계</h2>
+      <p>v0.1은 정적인 외형과 구조를 다룬다. 상호작용과 모션은 아직 수동 체크로 확인한다.</p>
+      <ul>
+        <li><strong>표현하지 못하는 것</strong>: 리플, 포커스 링 오프셋, 애니메이션, state 조합(<code>enabled,selected</code>), boolean 토큰, 텍스트의 자리표시자(<code>{count}개</code>)와 복수형, 번역 fallback(<code>ko-KR</code>→<code>ko</code>), RTL 레이아웃.</li>
+        <li><strong>조건의 한계</strong>: 한 context에 조건 하나만 둔다(너비이면서 가로 방향 같은 AND 없음). pointer, contrast, reduced motion 조건도 아직 없다.</li>
+        <li><strong>작성이 번거로운 것</strong>: variant 식에 OR가 없어 같은 블록을 반복해야 한다. 존재하지 않는 variant 조합을 제외할 방법도 없다.</li>
+        <li><strong>아직 정의하지 않은 것</strong>: 렌더러용 정규화 JSON(exchange 포맷)은 v0.2에서 정의한다. 지금 렌더러는 YAML을 직접 읽는다.</li>
+        <li><strong>다음 단계 후보</strong>: Compose·React 렌더러, 비주얼(인스펙터) 편집, YAML→Figma 생성 플러그인.</li>
+      </ul>
+    </main>
+  </body>
+</html>
