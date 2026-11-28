@@ -1,0 +1,21 @@
+# Chosen per instance by the button's `style` mode prop (modifier without a condition).
+
+button:
+  container-color: { $type: color, $value: "{md.sys.color.transparent}" }
+  label-color: { $type: color, $value: "{md.comp.outlined-button.label-text-color}" }
+  icon-color: { $type: color, $value: "{md.comp.outlined-button.with-icon-icon-color}" }
+  state-layer-color: { $type: color, $value: "{md.comp.outlined-button.hover-state-layer-color}" }
+  outline-color: { $type: color, $value: "{md.comp.outlined-button.outline-color}" }
+  outline-width: { $type: dimension, $value: "{md.comp.outlined-button.outline-width}" }
+  focus-outline-color: { $type: color, $value: "{md.comp.outlined-button.focus-outline-color}" }
+  shadow: { $type: shadow, $value: "{md.sys.elevation-shadow.level0}" }
+  hover-shadow: { $type: shadow, $value: "{md.sys.elevation-shadow.level0}" }
+  disabled-shadow: { $type: shadow, $value: "{md.sys.elevation-shadow.level0}" }
+  disabled-container-color: { $type: color, $value: "{md.sys.color.transparent}" }
+  disabled-container-opacity: { $type: number, $value: "{md.sys.opacity.zero}" }
+  disabled-outline-color: { $type: color, $value: "{md.comp.outlined-button.disabled-outline-color}" }
+  disabled-outline-opacity: { $type: number, $value: "{md.comp.outlined-button.disabled-outline-opacity}" }
+  leading-space: { $type: dimension, $value: { value: 24, unit: px } }
+  trailing-space: { $type: dimension, $value: { value: 24, unit: px } }
+  with-icon-leading-space: { $type: dimension, $value: { value: 16, unit: px } }
+  with-icon-trailing-space: { $type: dimension, $value: { value: 24, unit: px } }

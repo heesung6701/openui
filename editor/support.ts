@@ -55,3 +55,13 @@ export function previewMode(file: string, componentFound: boolean, diagnostics: 
   if (lastGoodFile === file) return "keep";
   return componentFound ? "render" : "none";
 }
+
+type Cond = { width?: { min?: number; max?: number }; height?: { min?: number; max?: number }; orientation?: string; device?: string; colorScheme?: string; language?: string };
+/** Short label of a mode condition for the mode picker, e.g. `600 ≤ width < 840`. */
+export function describeCondition(c: Cond): string {
+  const range = (f: string, r: { min?: number; max?: number }) =>
+    r.min !== undefined && r.max !== undefined ? `${r.min} ≤ ${f} < ${r.max}` : r.min !== undefined ? `${f} ≥ ${r.min}` : `${f} < ${r.max}`;
+  if (c.width) return range("width", c.width);
+  if (c.height) return range("height", c.height);
+  return String(c.orientation ?? c.device ?? c.colorScheme ?? c.language ?? "");
+}

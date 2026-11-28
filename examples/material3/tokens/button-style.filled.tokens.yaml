@@ -1,0 +1,21 @@
+# Chosen per instance by the button's `style` mode prop (modifier without a condition).
+
+button:
+  container-color: { $type: color, $value: "{md.comp.filled-button.container-color}" }
+  label-color: { $type: color, $value: "{md.comp.filled-button.label-text-color}" }
+  icon-color: { $type: color, $value: "{md.comp.filled-button.with-icon-icon-color}" }
+  state-layer-color: { $type: color, $value: "{md.comp.filled-button.hover-state-layer-color}" }
+  outline-color: { $type: color, $value: "{md.sys.color.transparent}" }
+  outline-width: { $type: dimension, $value: "{md.sys.space.zero}" }
+  focus-outline-color: { $type: color, $value: "{md.sys.color.transparent}" }
+  shadow: { $type: shadow, $value: "{md.sys.elevation-shadow.level0}" }
+  hover-shadow: { $type: shadow, $value: "{md.sys.elevation-shadow.level1}" }
+  disabled-shadow: { $type: shadow, $value: "{md.sys.elevation-shadow.level0}" }
+  disabled-container-color: { $type: color, $value: "{md.comp.filled-button.disabled-container-color}" }
+  disabled-container-opacity: { $type: number, $value: "{md.comp.filled-button.disabled-container-opacity}" }
+  disabled-outline-color: { $type: color, $value: "{md.sys.color.transparent}" }
+  disabled-outline-opacity: { $type: number, $value: "{md.sys.opacity.zero}" }
+  leading-space: { $type: dimension, $value: { value: 24, unit: px } }
+  trailing-space: { $type: dimension, $value: { value: 24, unit: px } }
+  with-icon-leading-space: { $type: dimension, $value: { value: 16, unit: px } }
+  with-icon-trailing-space: { $type: dimension, $value: { value: 24, unit: px } }

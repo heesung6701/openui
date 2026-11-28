@@ -1,0 +1,5 @@
+# Values of one modifier context. Which context applies when: see conformance.resolver.yaml (org.openui.when).
+layout:
+  $type: dimension
+  gallery-gap: { $value: { value: 12, unit: px } }
+  grid-gap: { $value: { value: 8, unit: px } }

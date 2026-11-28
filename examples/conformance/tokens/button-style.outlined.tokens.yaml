@@ -1,0 +1,7 @@
+# button-style is chosen per instance by the button's `style` mode prop (no condition).
+button:
+  container-color: { $type: color, $value: { colorSpace: srgb, components: [0, 0, 0], alpha: 0 } }
+  content-color: { $type: color, $value: "{color.primary}" }
+  outline-color: { $type: color, $value: "{color.outline}" }
+  outline-width: { $type: dimension, $value: "{stroke.thin}" }
+  shadow: { $type: shadow, $value: "{elevation.0}" }

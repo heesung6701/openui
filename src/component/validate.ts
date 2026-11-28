@@ -1,6 +1,7 @@
 import type { Diagnostic } from "../diagnostics";
 import type { TokenSet } from "../tokens/resolver";
 import { aliasTarget, collectAliases } from "../tokens/values";
+import { resolveStyles, variantCombos } from "./resolve";
 import { Ident, STYLE_PROPERTIES, type Component, type PartKind, type PartNode } from "./schema";
 
 export type ValidateContext = { tokens: TokenSet; componentIds: Set<string> };
@@ -92,6 +93,12 @@ export function validateComponent(doc: Component, file: string, ctx: ValidateCon
   // props
   for (const [name, def] of Object.entries(props)) {
     const at = ["data", "props", name];
+    if (def.type === "mode") {
+      const c = ctx.tokens.collections.find((c) => c.kind === "modifier" && c.name === def.modifier);
+      if (!c) err([...at, "modifier"], `unknown modifier "${def.modifier}"`);
+      else if (c.when) err([...at, "modifier"], `modifier "${def.modifier}" is selected by conditions (when); a mode prop needs a modifier without conditions`);
+      continue; // mode props bind to the component root, not to a part
+    }
     const n = bound.get(name) ?? 0;
     if (n === 0) err(at, `prop "${name}" is not bound to any part`);
     if (def.type === "text") textToken(def.default, [...at, "default"]);
@@ -134,6 +141,21 @@ export function validateComponent(doc: Component, file: string, ctx: ValidateCon
         for (const [prop, value] of Object.entries(cell ?? {})) checkValue(prop, value, part.kind, partName, [...sat, partName, prop]);
       }
     }
+  }
+
+  // §4.3: a variant axis exists only to change the UI tree. Structure = values without tokens (visible, direction,
+  // position, hug/fill …); everything else is a token value and belongs in token modes.
+  const structure = (variant: Record<string, string>, state: string) =>
+    JSON.stringify(Object.entries(resolveStyles(doc, variant, state)).map(([part, cell]) =>
+      [part, Object.entries(cell).filter(([, v]) => collectAliases(v).length === 0).sort(([a], [b]) => a.localeCompare(b))]));
+  const combos = variantCombos(doc);
+  for (const [axis, { values }] of Object.entries(axes)) {
+    if (axis === "state") continue;
+    const changes = values.length > 1 && combos.some((combo) => states.some((s) => {
+      const first = structure({ ...combo, [axis]: values[0]! }, s);
+      return values.slice(1).some((v) => structure({ ...combo, [axis]: v }, s) !== first);
+    }));
+    if (!changes) err(["data", "variants", axis], `variant axis "${axis}" does not change the UI tree (its values differ only in token values, or not at all): move the differences into tokens chosen by a mode prop or by conditions (§3.6)`);
   }
 
   // x-figma

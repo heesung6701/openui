@@ -9,19 +9,19 @@ items:
   - { id: container-size, title: "컨테이너 18dp", check: { part: container, property: width, expect: 18px } }
   - { id: container-centered, title: "컨테이너가 40dp 영역 중앙(11dp)", check: { part: container, property: left, expect: 11px } }
   - { id: container-shape, title: "컨테이너 모서리 2dp", check: { part: container, property: border-top-left-radius, expect: 2px } }
-  - { id: unselected-outline, title: "Unselected outline 2dp on-surface-variant", check: { variant: { type: unselected, error: "false" }, state: enabled, part: container, property: box-shadow, expect: "inset 0 0 0 2px {md.sys.color.on-surface-variant}" } }
-  - { id: unselected-hover-outline, title: "Unselected hover/focus/pressed outline = on-surface", check: { variant: { type: unselected, error: "false" }, state: [hovered, focused, pressed], part: container, property: box-shadow, expect: "inset 0 0 0 2px {md.sys.color.on-surface}" } }
+  - { id: unselected-outline, title: "Unselected outline 2dp on-surface-variant", check: { variant: { type: unselected }, state: enabled, mode: { checkbox-error: "false" }, part: container, property: box-shadow, expect: "inset 0 0 0 2px {md.sys.color.on-surface-variant}" } }
+  - { id: unselected-hover-outline, title: "Unselected hover/focus/pressed outline = on-surface", check: { variant: { type: unselected }, state: [hovered, focused, pressed], mode: { checkbox-error: "false" }, part: container, property: box-shadow, expect: "inset 0 0 0 2px {md.sys.color.on-surface}" } }
   - { id: unselected-empty, title: "Unselected 컨테이너 비어 있음", check: { variant: { type: unselected }, part: container, property: background-color, expect: transparent } }
-  - { id: selected-container, title: "Selected·Indeterminate 컨테이너 = primary", check: { variant: { type: [selected, indeterminate], error: "false" }, state: [enabled, hovered, focused, pressed], part: container, property: background-color, expect: "{md.sys.color.primary}" } }
+  - { id: selected-container, title: "Selected·Indeterminate 컨테이너 = primary", check: { variant: { type: [selected, indeterminate] }, state: [enabled, hovered, focused, pressed], mode: { checkbox-error: "false" }, part: container, property: background-color, expect: "{md.sys.color.primary}" } }
   - { id: selected-check, title: "Selected면 체크 표시", check: { variant: { type: selected }, part: check, property: display, expect: block } }
   - { id: selected-no-dash, title: "Selected면 대시 숨김", check: { variant: { type: selected }, part: dash, property: display, expect: none } }
   - { id: indeterminate-dash, title: "Indeterminate면 대시 표시, 체크 숨김", check: { variant: { type: indeterminate }, part: dash, property: display, expect: block } }
   - { id: indeterminate-no-check, title: "Indeterminate면 체크 숨김", check: { variant: { type: indeterminate }, part: check, property: display, expect: none } }
   - { id: unselected-no-icons, title: "Unselected면 아이콘 없음", check: { variant: { type: unselected }, part: check, property: display, expect: none } }
-  - { id: icon-color, title: "체크 아이콘 = on-primary", check: { variant: { type: selected, error: "false" }, state: enabled, part: check, property: --ou-icon-fill, expect: "{md.sys.color.on-primary}" } }
-  - { id: error-outline, title: "Error unselected outline = error", check: { variant: { type: unselected, error: "true" }, state: [enabled, hovered, focused, pressed], part: container, property: box-shadow, expect: "inset 0 0 0 2px {md.sys.color.error}" } }
-  - { id: error-selected, title: "Error selected 컨테이너 = error", check: { variant: { type: [selected, indeterminate], error: "true" }, state: [enabled, hovered, focused, pressed], part: container, property: background-color, expect: "{md.sys.color.error}" } }
-  - { id: error-icon, title: "Error selected 아이콘 = on-error", check: { variant: { type: selected, error: "true" }, state: enabled, part: check, property: --ou-icon-fill, expect: "{md.sys.color.on-error}" } }
+  - { id: icon-color, title: "체크 아이콘 = on-primary", check: { variant: { type: selected }, state: enabled, mode: { checkbox-error: "false" }, part: check, property: --ou-icon-fill, expect: "{md.sys.color.on-primary}" } }
+  - { id: error-outline, title: "Error unselected outline = error", check: { variant: { type: unselected }, state: [enabled, hovered, focused, pressed], mode: { checkbox-error: "true" }, part: container, property: box-shadow, expect: "inset 0 0 0 2px {md.sys.color.error}" } }
+  - { id: error-selected, title: "Error selected 컨테이너 = error", check: { variant: { type: [selected, indeterminate] }, state: [enabled, hovered, focused, pressed], mode: { checkbox-error: "true" }, part: container, property: background-color, expect: "{md.sys.color.error}" } }
+  - { id: error-icon, title: "Error selected 아이콘 = on-error", check: { variant: { type: selected }, state: enabled, mode: { checkbox-error: "true" }, part: check, property: --ou-icon-fill, expect: "{md.sys.color.on-error}" } }
   - { id: disabled-selected, title: "Disabled selected 컨테이너 on-surface 38%", check: { variant: { type: [selected, indeterminate] }, state: disabled, part: container, property: background-color, expect: "color-mix(in srgb, {md.sys.color.on-surface} 38%, transparent)" } }
   - { id: disabled-selected-icon, title: "Disabled selected 아이콘 = surface", check: { variant: { type: selected }, state: disabled, part: check, property: --ou-icon-fill, expect: "{md.sys.color.surface}" } }
   - { id: disabled-unselected, title: "Disabled unselected outline on-surface 38% (error 무시)", check: { variant: { type: unselected }, state: disabled, part: container, property: box-shadow, expect: "inset 0 0 0 2px color-mix(in srgb, {md.sys.color.on-surface} 38%, transparent)" } }
@@ -30,8 +30,8 @@ items:
   - { id: hover-layer, title: "Hover state layer 8%", check: { state: hovered, part: stateLayer, property: opacity, expect: "{md.sys.state.hover-state-layer-opacity}" } }
   - { id: focus-layer, title: "Focus state layer 10%", check: { state: focused, part: stateLayer, property: opacity, expect: "{md.sys.state.focus-state-layer-opacity}" } }
   - { id: pressed-layer, title: "Pressed state layer 10%", check: { state: pressed, part: stateLayer, property: opacity, expect: "{md.sys.state.pressed-state-layer-opacity}" } }
-  - { id: unselected-pressed-layer, title: "Unselected pressed layer = primary (선택될 색 미리보기)", check: { variant: { type: unselected, error: "false" }, state: pressed, part: stateLayer, property: background-color, expect: "{md.sys.color.primary}" } }
-  - { id: selected-pressed-layer, title: "Selected pressed layer = on-surface", check: { variant: { type: selected, error: "false" }, state: pressed, part: stateLayer, property: background-color, expect: "{md.sys.color.on-surface}" } }
+  - { id: unselected-pressed-layer, title: "Unselected pressed layer = primary (선택될 색 미리보기)", check: { variant: { type: unselected }, state: pressed, mode: { checkbox-error: "false" }, part: stateLayer, property: background-color, expect: "{md.sys.color.primary}" } }
+  - { id: selected-pressed-layer, title: "Selected pressed layer = on-surface", check: { variant: { type: selected }, state: pressed, mode: { checkbox-error: "false" }, part: stateLayer, property: background-color, expect: "{md.sys.color.on-surface}" } }
   - { id: checkmark-shape, title: "체크 글리프 형태 — Material Icons check 사용(M3 전용 path 아님) 확인", manual: true, hint: { variant: { type: selected } } }
   - { id: animation, title: "선택 전환 애니메이션 — v0.1 어휘로 미표현", manual: true }
   - { id: touch-target, title: "터치 타깃 48dp", manual: true }

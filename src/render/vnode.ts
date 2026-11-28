@@ -29,10 +29,17 @@ export function buildComponent(project: Project, id: string, opts: RenderOptions
     return d && "default" in d ? d.default ?? null : null;
   };
 
+  // Mode props: the instance picks a modifier context; it applies to this component's subtree (data attribute on the root).
+  const modes = { ...(opts.modes ?? {}) };
+  const modeAttrs: Record<string, string> = {};
+  for (const [name, def] of Object.entries(props)) {
+    const v = opts.props[name];
+    if (def.type === "mode" && typeof v === "string") modeAttrs[`data-${def.modifier}`] = modes[def.modifier] = v;
+  }
   /** Text tokens resolve in the selected locale; a literal runtime prop value (app data) renders as is. */
   const text = (v: unknown): string => {
     const a = aliasTarget(v);
-    return a ? String(resolveToken(project.tokens, a, opts.modes ?? {}) ?? `{${a}}`) : String(v ?? "");
+    return a ? String(resolveToken(project.tokens, a, modes) ?? `{${a}}`) : String(v ?? "");
   };
 
   const build = (name: string, part: PartNode, parentDirection: string | null, isRoot: boolean): VNode => {
@@ -40,7 +47,7 @@ export function buildComponent(project: Project, id: string, opts: RenderOptions
     const style = partStyle(part.kind, resolved, { parentDirection, isRoot });
     if (part.visible && propVal(part.visible.prop) === false) style.display = "none";
     const attrs: Record<string, string> = { "data-part": name };
-    if (isRoot) attrs["data-component"] = id;
+    if (isRoot) Object.assign(attrs, { "data-component": id }, modeAttrs);
     const dir = part.kind === "frame" || part.kind === "slot" ? ((resolved.direction as string | undefined) ?? "none") : null;
     const kids = () => Object.entries(part.children ?? {}).map(([n, p]) => build(n, p, dir, false));
 
@@ -59,7 +66,7 @@ export function buildComponent(project: Project, id: string, opts: RenderOptions
         const target = part.component ?? (part.prop ? propVal(part.prop) : null);
         if (typeof target !== "string") return { tag: "div", attrs, style, children: [] };
         const targetDoc = project.components.get(target)?.doc;
-        const inner = buildComponent(project, target, { variant: {}, state: targetDoc ? statesOf(targetDoc)[0]! : "enabled", props: {}, modes: opts.modes }, [...chain, id]);
+        const inner = buildComponent(project, target, { variant: {}, state: targetDoc ? statesOf(targetDoc)[0]! : "enabled", props: {}, modes }, [...chain, id]);
         const sized = (k: "width" | "height") => resolved[k] !== undefined && resolved[k] !== "hug";
         if (sized("width")) inner.style.width = "100%";
         if (sized("height")) inner.style.height = "100%";

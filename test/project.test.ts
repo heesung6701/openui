@@ -60,9 +60,9 @@ test("unknown instance component across files", async () => {
 });
 test("component with semantic errors is still loaded (best-effort preview)", async () => {
   const files = await conformance();
-  files["components/button.yaml"] = files["components/button.yaml"]!.replace("{color.primary}", "{color.nope}");
+  files["components/button.yaml"] = files["components/button.yaml"]!.replace("{type.label}", "{type.nope}");
   const r = await loadProject(memoryIO(files));
-  expect(msgs(r.diagnostics)).toContain("color.nope");
+  expect(msgs(r.diagnostics)).toContain("type.nope");
   expect(r.project!.components.has("button")).toBe(true);
 });
 test("CLI exit codes", () => {
@@ -101,4 +101,10 @@ data:
     "c/b.yaml": comp("b", "a"),
   };
   expect(msgs((await loadProject(memoryIO(files))).diagnostics)).toContain("instance cycle: a → b → a");
+});
+
+test("tokens of a modifier chosen by a mode prop cannot be aliased from other collections", async () => {
+  const files = await conformance();
+  files["tokens/base.tokens.yaml"] += `derived: { $type: color, $value: "{button.container-color}" }\n`;
+  expect(msgs((await loadProject(memoryIO(files))).diagnostics)).toContain('aliases "{button.container-color}" of modifier "button-style"');
 });

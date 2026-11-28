@@ -1,0 +1,15 @@
+# Chosen per instance by the icon button's `style` mode prop (modifier without a condition).
+
+icon-button:
+  container-color: { $type: color, $value: "{md.sys.color.transparent}" }
+  icon-color: { $type: color, $value: "{md.comp.outlined-icon-button.unselected-icon-color}" }
+  state-layer-color: { $type: color, $value: "{md.comp.outlined-icon-button.unselected-hover-state-layer-color}" }
+  pressed-state-layer-color: { $type: color, $value: "{md.comp.outlined-icon-button.unselected-pressed-state-layer-color}" }
+  pressed-icon-color: { $type: color, $value: "{md.comp.outlined-icon-button.unselected-pressed-icon-color}" }
+  focus-state-layer-opacity: { $type: number, $value: "{md.comp.outlined-icon-button.focus-state-layer-opacity}" }
+  outline-color: { $type: color, $value: "{md.comp.outlined-icon-button.unselected-outline-color}" }
+  outline-width: { $type: dimension, $value: "{md.comp.outlined-icon-button.unselected-outline-width}" }
+  disabled-container-color: { $type: color, $value: "{md.sys.color.transparent}" }
+  disabled-container-opacity: { $type: number, $value: "{md.sys.opacity.zero}" }
+  disabled-outline-color: { $type: color, $value: "{md.comp.outlined-icon-button.disabled-unselected-outline-color}" }
+  disabled-outline-opacity: { $type: number, $value: "{md.comp.outlined-icon-button.disabled-unselected-outline-opacity}" }

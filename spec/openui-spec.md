@@ -17,12 +17,13 @@ OpenUI는 디자인 토큰과 UI 컴포넌트를 YAML 문서로 기술한다. **
 |---|---|
 | 토큰(token) | 이름이 붙은 디자인 값. DTCG 형식 |
 | 컬렉션(collection) | 토큰 묶음. 하나 이상의 모드를 가진다 |
-| 모드(mode) | 같은 토큰의 맥락별 값(예: light/dark, en/ko) |
+| 모드(mode) | 같은 토큰의 맥락별 값(예: light/dark, en/ko, compact/expanded). modifier의 context 하나가 모드 하나다 |
+| 조건(condition) | 어떤 모드가 언제 적용되는지. 창 너비, 방향, 단말 종류 등(3.6) |
 | 텍스트 토큰 | 화면에 나오는 텍스트. `$type: string` 토큰이고, 경로가 텍스트 ID다(3.5) |
 | part | 컴포넌트 해부도(anatomy)의 한 요소. 예: `root`, `label`, `icon` |
 | slot | 사용 측이 임의 콘텐츠를 넣는 자리. Figma SLOT, React children, Compose `@Composable` 람다에 해당 |
-| prop | 컴포넌트 공개 API. text / boolean / instance / slot |
-| variant | 작성 시점에 고르는 외형 축. 예: `style=filled` |
+| prop | 컴포넌트 공개 API. text / boolean / instance / slot / mode |
+| variant | **UI 트리를 바꾸는** 축. 예: 아이콘 part를 보이는 `withIcon=true`(4.3) |
 | state | 런타임 상호작용 상태. 예: `enabled`, `pressed` |
 
 rootage에서 `slot`은 part를 뜻하지만, OpenUI에서는 **part와 slot을 구분**한다.
@@ -116,6 +117,7 @@ resolutionOrder: [{ $ref: "#/sets/base" }, { $ref: "#/modifiers/theme" }]
 - `version: "2025.10"` 필수.
 - source는 `{$ref: <resolver 파일 기준 상대경로>}`만 허용한다. 인라인 토큰 객체는 v0.1에서 미지원.
 - `modifiers.<m>.default`를 생략하면 첫 context가 기본값이다.
+- modifier에는 context가 언제 적용되는지 적는 `$extensions["org.openui"].when`을 둘 수 있다(3.6).
 - `resolutionOrder`에는 모든 set과 modifier가 정확히 한 번씩 나와야 한다.
 - 같은 source 목록 안에서는 뒤의 파일이 이긴다.
 
@@ -184,6 +186,51 @@ modifiers:
 - 선택된 locale context로 값을 해석해 텍스트 내용으로 넣는다. alias를 따라갈 때는 각 토큰이 속한 컬렉션의 모드를 쓴다.
 - 해석된 locale 하나는 `{ID: 문자열}` 평면 맵이다. 번역 파일(JSON, `strings.xml`, `.strings` 등)로 그대로 옮길 수 있다.
 
+### 3.6 조건부 모드: 언제 어떤 값인가
+
+**값이 상황에 따라 달라지면 그 차이는 토큰 정의에 둔다.** 컴포넌트는 토큰만 가리키고(4.5), 토큰이 "언제 어떤 값인지"를 가진다.
+- **어떤 값**: modifier의 context마다 토큰 파일에 값을 둔다(3.3, 3.4).
+- **언제**: modifier에 `$extensions["org.openui"].when`으로 context마다 조건을 적는다. DTCG Resolver가 허용하는 확장 위치다.
+
+```yaml
+modifiers:
+  window:
+    description: Window width class (breakpoints in dp)
+    contexts:
+      compact:  [{ $ref: window.compact.tokens.yaml }]     # layout.card-padding: 16px
+      medium:   [{ $ref: window.medium.tokens.yaml }]      # layout.card-padding: 24px
+      expanded: [{ $ref: window.expanded.tokens.yaml }]    # layout.card-padding: 24px
+    default: compact
+    $extensions:
+      org.openui:
+        when:
+          compact:  { width: { max: 600 } }
+          medium:   { width: { min: 600, max: 840 } }
+          expanded: { width: { min: 840 } }
+```
+
+**조건 어휘**
+
+| 조건 | 값 | 뜻 |
+|---|---|---|
+| `width` | `{min?, max?}` | 창(뷰포트) 너비. 단위 px(= dp). **`min ≤ 너비 < max`** 반열린 구간이라 브레이크포인트가 빈틈없이 이어진다 |
+| `height` | `{min?, max?}` | 창 높이. 구간 규칙은 width와 같다 |
+| `orientation` | `portrait \| landscape` | 화면 방향 |
+| `device` | `phone \| tablet \| desktop \| tv \| watch` | 단말 종류 |
+| `colorScheme` | `light \| dark` | 시스템 색 모드 |
+| `language` | BCP 47 태그(`ko`, `en-US`) | UI 언어. `ko`는 `ko-KR`에도 맞는다 |
+
+**규칙**
+- `when`이 있으면 모든 context에 조건이 정확히 하나씩 있어야 한다. 없는 context 이름은 오류다.
+- 한 modifier의 조건은 모두 같은 종류다(너비면 너비만). 축이 여럿이면 modifier를 나눈다(`window`, `orientation`, `device`).
+- 조건끼리 겹치면 오류다. 예: `conditions of "compact" and "medium" overlap`
+- 빈틈은 허용한다. 어느 조건에도 맞지 않으면 기본 context를 쓴다.
+- 여러 축에 걸친 값은 alias로 잇는다. 예: device modifier의 토큰이 window modifier의 토큰을 가리키면, 각 토큰은 자기 컬렉션의 모드로 풀린다.
+
+**모드를 고르는 순서**: 명시적 선택(앱이 지정하거나 컴포넌트의 mode prop) → 조건이 맞는 context → 기본 context.
+
+**`when`이 없는 modifier**는 명시적으로만 고른다. 예: 버튼 강조 스타일(`button-style`). 컴포넌트 인스턴스는 mode prop(4.2)으로 이런 modifier의 context를 고른다.
+
 ## 4. 컴포넌트
 
 ### 4.1 문서 구조
@@ -216,11 +263,17 @@ data:
 | `boolean` | `default: boolean` | part의 `visible: {prop}` |
 | `instance` | `default?: componentId`, `preferred?: componentId[]` | instance part의 `prop` |
 | `slot` | `min?: int≥0`, `max?: int≥1`, `preferred?: componentId[]`, `preferredOnly?: boolean` | slot part의 `prop` |
+| `mode` | `modifier: <when 없는 modifier 이름>` | 컴포넌트 루트(part에 바인딩하지 않음) |
 
 - 모든 prop에 `description?`을 둘 수 있다.
 - 모든 prop은 최소 한 part에 바인딩되어야 한다.
 - slot prop은 정확히 한 slot part에 바인딩된다.
 - componentId는 프로젝트에 실제로 있는 `metadata.id`여야 한다.
+- **mode prop**은 인스턴스가 modifier의 context를 고르는 API다. 예: `style: { type: mode, modifier: button-style }`
+  - 기본값은 그 modifier의 `default`다.
+  - 조건(`when`)이 있는 modifier는 고를 수 없다: `modifier "window" is selected by conditions (when); …`
+  - 고른 context는 그 인스턴스와 자손에만 적용된다.
+  - 그래서 mode prop이 고르는 modifier의 토큰은 다른 컬렉션의 토큰이 alias할 수 없다. alias하면, 인스턴스가 모드를 바꿔도 그 토큰은 바깥 모드 값에 머문다. 오류: `token "x" aliases "{button.container-color}" of modifier "button-style", …`
 
 ### 4.3 variants와 states
 
@@ -230,7 +283,21 @@ variants:
 states: [enabled, hovered, pressed, disabled]   # 생략하면 [enabled]
 ```
 
-**variants**:
+**variants는 UI 트리가 바뀔 때만 쓴다.**
+- UI 트리 변화 = **구조 값**이 달라지는 것. 구조 값은 토큰이 아닌 값이다: `visible`(part의 유무), `direction`, `position`, `align`, `wrap`, `grid`, `strokeAlign`, `textAlign`, `hug`/`fill`.
+- 축의 값들 사이에 구조 값 차이가 하나도 없으면 오류다: `variant axis "style" does not change the UI tree (its values differ only in token values, or not at all): …`
+- 패딩, 크기, 색처럼 **값만 다른 경우는 토큰에 둔다.**
+
+| 무엇이 다른가 | 표현 | 예 |
+|---|---|---|
+| part가 생기거나 없어짐, 배치 방향 | variant | `withIcon`(아이콘 part), `type`(체크/대시 아이콘) |
+| 값만 다름, 인스턴스가 고름 | mode prop + 조건 없는 modifier | 버튼 `style`(filled/outlined…), 체크박스 `error` |
+| 값만 다름, 환경에 따라 | 조건부 modifier(3.6) | 창 너비별 패딩, 단말별 높이, 언어별 텍스트 |
+| 런타임 상호작용 | state | hovered, pressed |
+
+- 구조가 바뀌는 variant 블록에서도 값은 토큰이다. 예: `withIcon=true`는 다른 패딩 **토큰**을 가리킨다.
+
+**variant 공통 규칙**:
 - 각 축의 `default`는 그 축의 `values` 중 하나여야 한다.
 - 축 이름 `state`는 예약어라 쓸 수 없다(Figma에서 state 축과 충돌).
 
@@ -246,7 +313,7 @@ states: [enabled, hovered, pressed, disabled]   # 생략하면 [enabled]
 anatomy:
   root:                                   # 키는 정확히 root 하나, kind는 frame
     kind: frame
-    layout: { direction: row, gap: 8px, padding: [0, 24px], width: hug, height: 40px }
+    layout: { direction: row, gap: "{space.gap}", padding: ["{space.none}", "{space.button-inline}"], width: hug, height: "{size.button-height}" }
     children:                             # 키 순서 = 레이어 순서(앞쪽이 아래)
       icon:  { kind: instance, prop: icon, visible: { prop: showIcon } }
       label: { kind: text, text: { prop: label } }
@@ -277,6 +344,9 @@ styles:
 
 - variantExpr의 축과 값은 선언된 것이어야 하고, 한 식 안에 같은 축이 두 번 나올 수 없다.
 - property는 4.6의 어휘만 쓸 수 있고, 그 part 종류에 허용된 것이어야 한다.
+- **모든 값은 토큰이다.** 치수, 색, 숫자(불투명도)는 리터럴로 쓸 수 없고 토큰 alias만 쓴다. 그래야 "언제 어떤 값인지"가 토큰 정의 한 곳에 모인다(3.6). 리터럴로 남는 것은 구조 값(키워드, 열거값, boolean, grid 개수)뿐이다.
+  - 오류: `value must be a token like "{space.inset}" (literal values are not allowed: every value is a token)`
+  - `0`, `transparent`도 토큰이다. 예: `{space.none}`, `{md.sys.color.transparent}`
 
 ### 4.6 속성 어휘
 
@@ -315,9 +385,9 @@ styles:
 - `fillOpacity`와 `strokeOpacity`는 각각 칠과 선(paint)에만 적용된다. 예: M3의 disabled 컨테이너 12%, 외곽선 12%.
 - `opacity`는 part와 그 자손 전체에 적용된다.
 
-**값 shorthand**(컴포넌트 문서 전용. 토큰 파일은 DTCG 객체 형식을 쓴다):
-- dim: `8px`, `1.5rem`, 단위 없는 `0`, 또는 alias `"{…}"`
-- color: `#rrggbb`, `#rrggbbaa`, `transparent`, 또는 alias `"{…}"`
+**값 표기**(컴포넌트 문서):
+- 표의 dim, color, 0..1은 모두 그 타입의 **토큰 alias** `"{…}"`다. 리터럴 값은 토큰 파일(DTCG 객체 형식)에만 쓴다.
+- `width`/`height`는 `hug`, `fill` 또는 dimension 토큰이다.
 - alias는 반드시 따옴표로 감싼다.
 
 ## 5. 스타일 해석
@@ -332,9 +402,9 @@ styles:
 V에 없는 축은 그 축의 `default` 값을 쓴다. 선언되지 않은 state나 값이 들어오면 오류다.
 
 **state 계층이 variant 구체성보다 우선한다.** 예시(`test/resolve.test.ts`):
-- `base.enabled.root.fill`이 있고 `size=small.enabled.root.fill`이 있으면, `size=small`의 enabled에서는 후자가 이긴다(같은 state 계층에서는 구체적인 쪽이 이김).
-- `base.pressed.root.fill`은 `size=small.enabled.root.fill`을 이긴다(pressed 계층이 enabled 계층 뒤에 적용됨).
-- 축 두 개짜리 식(`size=small,tone=b`)은 문서상 위치와 관계없이 축 하나짜리 식(`size=small`)을 이긴다.
+- `base.enabled.root.fill`이 있고 `layout=stacked.enabled.root.fill`이 있으면, `layout=stacked`의 enabled에서는 후자가 이긴다(같은 state 계층에서는 구체적인 쪽이 이김).
+- `base.pressed.root.fill`은 `layout=stacked.enabled.root.fill`을 이긴다(pressed 계층이 enabled 계층 뒤에 적용됨).
+- 축 두 개짜리 식(`layout=stacked,badge=true`)은 문서상 위치와 관계없이 축 하나짜리 식(`layout=stacked`)을 이긴다.
 - variant를 지정하지 않으면 각 축의 default로 해석하고, 어느 레이어에도 없는 속성은 anatomy layout 값을 그대로 쓴다.
 
 Figma 컴포넌트로 옮길 때는 variant 조합 × state 하나하나를 이 규칙으로 해석해 각 variant 컴포넌트를 만든다.
@@ -393,11 +463,17 @@ items:
 - item id는 고유하고, `check`와 `manual`은 정확히 하나만 둔다.
 - `property`는 CSS shorthand(`background`, `border`, `border-radius`, `padding`, `margin`, `font`, `gap`, `inset`, `outline`, `flex`, `grid`, `place-items`, `overflow`, `transition`, `animation`)가 아니어야 한다. shorthand의 computed 값은 비교하기 어렵기 때문.
 - 컴포넌트당 체크리스트는 최대 1개다.
+- mode prop으로 고르는 값도 `mode`로 지정한다. 예: `mode: { button-style: outlined }`
+
+**케이스 전개**
+- 생략한 축과 state는 모든 값을 검사한다.
+- 생략한 modifier는 **컴포넌트가 의존하는 것만** 모든 context를 검사하고, 나머지는 기본 context로 고정한다. 의존 = 컴포넌트가 가리키는 토큰이 alias 사슬을 따라 그 modifier에 닿거나, mode prop이 그 modifier를 고르는 경우. 예: 버튼이 window 토큰을 쓰지 않으면 window는 compact 하나로만 검사한다.
 
 **판정**
 - 각 케이스(variant × state × mode)를 렌더하고 part의 computed `property` 값을 읽는다.
 - 기대값은 같은 컨텍스트에 둔 프로브 요소에 `expect`를 설정해서 얻은 computed 값이다. 양쪽을 브라우저가 같은 방식으로 정규화하게 하려는 것.
 - 문자열이 같으면 통과한다. 둘 다 px 길이면 차이가 0.05px 미만일 때 통과한다(레이아웃 반올림 허용).
+- 둘 다 색 하나면 표기가 아니라 값으로 비교한다. 브라우저는 `color-mix()` 결과를 `color(srgb …)`로, 일반 색을 `rgb()`로 직렬화하기 때문이다. 둘 다 완전히 투명하면 같다.
 - **`property: text`**는 CSS 속성이 아니라 part의 렌더된 텍스트다. `expect`는 텍스트 토큰 alias 하나여야 하고, 케이스마다 그 케이스의 locale로 해석한 값과 비교한다. 예: `{ part: label, property: text, expect: "{text.button.label}" }`는 en에서 `Button`, ko에서 `버튼`을 기대한다.
 
 **기대값 작성 원칙**: 컴포넌트가 참조하는 comp 토큰을 그대로 기대값으로 쓰지 않는다. 대신 sys 토큰이나 공식 스펙의 리터럴을 쓴다. 그래야 comp→sys 연결, YAML 작성, 렌더러가 한꺼번에 교차 검증된다.
@@ -409,6 +485,8 @@ items:
 | OpenUI | REST (`api_types.ts`) | Plugin API |
 |---|---|---|
 | 컬렉션 / 모드 | `VariableCollection.modes`, `defaultModeId` | `figma.variables.createVariableCollection`, `addMode` |
+| 조건(`when`) | 대응 없음. Figma는 모드를 자동으로 고르지 않는다. 조건별 화면은 프레임에 explicit mode를 지정해 만든다. 조건은 `$extensions`로 보존한다 | `setExplicitVariableModeForCollection` |
+| mode prop | 인스턴스의 `explicitVariableModes`(컬렉션 → 모드). component set의 variant 축이 되지 않는다 | `instance.setExplicitVariableModeForCollection` |
 | 토큰(color/dimension/number) | `Variable.resolvedType`(`COLOR` / `FLOAT`), `valuesByMode` | `createVariable`, `setValueForMode` |
 | 텍스트 토큰(`string`) | `Variable.resolvedType` `STRING`, `scopes: ["TEXT_CONTENT"]`. 변수 이름 = ID | `createVariable(…, "STRING")` |
 | locale modifier | variable collection 하나, 언어마다 mode 하나 | `addMode("ko")` |
@@ -452,10 +530,13 @@ items:
 - **텍스트 토큰의 자리표시자와 복수형**: `{count}개` 같은 치환값과 복수형 규칙(ICU MessageFormat 등)은 v0.1 범위 밖이다. `{`로 시작해 `}`로 끝나는 값 전체는 alias로 해석되므로, 자리표시자 문법은 이와 겹치지 않게 정해야 한다.
 - **번역 대체 순서**: `ko-KR`에 없으면 `ko`를 쓰는 식의 fallback이 없다. v0.1은 모든 locale context에 모든 텍스트 토큰을 요구한다.
 - **RTL**: 오른쪽에서 왼쪽으로 쓰는 언어의 레이아웃 반전(`start`/`end`)은 정의하지 않았다.
+- **조건 조합**: 한 context에 조건 하나만 둔다(`width`이면서 `landscape` 같은 AND가 없음). 축마다 modifier를 나누고 alias로 잇는다.
+- **조건 어휘 확장**: `pointer`(coarse/fine), `contrast`, `reducedMotion`, 폴더블 자세 등은 아직 없다.
+- **mode prop 기본값**: 컴포넌트별로 modifier 기본값과 다른 기본 context를 둘 수 없다.
 - **variant 조합 제외**: 존재하지 않는 조합(예: 특정 style에는 없는 size)을 표현할 방법이 없다.
 - **리플·포커스 링 오프셋·모션**: 어휘가 없다. 체크리스트의 수동 항목으로 확인한다.
 - **variant 식의 OR**: `type=selected|indeterminate` 같은 표현이 없어서 같은 블록을 반복해야 한다(Material 3 checkbox).
-- **prop에 따라 달라지는 스타일**: 스타일 표는 variant×state 기준이라, "아이콘 표시 여부에 따른 패딩"은 prop이 아닌 variant 축(`withIcon`)으로 모델링했다.
+- **prop에 따라 달라지는 스타일**: 스타일 표는 variant×state 기준이라, "아이콘 표시 여부에 따른 패딩"은 prop이 아닌 variant 축(`withIcon`)으로 모델링했다. 아이콘 part가 생기므로 UI 트리 규칙에도 맞는다.
 - **instance 내부 덮어쓰기**: v0.1은 벡터 fill(아이콘 색)만 덮어쓸 수 있다.
 - **슬롯 기본 콘텐츠의 미리보기**: 프리뷰는 빈 slot을 placeholder로만 그린다.
 - **Exchange 포맷**(7장): 0.2에서 정의한다.
@@ -471,7 +552,12 @@ items:
 - alias는 `var(--대상)`이 된다.
 - 시트 구성:
   - `.ou-root`에 set 토큰과 각 modifier의 기본 context를 둔다.
-  - modifier context마다 `.ou-root[data-<modifier>="<context>"]` 규칙을 하나씩 만든다.
+  - **조건 규칙**: 조건이 있는 context는 그 modifier가 명시되지 않은 동안 조건으로 적용된다.
+    - `width`/`height` → `@media (600px <= width < 840px) { .ou-root:not([data-window]) {…} }`(Media Queries 4 범위 문법)
+    - `orientation` → `@media (orientation: landscape)`, `colorScheme` → `@media (prefers-color-scheme: dark)`
+    - `language` → `.ou-root:not([data-locale]):lang(ko)`
+    - `device`는 CSS로 알 수 없다. 앱이 `data-device`를 지정한다.
+  - **명시 규칙**: context마다 `.ou-root[data-<m>="<c>"], .ou-root [data-<m>="<c>"]`. 앱은 `.ou-root`에, mode prop은 컴포넌트 루트에 `data-<m>`을 둔다. 명시가 조건보다 우선한다.
 
 | `$type` | CSS 값 |
 |---|---|

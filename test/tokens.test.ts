@@ -115,3 +115,34 @@ resolutionOrder: [{ $ref: "#/sets/base" }, { $ref: "#/modifiers/locale" }]
   expect(resolveToken(tokens, "text.ok", { locale: "ko" })).toBe("확인");
   expect(resolveToken(tokens, "text.nope", {})).toBeUndefined();
 });
+
+const whenResolver = (when: string) => `version: "2025.10"
+modifiers:
+  window:
+    contexts: { compact: [{ $ref: c.tokens.yaml }], medium: [{ $ref: m.tokens.yaml }], expanded: [{ $ref: e.tokens.yaml }] }
+    default: compact
+    $extensions: { org.openui: { when: ${when} } }
+resolutionOrder: [{ $ref: "#/modifiers/window" }]
+`;
+const px = (n: number) => `space: { $type: dimension, x: { $value: { value: ${n}, unit: px } } }\n`;
+const loadWhen = (when: string) =>
+  load({ "t/r.resolver.yaml": whenResolver(when), "t/c.tokens.yaml": px(16), "t/m.tokens.yaml": px(24), "t/e.tokens.yaml": px(32) });
+const WINDOW = "{ compact: { width: { max: 600 } }, medium: { width: { min: 600, max: 840 } }, expanded: { width: { min: 840 } } }";
+test("conditional modes: $extensions org.openui.when describes when each context applies", async () => {
+  const { tokens, diagnostics } = await loadWhen(WINDOW);
+  expect(diagnostics).toEqual([]);
+  expect(tokens.collections[0]!.when).toEqual({ compact: { width: { max: 600 } }, medium: { width: { min: 600, max: 840 } }, expanded: { width: { min: 840 } } });
+});
+const badWhen: [string, string, string][] = [
+  ["unknown context", WINDOW.slice(0, -2) + ", huge: { width: { min: 2000 } } }", 'unknown context "huge"'],
+  ["context without a condition", "{ compact: { width: { max: 600 } }, medium: { width: { min: 600 } } }", 'context "expanded" has no condition'],
+  ["mixed condition kinds", "{ compact: { width: { max: 600 } }, medium: { orientation: portrait }, expanded: { width: { min: 840 } } }", "same condition"],
+  ["overlapping ranges", WINDOW.replace("max: 600", "max: 700"), 'conditions of "compact" and "medium" overlap'],
+  ["same enum value twice", "{ compact: { device: phone }, medium: { device: phone }, expanded: { device: desktop } }", "overlap"],
+  ["unknown condition", "{ compact: { size: s }, medium: { size: m }, expanded: { size: l } }", 'unknown condition "size"'],
+  ["bad device", "{ compact: { device: phone }, medium: { device: fridge }, expanded: { device: desktop } }", "device"],
+  ["empty range", WINDOW.replace("{ max: 600 }", "{}"), "min or max"],
+  ["two conditions in one context", WINDOW.replace("{ width: { max: 600 } }", "{ width: { max: 600 }, orientation: portrait }"), "exactly one condition"],
+];
+for (const [name, when, needle] of badWhen)
+  test(`conditional modes invalid: ${name}`, async () => expect(msgs((await loadWhen(when)).diagnostics)).toContain(needle));

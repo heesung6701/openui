@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=../../../schema/component.schema.json
 # M3 icon buttons (standard / filled / filled tonal / outlined), unselected (non-toggle) form, material-web v0.192 tokens.
+# One UI tree for all styles: `style` is a mode prop (tokens/icon-button-style.*.tokens.yaml), not a variant.
 kind: Component
 metadata:
   id: icon-button
@@ -8,14 +9,7 @@ metadata:
 data:
   props:
     icon: { type: instance, default: icon-star, preferred: [icon-star, icon-add] }
-  variants:
-    style:
-      values:
-        standard: { description: "Lowest emphasis, no container" }
-        filled:   { description: "Highest emphasis" }
-        tonal:    { description: "Medium emphasis, secondary container" }
-        outlined: { description: "Medium emphasis with outline" }
-      default: standard
+    style: { type: mode, modifier: icon-button-style, description: "standard | filled | tonal | outlined (token mode)" }
   states: [enabled, hovered, focused, pressed, disabled]
   anatomy:
     root:
@@ -31,49 +25,16 @@ data:
   styles:
     base:
       enabled:
-        root:       { cornerRadius: "{md.comp.filled-icon-button.container-shape}" }
-        stateLayer: { cornerRadius: "{md.comp.icon-button.state-layer-shape}", opacity: 0 }
-        icon:       { width: "{md.comp.icon-button.icon-size}", height: "{md.comp.icon-button.icon-size}" }
+        root:       { fill: "{icon-button.container-color}", cornerRadius: "{md.comp.filled-icon-button.container-shape}", strokeColor: "{icon-button.outline-color}", strokeWidth: "{icon-button.outline-width}" }
+        stateLayer: { fill: "{icon-button.state-layer-color}", cornerRadius: "{md.comp.icon-button.state-layer-shape}", opacity: "{md.sys.opacity.zero}" }
+        icon:       { fill: "{icon-button.icon-color}", width: "{md.comp.icon-button.icon-size}", height: "{md.comp.icon-button.icon-size}" }
       hovered:
         stateLayer: { opacity: "{md.comp.filled-icon-button.hover-state-layer-opacity}" }
       focused:
-        stateLayer: { opacity: "{md.comp.filled-icon-button.focus-state-layer-opacity}" }
+        stateLayer: { opacity: "{icon-button.focus-state-layer-opacity}" }
       pressed:
-        stateLayer: { opacity: "{md.comp.filled-icon-button.pressed-state-layer-opacity}" }
+        stateLayer: { opacity: "{md.comp.filled-icon-button.pressed-state-layer-opacity}", fill: "{icon-button.pressed-state-layer-color}" }
+        icon:       { fill: "{icon-button.pressed-icon-color}" }
       disabled:
+        root: { fill: "{icon-button.disabled-container-color}", fillOpacity: "{icon-button.disabled-container-opacity}", strokeColor: "{icon-button.disabled-outline-color}", strokeOpacity: "{icon-button.disabled-outline-opacity}" }
         icon: { fill: "{md.comp.icon-button.disabled-icon-color}", fillOpacity: "{md.comp.icon-button.disabled-icon-opacity}" }
-
-    style=standard:
-      enabled:
-        root:       { fill: transparent }
-        stateLayer: { fill: "{md.comp.icon-button.unselected-hover-state-layer-color}" }
-        icon:       { fill: "{md.comp.icon-button.unselected-icon-color}" }
-
-    style=filled:
-      enabled:
-        root:       { fill: "{md.comp.filled-icon-button.container-color}" }
-        stateLayer: { fill: "{md.comp.filled-icon-button.hover-state-layer-color}" }
-        icon:       { fill: "{md.comp.filled-icon-button.icon-color}" }
-      disabled:
-        root: { fill: "{md.comp.filled-icon-button.disabled-container-color}", fillOpacity: "{md.comp.filled-icon-button.disabled-container-opacity}" }
-
-    style=tonal:
-      enabled:
-        root:       { fill: "{md.comp.filled-tonal-icon-button.container-color}" }
-        stateLayer: { fill: "{md.comp.filled-tonal-icon-button.hover-state-layer-color}" }
-        icon:       { fill: "{md.comp.filled-tonal-icon-button.icon-color}" }
-      disabled:
-        root: { fill: "{md.comp.filled-tonal-icon-button.disabled-container-color}", fillOpacity: "{md.comp.filled-tonal-icon-button.disabled-container-opacity}" }
-
-    style=outlined:
-      enabled:
-        root:       { fill: transparent, strokeColor: "{md.comp.outlined-icon-button.unselected-outline-color}", strokeWidth: "{md.comp.outlined-icon-button.unselected-outline-width}" }
-        stateLayer: { fill: "{md.comp.outlined-icon-button.unselected-hover-state-layer-color}" }
-        icon:       { fill: "{md.comp.outlined-icon-button.unselected-icon-color}" }
-      focused:
-        stateLayer: { opacity: "{md.comp.outlined-icon-button.focus-state-layer-opacity}" }
-      pressed:
-        stateLayer: { fill: "{md.comp.outlined-icon-button.unselected-pressed-state-layer-color}" }
-        icon:       { fill: "{md.comp.outlined-icon-button.unselected-pressed-icon-color}" }
-      disabled:
-        root: { strokeColor: "{md.comp.outlined-icon-button.disabled-unselected-outline-color}", strokeOpacity: "{md.comp.outlined-icon-button.disabled-unselected-outline-opacity}" }

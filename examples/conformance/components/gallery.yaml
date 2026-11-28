@@ -7,17 +7,17 @@ data:
   anatomy:
     root:
       kind: frame
-      layout: { direction: column, gap: 12px, padding: "{space.inset}", width: hug, height: hug }
+      layout: { direction: column, gap: "{layout.gallery-gap}", padding: "{space.inset}", width: hug, height: hug }
       children:
         grid:
           kind: frame
-          layout: { direction: grid, grid: { columns: 2, rows: 2 }, gap: 8px, crossGap: 8px }
+          layout: { direction: grid, grid: { columns: 2, rows: 2 }, gap: "{layout.grid-gap}", crossGap: "{layout.grid-gap}" }
           children:
             photo: { kind: image, src: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='96' height='96' fill='%23d0bcff'/></svg>" }
             badge: { kind: text, text: "{text.gallery.badge}" }
         tags:
           kind: frame
-          layout: { direction: row, wrap: true, gap: 4px, crossGap: 4px, width: 200px }
+          layout: { direction: row, wrap: true, gap: "{space.xs}", crossGap: "{space.xs}", width: "{layout.tags-width}" }
           children:
             tagA: { kind: text, text: "{text.gallery.tag-a}" }
             tagB: { kind: text, text: "{text.gallery.tag-b}" }
@@ -26,10 +26,10 @@ data:
   styles:
     base:
       enabled:
-        root:    { fill: "{color.surface}", cornerRadius: [12px, 12px, 0, 0] }
+        root:    { fill: "{color.surface}", cornerRadius: ["{radius.medium}", "{radius.medium}", "{radius.none}", "{radius.none}"] }
         grid:    { fill: "{gradient.scrim}" }
-        photo:   { width: 96px, height: 96px, cornerRadius: 8px }
-        badge:   { position: absolute, x: 4px, y: 4px, color: "{color.on-primary}", typography: "{type.label}" }
+        photo:   { width: "{size.thumb}", height: "{size.thumb}", cornerRadius: "{radius.small}" }
+        badge:   { position: absolute, x: "{space.xs}", y: "{space.xs}", color: "{color.on-primary}", typography: "{type.label}" }
         caption: { color: "{color.on-surface}", typography: "{type.body}", textAlign: center }
   x-figma:
     parts:

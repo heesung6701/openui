@@ -14,13 +14,22 @@ test("prop rules", () => {
   expect(Component.safeParse(y(ok.replace('default: "{text.chip.label}"', "default: 3"))).success).toBe(false);
   expect(Component.safeParse(y(ok.replace("max: 1", "max: 0"))).success).toBe(false);
 });
-test("value shorthand", () => {
-  expect(Component.safeParse(y(ok.replace("gap: 8px", "gap: 8"))).success).toBe(false);
-  expect(Component.safeParse(y(ok.replace('"#6750A4"', "red"))).success).toBe(false);
-  expect(Component.safeParse(y(ok.replace('"#6750A4"', '"#6750A4CC"'))).success).toBe(true);
+test("values are tokens: literal dimension, color and number values are rejected; keywords stay", () => {
+  const bad = (from: string, to: string) => {
+    const r = Component.safeParse(y(ok.replace(from, to)));
+    expect(r.success).toBe(false);
+    return r.error!.issues.map((i) => i.message).join("\n");
+  };
+  expect(bad('gap: "{g}"', "gap: 8px")).toContain("token");
+  expect(bad('fill: "{c}"', 'fill: "#6750A4"')).toContain("token");
+  expect(bad('fill: "{c}"', "fill: transparent")).toContain("token");
+  expect(bad('padding: ["{z}", "{p}"]', "padding: [0, 12px]")).toContain("token");
+  expect(bad('cornerRadius: "{r}"', "cornerRadius: 0")).toContain("token");
+  expect(bad('root: { direction: column }', "root: { opacity: 0.5 }")).toContain("token");
+  expect(Component.safeParse(y(ok.replace("width: hug", "width: fill"))).success).toBe(true);
 });
 test("layout block rejects non-layout keys", () => {
-  expect(Component.safeParse(y(ok.replace("gap: 8px,", "gap: 8px, fill: '#000000',"))).success).toBe(false);
+  expect(Component.safeParse(y(ok.replace('gap: "{g}",', 'gap: "{g}", fill: "{c}",'))).success).toBe(false);
 });
 test("vector needs svg, image needs src", () => {
   const vec = ok.replace("tail: { kind: slot, prop: trailing }", "tail: { kind: slot, prop: trailing }\n        v: { kind: vector }");

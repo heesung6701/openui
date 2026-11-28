@@ -15,21 +15,24 @@ const conformance = async () => {
 test("conformance checklist loads clean", async () => {
   const { project, diagnostics } = await loadProject(fsIO("examples/conformance"));
   expect(diagnostics).toEqual([]);
-  expect(project!.checklists.get("button")!.doc.items.length).toBe(4);
+  expect(project!.checklists.get("button")!.doc.items.length).toBe(5);
 });
-test("expandCheck: omitted axis/state/mode = all", async () => {
+test("expandCheck: omitted axes/states = all; omitted modifiers = all contexts only if the component depends on them", async () => {
   const { project } = await loadProject(fsIO("examples/conformance"));
   const doc = project!.components.get("button")!.doc;
-  const cases = expandCheck({ variant: { size: "medium" }, part: "root", property: "height", expect: "40px" }, doc, project!.tokens);
-  expect(cases.length).toBe(2 /*style*/ * 3 /*states*/ * 2 /*theme*/ * 2 /*locale*/);
-  expect(cases[0]).toEqual({ variant: { style: "filled", size: "medium" }, state: "enabled", mode: { theme: "light", locale: "en" } });
+  const cases = expandCheck({ variant: { layout: "inline" }, part: "root", property: "height", expect: "40px" }, doc, project!.tokens);
+  // badge × states × theme × locale × device × button-style; the button uses no window or orientation token
+  expect(cases.length).toBe(2 * 3 * 2 * 2 * 3 * 2);
+  expect(cases[0]).toEqual({ variant: { layout: "inline", badge: "false" }, state: "enabled",
+    mode: { theme: "light", locale: "en", window: "compact", orientation: "portrait", device: "phone", "button-style": "filled" } });
+  expect(cases.every((c) => c.mode.window === "compact" && c.mode.orientation === "portrait")).toBe(true);
 });
-test("expandCheck: explicit lists narrow", async () => {
+test("expandCheck: explicit lists narrow (also for modifiers the component does not use)", async () => {
   const { project } = await loadProject(fsIO("examples/conformance"));
   const doc = project!.components.get("button")!.doc;
-  const cases = expandCheck({ variant: { style: ["outlined"] }, state: ["pressed", "disabled"], mode: { theme: "dark" }, part: "root", property: "height", expect: "40px" }, doc, project!.tokens);
-  expect(cases.length).toBe(2 /*size*/ * 2 /*states*/ * 1 /*theme*/ * 2 /*locale*/);
-  expect(cases.every((c) => c.variant.style === "outlined" && c.mode.theme === "dark")).toBe(true);
+  const cases = expandCheck({ variant: { layout: ["stacked"] }, state: ["pressed", "disabled"], mode: { theme: "dark", device: ["desktop"], window: "expanded" }, part: "root", property: "height", expect: "40px" }, doc, project!.tokens);
+  expect(cases.length).toBe(2 /*badge*/ * 2 /*states*/ * 2 /*locale*/ * 2 /*button-style*/);
+  expect(cases.every((c) => c.variant.layout === "stacked" && c.mode.theme === "dark" && c.mode.device === "desktop" && c.mode.window === "expanded")).toBe(true);
 });
 test("expectToCss + sameCss", () => {
   expect(expectToCss("color-mix(in srgb, {md.sys.color.on-surface} 12%, transparent)"))
@@ -55,7 +58,7 @@ const bad: [string, string, string, string][] = [
   ["unknown state", "state: enabled", "state: hovered", "hovered"],
   ["unknown token", "{color.primary}", "{color.nope}", "color.nope"],
   ["unknown component", "component: button", "component: buton", "buton"],
-  ["unknown modifier", "variant: { size: medium }", "variant: { size: medium }, mode: { thme: dark }", "thme"],
+  ["unknown modifier", "mode: { device: [phone, tablet] }", "mode: { device: [phone, tablet], thme: dark }", "thme"],
 ];
 for (const [name, from, to, needle] of bad)
   test(`checklist invalid: ${name}`, async () => {
@@ -77,7 +80,7 @@ test("text check: expected text is the token resolved in each case's locale", as
   expect(diagnostics).toEqual([]);
   const doc = project!.components.get("button")!.doc;
   const cl = { kind: "Checklist" as const, metadata: { id: "t", component: "button" }, items: [
-    { id: "label", title: "label", check: { variant: { style: "filled", size: "medium" }, state: "enabled", mode: { theme: "light" }, part: "label", property: "text", expect: "{text.button.label}" } },
+    { id: "label", title: "label", check: { variant: { layout: "inline", badge: "false" }, state: "enabled", mode: { theme: "light", device: "phone", "button-style": "filled" }, part: "label", property: "text", expect: "{text.button.label}" } },
   ] };
   const seen: string[] = [];
   const r = await runChecklist(cl, doc, project!.tokens, async (c) => (seen.push(`${c.mode.locale}:${c.expectCss}`), { actual: c.expectCss, expected: c.expectCss }));
@@ -94,3 +97,10 @@ for (const [name, expectValue, needle] of badText)
     files["checklists/button.yaml"] += `  - { id: bad-text, title: label, check: { part: label, property: text, expect: "${expectValue}" } }\n`;
     expect(msgs((await loadProject(memoryIO(files))).diagnostics)).toContain(needle);
   });
+test("sameCss compares single colors by value, not notation (color-mix serializes as color(srgb …))", () => {
+  expect(sameCss("color(srgb 0 0 0 / 0)", "rgba(0, 0, 0, 0)")).toBe(true);
+  expect(sameCss("color(srgb 1 0 0)", "rgb(255, 0, 0)")).toBe(true);
+  expect(sameCss("color(srgb 0.4 0.31 0.64 / 0.12)", "rgba(102, 79, 163, 0.12)")).toBe(true);
+  expect(sameCss("rgb(255, 0, 0)", "rgb(253, 0, 0)")).toBe(false);
+  expect(sameCss("rgba(0, 0, 0, 0.12)", "rgba(0, 0, 0, 0.38)")).toBe(false);
+});

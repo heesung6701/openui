@@ -84,6 +84,27 @@
                 "properties": {
                   "type": {
                     "type": "string",
+                    "const": "mode"
+                  },
+                  "modifier": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "type",
+                  "modifier"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
                     "const": "instance"
                   },
                   "default": {
@@ -232,69 +253,29 @@
                     ]
                   },
                   "gap": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "const": 0
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                      }
-                    ]
+                    "type": "string",
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "crossGap": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "const": 0
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                      }
-                    ]
+                    "type": "string",
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "padding": {
                     "anyOf": [
                       {
-                        "anyOf": [
-                          {
-                            "type": "number",
-                            "const": 0
-                          },
-                          {
-                            "type": "string",
-                            "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                          }
-                        ]
+                        "type": "string",
+                        "pattern": "^\\{[^{}]+\\}$"
                       },
                       {
                         "type": "array",
                         "prefixItems": [
                           {
-                            "anyOf": [
-                              {
-                                "type": "number",
-                                "const": 0
-                              },
-                              {
-                                "type": "string",
-                                "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                              }
-                            ]
+                            "type": "string",
+                            "pattern": "^\\{[^{}]+\\}$"
                           },
                           {
-                            "anyOf": [
-                              {
-                                "type": "number",
-                                "const": 0
-                              },
-                              {
-                                "type": "string",
-                                "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                              }
-                            ]
+                            "type": "string",
+                            "pattern": "^\\{[^{}]+\\}$"
                           }
                         ],
                         "items": false,
@@ -305,52 +286,20 @@
                         "type": "array",
                         "prefixItems": [
                           {
-                            "anyOf": [
-                              {
-                                "type": "number",
-                                "const": 0
-                              },
-                              {
-                                "type": "string",
-                                "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                              }
-                            ]
+                            "type": "string",
+                            "pattern": "^\\{[^{}]+\\}$"
                           },
                           {
-                            "anyOf": [
-                              {
-                                "type": "number",
-                                "const": 0
-                              },
-                              {
-                                "type": "string",
-                                "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                              }
-                            ]
+                            "type": "string",
+                            "pattern": "^\\{[^{}]+\\}$"
                           },
                           {
-                            "anyOf": [
-                              {
-                                "type": "number",
-                                "const": 0
-                              },
-                              {
-                                "type": "string",
-                                "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                              }
-                            ]
+                            "type": "string",
+                            "pattern": "^\\{[^{}]+\\}$"
                           },
                           {
-                            "anyOf": [
-                              {
-                                "type": "number",
-                                "const": 0
-                              },
-                              {
-                                "type": "string",
-                                "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                              }
-                            ]
+                            "type": "string",
+                            "pattern": "^\\{[^{}]+\\}$"
                           }
                         ],
                         "items": false,
@@ -416,16 +365,8 @@
                         ]
                       },
                       {
-                        "anyOf": [
-                          {
-                            "type": "number",
-                            "const": 0
-                          },
-                          {
-                            "type": "string",
-                            "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                          }
-                        ]
+                        "type": "string",
+                        "pattern": "^\\{[^{}]+\\}$"
                       }
                     ]
                   },
@@ -439,66 +380,26 @@
                         ]
                       },
                       {
-                        "anyOf": [
-                          {
-                            "type": "number",
-                            "const": 0
-                          },
-                          {
-                            "type": "string",
-                            "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                          }
-                        ]
+                        "type": "string",
+                        "pattern": "^\\{[^{}]+\\}$"
                       }
                     ]
                   },
                   "minWidth": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "const": 0
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                      }
-                    ]
+                    "type": "string",
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "maxWidth": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "const": 0
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                      }
-                    ]
+                    "type": "string",
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "minHeight": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "const": 0
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                      }
-                    ]
+                    "type": "string",
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "maxHeight": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "const": 0
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                      }
-                    ]
+                    "type": "string",
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "position": {
                     "type": "string",
@@ -508,74 +409,32 @@
                     ]
                   },
                   "x": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "const": 0
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                      }
-                    ]
+                    "type": "string",
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "y": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "const": 0
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                      }
-                    ]
+                    "type": "string",
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "fill": {
                     "type": "string",
-                    "pattern": "^(#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?|transparent|\\{[^{}]+\\})$"
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "fillOpacity": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "minimum": 0,
-                        "maximum": 1
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^\\{[^{}]+\\}$"
-                      }
-                    ]
+                    "type": "string",
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "strokeColor": {
                     "type": "string",
-                    "pattern": "^(#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?|transparent|\\{[^{}]+\\})$"
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "strokeWidth": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "const": 0
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                      }
-                    ]
+                    "type": "string",
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "strokeOpacity": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "minimum": 0,
-                        "maximum": 1
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^\\{[^{}]+\\}$"
-                      }
-                    ]
+                    "type": "string",
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "strokeAlign": {
                     "type": "string",
@@ -588,67 +447,27 @@
                   "cornerRadius": {
                     "anyOf": [
                       {
-                        "anyOf": [
-                          {
-                            "type": "number",
-                            "const": 0
-                          },
-                          {
-                            "type": "string",
-                            "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                          }
-                        ]
+                        "type": "string",
+                        "pattern": "^\\{[^{}]+\\}$"
                       },
                       {
                         "type": "array",
                         "prefixItems": [
                           {
-                            "anyOf": [
-                              {
-                                "type": "number",
-                                "const": 0
-                              },
-                              {
-                                "type": "string",
-                                "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                              }
-                            ]
+                            "type": "string",
+                            "pattern": "^\\{[^{}]+\\}$"
                           },
                           {
-                            "anyOf": [
-                              {
-                                "type": "number",
-                                "const": 0
-                              },
-                              {
-                                "type": "string",
-                                "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                              }
-                            ]
+                            "type": "string",
+                            "pattern": "^\\{[^{}]+\\}$"
                           },
                           {
-                            "anyOf": [
-                              {
-                                "type": "number",
-                                "const": 0
-                              },
-                              {
-                                "type": "string",
-                                "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                              }
-                            ]
+                            "type": "string",
+                            "pattern": "^\\{[^{}]+\\}$"
                           },
                           {
-                            "anyOf": [
-                              {
-                                "type": "number",
-                                "const": 0
-                              },
-                              {
-                                "type": "string",
-                                "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                              }
-                            ]
+                            "type": "string",
+                            "pattern": "^\\{[^{}]+\\}$"
                           }
                         ],
                         "items": false,
@@ -658,17 +477,8 @@
                     ]
                   },
                   "opacity": {
-                    "anyOf": [
-                      {
-                        "type": "number",
-                        "minimum": 0,
-                        "maximum": 1
-                      },
-                      {
-                        "type": "string",
-                        "pattern": "^\\{[^{}]+\\}$"
-                      }
-                    ]
+                    "type": "string",
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "shadow": {
                     "type": "string",
@@ -679,7 +489,7 @@
                   },
                   "color": {
                     "type": "string",
-                    "pattern": "^(#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?|transparent|\\{[^{}]+\\})$"
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "typography": {
                     "type": "string",
@@ -758,69 +568,29 @@
                   ]
                 },
                 "gap": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 "crossGap": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 "padding": {
                   "anyOf": [
                     {
-                      "anyOf": [
-                        {
-                          "type": "number",
-                          "const": 0
-                        },
-                        {
-                          "type": "string",
-                          "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                        }
-                      ]
+                      "type": "string",
+                      "pattern": "^\\{[^{}]+\\}$"
                     },
                     {
                       "type": "array",
                       "prefixItems": [
                         {
-                          "anyOf": [
-                            {
-                              "type": "number",
-                              "const": 0
-                            },
-                            {
-                              "type": "string",
-                              "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                            }
-                          ]
+                          "type": "string",
+                          "pattern": "^\\{[^{}]+\\}$"
                         },
                         {
-                          "anyOf": [
-                            {
-                              "type": "number",
-                              "const": 0
-                            },
-                            {
-                              "type": "string",
-                              "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                            }
-                          ]
+                          "type": "string",
+                          "pattern": "^\\{[^{}]+\\}$"
                         }
                       ],
                       "items": false,
@@ -831,52 +601,20 @@
                       "type": "array",
                       "prefixItems": [
                         {
-                          "anyOf": [
-                            {
-                              "type": "number",
-                              "const": 0
-                            },
-                            {
-                              "type": "string",
-                              "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                            }
-                          ]
+                          "type": "string",
+                          "pattern": "^\\{[^{}]+\\}$"
                         },
                         {
-                          "anyOf": [
-                            {
-                              "type": "number",
-                              "const": 0
-                            },
-                            {
-                              "type": "string",
-                              "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                            }
-                          ]
+                          "type": "string",
+                          "pattern": "^\\{[^{}]+\\}$"
                         },
                         {
-                          "anyOf": [
-                            {
-                              "type": "number",
-                              "const": 0
-                            },
-                            {
-                              "type": "string",
-                              "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                            }
-                          ]
+                          "type": "string",
+                          "pattern": "^\\{[^{}]+\\}$"
                         },
                         {
-                          "anyOf": [
-                            {
-                              "type": "number",
-                              "const": 0
-                            },
-                            {
-                              "type": "string",
-                              "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                            }
-                          ]
+                          "type": "string",
+                          "pattern": "^\\{[^{}]+\\}$"
                         }
                       ],
                       "items": false,
@@ -942,16 +680,8 @@
                       ]
                     },
                     {
-                      "anyOf": [
-                        {
-                          "type": "number",
-                          "const": 0
-                        },
-                        {
-                          "type": "string",
-                          "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                        }
-                      ]
+                      "type": "string",
+                      "pattern": "^\\{[^{}]+\\}$"
                     }
                   ]
                 },
@@ -965,66 +695,26 @@
                       ]
                     },
                     {
-                      "anyOf": [
-                        {
-                          "type": "number",
-                          "const": 0
-                        },
-                        {
-                          "type": "string",
-                          "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                        }
-                      ]
+                      "type": "string",
+                      "pattern": "^\\{[^{}]+\\}$"
                     }
                   ]
                 },
                 "minWidth": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 "maxWidth": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 "minHeight": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 "maxHeight": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 "position": {
                   "type": "string",
@@ -1034,28 +724,12 @@
                   ]
                 },
                 "x": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 "y": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 }
               },
               "additionalProperties": false
@@ -1118,69 +792,29 @@
                   ]
                 },
                 "gap": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 "crossGap": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 "padding": {
                   "anyOf": [
                     {
-                      "anyOf": [
-                        {
-                          "type": "number",
-                          "const": 0
-                        },
-                        {
-                          "type": "string",
-                          "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                        }
-                      ]
+                      "type": "string",
+                      "pattern": "^\\{[^{}]+\\}$"
                     },
                     {
                       "type": "array",
                       "prefixItems": [
                         {
-                          "anyOf": [
-                            {
-                              "type": "number",
-                              "const": 0
-                            },
-                            {
-                              "type": "string",
-                              "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                            }
-                          ]
+                          "type": "string",
+                          "pattern": "^\\{[^{}]+\\}$"
                         },
                         {
-                          "anyOf": [
-                            {
-                              "type": "number",
-                              "const": 0
-                            },
-                            {
-                              "type": "string",
-                              "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                            }
-                          ]
+                          "type": "string",
+                          "pattern": "^\\{[^{}]+\\}$"
                         }
                       ],
                       "items": false,
@@ -1191,52 +825,20 @@
                       "type": "array",
                       "prefixItems": [
                         {
-                          "anyOf": [
-                            {
-                              "type": "number",
-                              "const": 0
-                            },
-                            {
-                              "type": "string",
-                              "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                            }
-                          ]
+                          "type": "string",
+                          "pattern": "^\\{[^{}]+\\}$"
                         },
                         {
-                          "anyOf": [
-                            {
-                              "type": "number",
-                              "const": 0
-                            },
-                            {
-                              "type": "string",
-                              "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                            }
-                          ]
+                          "type": "string",
+                          "pattern": "^\\{[^{}]+\\}$"
                         },
                         {
-                          "anyOf": [
-                            {
-                              "type": "number",
-                              "const": 0
-                            },
-                            {
-                              "type": "string",
-                              "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                            }
-                          ]
+                          "type": "string",
+                          "pattern": "^\\{[^{}]+\\}$"
                         },
                         {
-                          "anyOf": [
-                            {
-                              "type": "number",
-                              "const": 0
-                            },
-                            {
-                              "type": "string",
-                              "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                            }
-                          ]
+                          "type": "string",
+                          "pattern": "^\\{[^{}]+\\}$"
                         }
                       ],
                       "items": false,
@@ -1302,16 +904,8 @@
                       ]
                     },
                     {
-                      "anyOf": [
-                        {
-                          "type": "number",
-                          "const": 0
-                        },
-                        {
-                          "type": "string",
-                          "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                        }
-                      ]
+                      "type": "string",
+                      "pattern": "^\\{[^{}]+\\}$"
                     }
                   ]
                 },
@@ -1325,66 +919,26 @@
                       ]
                     },
                     {
-                      "anyOf": [
-                        {
-                          "type": "number",
-                          "const": 0
-                        },
-                        {
-                          "type": "string",
-                          "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                        }
-                      ]
+                      "type": "string",
+                      "pattern": "^\\{[^{}]+\\}$"
                     }
                   ]
                 },
                 "minWidth": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 "maxWidth": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 "minHeight": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 "maxHeight": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 "position": {
                   "type": "string",
@@ -1394,28 +948,12 @@
                   ]
                 },
                 "x": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 "y": {
-                  "anyOf": [
-                    {
-                      "type": "number",
-                      "const": 0
-                    },
-                    {
-                      "type": "string",
-                      "pattern": "^(-?\\d+(\\.\\d+)?(px|rem)|\\{[^{}]+\\})$"
-                    }
-                  ]
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 }
               },
               "additionalProperties": false

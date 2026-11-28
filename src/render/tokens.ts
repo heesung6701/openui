@@ -1,4 +1,4 @@
-import type { TokenSet } from "../tokens/resolver";
+import type { Condition, Range, TokenSet } from "../tokens/resolver";
 import { aliasTarget, FONT_WEIGHT_NAMES, type TokenType } from "../tokens/values";
 import { cssSubVar, cssVar } from "./css-var";
 
@@ -68,7 +68,24 @@ export function tokenValueCss(type: TokenType, value: unknown): string | Record<
   }
 }
 
-/** `.ou-root` carries set tokens + each modifier's default context; one rule per modifier context. Typography expands to `--x__font-size` etc. */
+const range = (feature: string, { min, max }: Range) =>
+  min !== undefined && max !== undefined ? `(${min}px <= ${feature} < ${max}px)` : min !== undefined ? `(${feature} >= ${min}px)` : `(${feature} < ${max}px)`;
+
+/** §C: a condition as CSS — a media query, or a `:lang()` selector. Device type has no CSS feature: the app sets `data-device`. */
+export function conditionCss(c: Condition): { media?: string; lang?: string } | null {
+  if ("width" in c) return { media: range("width", c.width) };
+  if ("height" in c) return { media: range("height", c.height) };
+  if ("orientation" in c) return { media: `(orientation: ${c.orientation})` };
+  if ("colorScheme" in c) return { media: `(prefers-color-scheme: ${c.colorScheme})` };
+  if ("language" in c) return { lang: c.language };
+  return null;
+}
+
+/**
+ * `.ou-root` carries set tokens + each modifier's default context. Per modifier context: a conditional rule (media query /
+ * `:lang`, only while no context is chosen explicitly) and an explicit rule on `.ou-root` or any element inside it
+ * (mode props re-scope a component). Typography expands to `--x__font-size` etc.; text tokens are not CSS.
+ */
 export function tokenSheet(set: TokenSet): string {
   const decls = (path: string, type: TokenType, value: unknown): string[] => {
     const css = tokenValueCss(type, value);
@@ -76,10 +93,10 @@ export function tokenSheet(set: TokenSet): string {
       ? [`${cssVar(path)}: ${css};`]
       : Object.entries(css).map(([k, v]) => `${cssSubVar(path, k)}: ${v};`);
   };
-  const rule = (selector: string, lines: string[]) => `${selector} {\n${lines.map((l) => `  ${l}`).join("\n")}\n}\n`;
+  const rule = (selector: string, lines: string[], pad = "") => `${pad}${selector} {\n${lines.map((l) => `${pad}  ${l}`).join("\n")}\n${pad}}\n`;
   const kinds = new Map(set.collections.map((c) => [c.name, c]));
   const base: string[] = [];
-  const contexts = new Map<string, string[]>();
+  const contexts = new Map<string, { collection: string; mode: string; lines: string[] }>();
   for (const [path, e] of set.tokens) {
     if (e.type === "string") continue; // text tokens become text content, not CSS
     const c = kinds.get(e.collection)!;
@@ -87,10 +104,20 @@ export function tokenSheet(set: TokenSet): string {
       const lines = decls(path, e.type, def.value);
       if (mode === c.defaultMode) base.push(...lines);
       if (c.kind === "modifier") {
-        const sel = `.ou-root[data-${c.name}="${mode}"]`;
-        contexts.set(sel, [...(contexts.get(sel) ?? []), ...lines]);
+        const key = `${c.name}\u0000${mode}`;
+        if (!contexts.has(key)) contexts.set(key, { collection: c.name, mode, lines: [] });
+        contexts.get(key)!.lines.push(...lines);
       }
     }
   }
-  return rule(".ou-root", base) + [...contexts].map(([sel, lines]) => rule(sel, lines)).join("");
+  let conditional = "";
+  let explicit = "";
+  for (const { collection, mode, lines } of contexts.values()) {
+    const cond = kinds.get(collection)!.when?.[mode];
+    const css = cond ? conditionCss(cond) : null;
+    if (css?.media) conditional += `@media ${css.media} {\n${rule(`.ou-root:not([data-${collection}])`, lines, "  ")}}\n`;
+    if (css?.lang) conditional += rule(`.ou-root:not([data-${collection}]):lang(${css.lang})`, lines);
+    explicit += rule(`.ou-root[data-${collection}="${mode}"], .ou-root [data-${collection}="${mode}"]`, lines);
+  }
+  return rule(".ou-root", base) + conditional + explicit;
 }

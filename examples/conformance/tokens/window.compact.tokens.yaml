@@ -1,0 +1,6 @@
+# Values of one modifier context. Which context applies when: see conformance.resolver.yaml (org.openui.when).
+layout:
+  $type: dimension
+  card-width: { $value: { value: 280, unit: px } }
+  card-padding: { $value: { value: 16, unit: px } }
+  tags-width: { $value: { value: 200, unit: px } }

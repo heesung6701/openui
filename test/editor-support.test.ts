@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { filesHtml, previewMode, problemsHtml, rangeOf, tokenCompletion } from "../editor/support";
+import { describeCondition, filesHtml, previewMode, problemsHtml, rangeOf, tokenCompletion } from "../editor/support";
 
 const t = "a:\n  b: 1\n  c: [x, y]\n";
 test("rangeOf exact, array index, fallback to parent, root", () => {
@@ -38,4 +38,12 @@ test("I5: preview keeps the last good render while the open file has YAML errors
   expect(previewMode("c/b.yaml", true, yamlErr, null)).toBe("render");        // nothing better to show
   expect(previewMode("c/b.yaml", false, [], null)).toBe("none");
   expect(previewMode("c/b.yaml", false, [], "c/a.yaml")).toBe("none");        // last good belongs to another file
+});
+
+test("describeCondition labels each condition kind", () => {
+  expect(describeCondition({ width: { max: 600 } })).toBe("width < 600");
+  expect(describeCondition({ width: { min: 600, max: 840 } })).toBe("600 ≤ width < 840");
+  expect(describeCondition({ height: { min: 480 } })).toBe("height ≥ 480");
+  expect(describeCondition({ orientation: "landscape" })).toBe("landscape");
+  expect(describeCondition({ device: "tablet" })).toBe("tablet");
 });

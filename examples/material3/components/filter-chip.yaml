@@ -18,8 +18,8 @@ data:
       kind: frame
       layout:
         direction: row
-        gap: 8px
-        padding: [0, 16px]
+        gap: "{md.comp.filter-chip.icon-label-space}"
+        padding: ["{md.sys.space.zero}", "{md.comp.filter-chip.trailing-space}", "{md.sys.space.zero}", "{md.comp.filter-chip.leading-space}"]
         align: { main: center, cross: center }
         width: hug
         height: "{md.comp.filter-chip.container-height}"
@@ -30,8 +30,8 @@ data:
   styles:
     base:
       enabled:
-        root:       { fill: transparent, cornerRadius: "{md.comp.filter-chip.container-shape}", strokeColor: "{md.comp.filter-chip.flat-unselected-outline-color}", strokeWidth: "{md.comp.filter-chip.flat-unselected-outline-width}" }
-        stateLayer: { cornerRadius: "{md.comp.filter-chip.container-shape}", opacity: 0, fill: "{md.comp.filter-chip.unselected-hover-state-layer-color}" }
+        root:       { fill: "{md.sys.color.transparent}", cornerRadius: "{md.comp.filter-chip.container-shape}", strokeColor: "{md.comp.filter-chip.flat-unselected-outline-color}", strokeWidth: "{md.comp.filter-chip.flat-unselected-outline-width}" }
+        stateLayer: { cornerRadius: "{md.comp.filter-chip.container-shape}", opacity: "{md.sys.opacity.zero}", fill: "{md.comp.filter-chip.unselected-hover-state-layer-color}" }
         leading:    { visible: false, width: "{md.comp.filter-chip.with-icon-icon-size}", height: "{md.comp.filter-chip.with-icon-icon-size}", fill: "{md.comp.filter-chip.with-leading-icon-selected-leading-icon-color}" }
         label:      { typography: "{md.sys.typescale.label-large}", color: "{md.comp.filter-chip.unselected-label-text-color}" }
       hovered:
@@ -47,7 +47,7 @@ data:
         leading: { fill: "{md.comp.filter-chip.with-leading-icon-disabled-leading-icon-color}", fillOpacity: "{md.comp.filter-chip.with-leading-icon-disabled-leading-icon-opacity}" }
     selected=true:
       enabled:
-        root:       { fill: "{md.comp.filter-chip.flat-selected-container-color}", strokeWidth: "{md.comp.filter-chip.flat-selected-outline-width}", padding: [0, 16px, 0, 8px] }
+        root:       { fill: "{md.comp.filter-chip.flat-selected-container-color}", strokeWidth: "{md.comp.filter-chip.flat-selected-outline-width}", padding: ["{md.sys.space.zero}", "{md.comp.filter-chip.trailing-space}", "{md.sys.space.zero}", "{md.comp.filter-chip.with-leading-icon-leading-space}"] }
         stateLayer: { fill: "{md.comp.filter-chip.selected-hover-state-layer-color}" }
         leading:    { visible: true }
         label:      { color: "{md.comp.filter-chip.selected-label-text-color}" }

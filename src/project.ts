@@ -7,6 +7,7 @@ import { globToRegExp } from "./glob";
 import type { ProjectIO } from "./io";
 import { Manifest } from "./manifest";
 import { loadTokens, type TokenSet } from "./tokens/resolver";
+import { collectAliases } from "./tokens/values";
 import { parseYaml } from "./yaml";
 
 export type Project = {
@@ -93,6 +94,19 @@ export async function loadProject(io: ProjectIO): Promise<{ project?: Project; d
   // Components with semantic errors stay in the project so the editor can still preview them.
   const ctx = { tokens: t.tokens, componentIds: new Set(components.keys()) };
   for (const { file, doc } of components.values()) diagnostics.push(...validateComponent(doc, file, ctx));
+
+  // A mode prop re-scopes its modifier per instance; tokens elsewhere that alias it would keep the outer context.
+  const chosen = new Set<string>();
+  for (const { doc } of components.values()) for (const p of Object.values(doc.data.props ?? {})) if (p.type === "mode") chosen.add(p.modifier);
+  for (const [path, e] of t.tokens.tokens) {
+    if (chosen.has(e.collection)) continue;
+    for (const d of Object.values(e.byMode))
+      for (const a of collectAliases(d.value)) {
+        const target = t.tokens.tokens.get(a);
+        if (target && chosen.has(target.collection))
+          diagnostics.push({ file: d.file, path: path.split("."), message: `token "${path}" aliases "{${a}}" of modifier "${target.collection}", which a mode prop switches per instance; reference it from components only` });
+      }
+  }
 
   const checklists = new Map<string, { file: string; doc: Checklist }>();
   const project: Project = { manifest: manifest.data, tokens: t.tokens, components, checklists };

@@ -1,40 +1,46 @@
 # yaml-language-server: $schema=../../../schema/component.schema.json
 kind: Component
-metadata: { id: button, name: Button, description: "Conformance: props, variants, states, styles" }
+metadata: { id: button, name: Button, description: "Conformance: props (incl. a mode prop), structural variants, states, token-only values" }
 data:
   props:
     label:    { type: text, default: "{text.button.label}" }
     showIcon: { type: boolean, default: false }
     icon:     { type: instance, default: icon, preferred: [icon] }
+    style:    { type: mode, modifier: button-style, description: "Emphasis. Only token values differ, so it is a mode, not a variant" }
   variants:
-    style: { values: { filled: {}, outlined: {} }, default: filled }
-    size:  { values: { small: {}, medium: {} }, default: medium }
+    layout:
+      values: { inline: { description: Icon and label side by side }, stacked: { description: Icon above the label } }
+      default: inline
+    badge:
+      values: { "false": {}, "true": { description: Shows a notification dot } }
+      default: "false"
   states: [enabled, pressed, disabled]
   anatomy:
     root:
       kind: frame
-      layout: { direction: row, gap: "{space.gap}", padding: [0, 24px], align: { main: center, cross: center }, width: hug, height: 40px }
+      layout: { direction: row, gap: "{space.gap}", padding: ["{space.none}", "{space.button-inline}"], align: { main: center, cross: center }, width: hug, height: "{size.button-height}" }
       children:
         icon:  { kind: instance, prop: icon, visible: { prop: showIcon } }
         label: { kind: text, text: { prop: label } }
+        dot:   { kind: frame, layout: { position: absolute, x: "{space.xs}", y: "{space.xs}", width: "{size.dot}", height: "{size.dot}" } }
   styles:
     base:
       enabled:
-        root:  { fill: "{color.primary}", cornerRadius: "{radius.full}", shadow: "{elevation.1}" }
-        label: { color: "{color.on-primary}", typography: "{type.label}" }
+        root:  { fill: "{button.container-color}", strokeColor: "{button.outline-color}", strokeWidth: "{button.outline-width}", cornerRadius: "{radius.full}", shadow: "{button.shadow}" }
+        label: { color: "{button.content-color}", typography: "{type.label}" }
+        icon:  { fill: "{button.content-color}" }
+        dot:   { fill: "{color.primary}", cornerRadius: "{radius.full}" }
       pressed:
         root: { opacity: "{opacity.pressed}" }
       disabled:
-        root:  { fill: "{color.disabled}", fillOpacity: 0.12 }
-        label: { color: "{color.on-disabled}", opacity: 0.38 }
-    style=outlined:
+        root:  { fill: "{color.disabled}", fillOpacity: "{opacity.disabled-container}" }
+        label: { color: "{color.on-disabled}", opacity: "{opacity.disabled-content}" }
+    badge=false:
       enabled:
-        root:  { fill: transparent, strokeColor: "{color.outline}", strokeWidth: 1px }
-        label: { color: "{color.primary}" }
-        icon:  { fill: "{color.primary}" }
-    size=small:
+        dot: { visible: false }
+    layout=stacked:
       enabled:
-        root: { height: 32px, padding: [0, 16px] }
-    style=outlined,size=small:
+        root: { direction: column, height: hug, padding: "{space.sm}" }
+    layout=stacked,badge=true:
       enabled:
-        root: { strokeWidth: 0.5px }
+        dot: { x: "{space.sm}" }

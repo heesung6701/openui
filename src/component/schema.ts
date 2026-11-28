@@ -22,15 +22,17 @@ function ext<S extends z.ZodRawShape>(shape: S) {
 
 const ALIAS = "\\{[^{}]+\\}";
 export const aliasValue = z.string().regex(new RegExp(`^${ALIAS}$`), 'must be a token alias like "{a.b.c}"');
-/** Dimension shorthand: `8px`, `1rem`, `"{token}"`, or unitless `0` (as in CSS). */
-const dim = z.union([
-  z.literal(0),
-  z.string().regex(new RegExp(`^(-?\\d+(\\.\\d+)?(px|rem)|${ALIAS})$`), 'dimension must look like 8px, 1rem, 0 or "{token}"'),
-]);
-const color = z.string().regex(new RegExp(`^(#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?|transparent|${ALIAS})$`), 'color must be #rrggbb, #rrggbbaa, transparent or "{token}"');
-const num01 = z.union([z.number().min(0).max(1), aliasValue]);
-const sizing = z.union([z.enum(["hug", "fill"]), dim]);
-const corners = z.union([dim, z.tuple([dim, dim, dim, dim])]);
+/**
+ * Values are tokens: every dimension, color and number is a token reference, so "which value when" lives in the
+ * token definition (modes and their conditions). Only structure stays literal: keywords, enums, booleans, counts.
+ */
+const VALUE_MSG = 'value must be a token like "{space.inset}" (literal values are not allowed: every value is a token)';
+const token = z.string({ error: VALUE_MSG }).regex(new RegExp(`^${ALIAS}$`), VALUE_MSG);
+const dim = token;
+const color = token;
+const num01 = token;
+const sizing = z.union([z.enum(["hug", "fill"]), token], { error: `size must be hug, fill or a token: ${VALUE_MSG}` });
+const corners = z.union([dim, z.tuple([dim, dim, dim, dim])], { error: `corner radius must be a token or 4 tokens: ${VALUE_MSG}` });
 
 type Prop = { schema: z.ZodType; tokenTypes: TokenType[]; parts: PartKind[] | "all"; layout: boolean };
 const CONTAINER: PartKind[] = ["frame", "slot"];
@@ -41,7 +43,7 @@ export const STYLE_PROPERTIES: Record<string, Prop> = {
   direction: p(z.enum(["row", "column", "grid", "none"]), [], CONTAINER, true),
   gap: p(dim, ["dimension"], CONTAINER, true),
   crossGap: p(dim, ["dimension"], CONTAINER, true),
-  padding: p(z.union([dim, z.tuple([dim, dim]), z.tuple([dim, dim, dim, dim])]), ["dimension"], CONTAINER, true),
+  padding: p(z.union([dim, z.tuple([dim, dim]), z.tuple([dim, dim, dim, dim])], { error: `padding must be a token, [block, inline] or 4 tokens: ${VALUE_MSG}` }), ["dimension"], CONTAINER, true),
   align: p(z.strictObject({
     main: z.enum(["start", "center", "end", "space-between"]).optional(),
     cross: z.enum(["start", "center", "end", "baseline"]).optional(),
@@ -125,6 +127,8 @@ export type PartNode = {
 const PropDef = z.discriminatedUnion("type", [
   z.strictObject({ type: z.literal("text"), default: TextToken, description: z.string().optional() }),
   z.strictObject({ type: z.literal("boolean"), default: z.boolean(), description: z.string().optional() }),
+  /** The instance picks a context of an explicitly selected modifier (no conditions), e.g. button style. */
+  z.strictObject({ type: z.literal("mode"), modifier: z.string().min(1), description: z.string().optional() }),
   z.strictObject({
     type: z.literal("instance"), default: ComponentId.optional(), preferred: z.array(ComponentId).optional(),
     description: z.string().optional(),

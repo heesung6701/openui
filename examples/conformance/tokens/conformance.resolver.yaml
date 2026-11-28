@@ -1,5 +1,8 @@
 version: "2025.10"
 name: conformance
+description: >
+  Modes and when they apply. A context with a condition (org.openui.when) is picked by the environment;
+  one without (button-style) is picked explicitly, here by the button's `style` mode prop.
 sets:
   base:
     sources: [{ $ref: base.tokens.yaml }]
@@ -10,13 +13,57 @@ modifiers:
       light: [{ $ref: light.tokens.yaml }]
       dark: [{ $ref: dark.tokens.yaml }]
     default: light
+    $extensions:
+      org.openui: { when: { light: { colorScheme: light }, dark: { colorScheme: dark } } }
   locale:
     description: UI language (BCP 47). Holds the text tokens.
     contexts:
       en: [{ $ref: text.en.tokens.yaml }]
       ko: [{ $ref: text.ko.tokens.yaml }]
     default: en
+    $extensions:
+      org.openui: { when: { en: { language: en }, ko: { language: ko } } }
+  window:
+    description: Window width class (breakpoints in dp)
+    contexts:
+      compact: [{ $ref: window.compact.tokens.yaml }]
+      medium: [{ $ref: window.medium.tokens.yaml }]
+      expanded: [{ $ref: window.expanded.tokens.yaml }]
+    default: compact
+    $extensions:
+      org.openui:
+        when:
+          compact: { width: { max: 600 } }
+          medium: { width: { min: 600, max: 840 } }
+          expanded: { width: { min: 840 } }
+  orientation:
+    description: Screen orientation
+    contexts:
+      portrait: [{ $ref: orientation.portrait.tokens.yaml }]
+      landscape: [{ $ref: orientation.landscape.tokens.yaml }]
+    default: portrait
+    $extensions:
+      org.openui: { when: { portrait: { orientation: portrait }, landscape: { orientation: landscape } } }
+  device:
+    description: Device type
+    contexts:
+      phone: [{ $ref: device.phone.tokens.yaml }]
+      tablet: [{ $ref: device.tablet.tokens.yaml }]
+      desktop: [{ $ref: device.desktop.tokens.yaml }]
+    default: phone
+    $extensions:
+      org.openui: { when: { phone: { device: phone }, tablet: { device: tablet }, desktop: { device: desktop } } }
+  button-style:
+    description: "Button emphasis. No condition: each button instance picks it (mode prop `style`)."
+    contexts:
+      filled: [{ $ref: button-style.filled.tokens.yaml }]
+      outlined: [{ $ref: button-style.outlined.tokens.yaml }]
+    default: filled
 resolutionOrder:
   - { $ref: "#/sets/base" }
   - { $ref: "#/modifiers/theme" }
   - { $ref: "#/modifiers/locale" }
+  - { $ref: "#/modifiers/window" }
+  - { $ref: "#/modifiers/orientation" }
+  - { $ref: "#/modifiers/device" }
+  - { $ref: "#/modifiers/button-style" }

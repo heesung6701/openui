@@ -67,7 +67,7 @@ test("token sheet: set + default context on .ou-root, one rule per modifier cont
   const { project } = await loadProject(fsIO("examples/conformance"));
   const sheet = tokenSheet(project!.tokens);
   expect(sheet).toContain(".ou-root {");
-  expect(sheet).toContain('.ou-root[data-theme="dark"] {');
+  expect(sheet).toContain('.ou-root[data-theme="dark"], .ou-root [data-theme="dark"] {');
   expect(sheet).toContain("--color-primary: var(--palette-purple40);");
   expect(sheet).toContain("--type-label__font-size: 14px;");
 });
@@ -82,12 +82,12 @@ const find = (n: VNode, part: string): VNode | undefined =>
   n.attrs["data-part"] === part ? n : n.children.map((c) => find(c, part)).find(Boolean);
 test("buildComponent: conformance button", async () => {
   const { project } = await loadProject(fsIO("examples/conformance"));
-  const v = buildComponent(project!, "button", { variant: { style: "outlined", size: "small" }, state: "enabled", props: { label: "Go", showIcon: true } });
+  const v = buildComponent(project!, "button", { variant: { layout: "inline" }, state: "enabled", props: { label: "Go", showIcon: true, style: "outlined" } });
   expect(v.attrs["data-component"]).toBe("button");
   expect(v.attrs["data-part"]).toBe("root");
   expect(find(v, "label")!.text).toBe("Go");
-  expect(v.style.height).toBe("32px");
-  expect(find(v, "icon")!.style["--ou-icon-fill"]).toBe("var(--color-primary)");
+  expect(v.style.height).toBe("var(--size-button-height)");
+  expect(find(v, "icon")!.style["--ou-icon-fill"]).toBe("var(--button-content-color)");
   expect(find(v, "icon")!.style.display).toBeUndefined();
   expect(find(v, "icon")!.children[0]!.attrs["data-component"]).toBe("icon");
 });
@@ -138,4 +138,22 @@ test("text tokens: text parts and text prop defaults render the selected locale"
   const o = buildComponent(project!, "button", { variant: {}, state: "enabled", props: { label: "{text.gallery.badge}" }, modes: { locale: "ko" } });
   expect(find(o, "label")!.text).toBe("신규");
   expect(tokenSheet(project!.tokens)).not.toContain("--text-");
+});
+
+test("mode prop: the instance's choice sets the modifier on the component root", async () => {
+  const { project } = await loadProject(fsIO("examples/conformance"));
+  const chosen = buildComponent(project!, "button", { variant: {}, state: "enabled", props: { style: "outlined" } });
+  expect(chosen.attrs["data-button-style"]).toBe("outlined");
+  expect(buildComponent(project!, "button", { variant: {}, state: "enabled", props: {} }).attrs["data-button-style"]).toBeUndefined();
+});
+test("token sheet: conditions become media queries; explicit contexts also apply to nested elements", async () => {
+  const { project } = await loadProject(fsIO("examples/conformance"));
+  const css = tokenSheet(project!.tokens);
+  expect(css).toContain("@media (width < 600px) {\n  .ou-root:not([data-window]) {");
+  expect(css).toContain("@media (600px <= width < 840px) {");
+  expect(css).toContain("@media (width >= 840px) {");
+  expect(css).toContain("@media (orientation: landscape) {");
+  expect(css).toContain("@media (prefers-color-scheme: dark) {\n  .ou-root:not([data-theme]) {");
+  expect(css).toContain('.ou-root[data-button-style="outlined"], .ou-root [data-button-style="outlined"] {');
+  expect(css).not.toContain(":not([data-device])"); // no CSS media feature for device type: the app sets data-device
 });

@@ -100,10 +100,12 @@ host.addEventListener("click", (e) => {
   const filter = item.check ?? item.hint ?? {};
   const list = (v: string | string[] | undefined) => (v === undefined ? undefined : Array.isArray(v) ? v : [v]);
   for (const td of document.querySelectorAll<HTMLElement>("#preview td[data-cell]")) {
-    const cell = JSON.parse(td.dataset.cell!) as { variant: Record<string, string>; state: string };
+    const cell = JSON.parse(td.dataset.cell!) as { variant: Record<string, string>; state: string; modes: Record<string, string> };
     const states = list(filter.state);
+    const modes = "mode" in filter ? filter.mode ?? {} : {};
     const match = (!states || states.includes(cell.state)) &&
-      Object.entries(filter.variant ?? {}).every(([axis, v]) => list(v)!.includes(cell.variant[axis]!));
+      Object.entries(filter.variant ?? {}).every(([axis, v]) => list(v)!.includes(cell.variant[axis]!)) &&
+      Object.entries(modes).every(([m, v]) => !(m in cell.modes) || list(v)!.includes(cell.modes[m]!)); // rows exist only for mode props
     td.classList.toggle("hl", match);
   }
 });

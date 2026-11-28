@@ -5,7 +5,7 @@ import { tokenSheet } from "../src/render/tokens";
 import { resolveToken } from "../src/tokens/resolver";
 import { buildComponent, type RenderOptions, type VNode } from "../src/render/vnode";
 import { escapeHtml, hooks, state } from "./app";
-import { previewMode } from "./support";
+import { describeCondition, previewMode } from "./support";
 
 const SVG_NS = "http://www.w3.org/2000/svg";
 
@@ -22,6 +22,9 @@ export function toDOM(v: VNode): Element {
 export const ui = { props: {} as Record<string, RenderOptions["props"]>, modes: {} as Record<string, string> };
 
 export const modifiersOf = (p: Project) => p.tokens.collections.filter((c) => c.kind === "modifier");
+/** Modifiers a mode prop picks per instance: shown as preview rows, not in the global mode bar. */
+const perInstance = (p: Project) =>
+  new Set([...p.components.values()].flatMap(({ doc }) => Object.values(doc.data.props ?? {}).flatMap((d) => (d.type === "mode" ? [d.modifier] : []))));
 export const modeOf = (p: Project, name: string) => ui.modes[name] ?? modifiersOf(p).find((c) => c.name === name)!.defaultMode;
 export const currentModes = (p: Project) => Object.fromEntries(modifiersOf(p).map((c) => [c.name, modeOf(p, c.name)]));
 
@@ -47,9 +50,14 @@ const sheet = document.head.appendChild(document.createElement("style"));
 sheet.id = "ou-tokens";
 
 function renderModes(p: Project) {
-  document.querySelector("#modes")!.innerHTML = modifiersOf(p)
+  const skip = perInstance(p);
+  document.querySelector("#modes")!.innerHTML = modifiersOf(p).filter((c) => !skip.has(c.name))
     .map((c) => `<label>${escapeHtml(c.name)}<select data-modifier="${escapeHtml(c.name)}">${c.modes
-      .map((m) => `<option${m === modeOf(p, c.name) ? " selected" : ""}>${escapeHtml(m)}</option>`).join("")}</select></label>`)
+      .map((m) => {
+        const d = c.when?.[m] ? describeCondition(c.when[m] as Parameters<typeof describeCondition>[0]) : "";
+        const when = d && d !== m ? ` (${d})` : "";
+        return `<option value="${escapeHtml(m)}"${m === modeOf(p, c.name) ? " selected" : ""}>${escapeHtml(m + when)}</option>`;
+      }).join("")}</select></label>`)
     .join("");
 }
 document.querySelector("#modes")!.addEventListener("change", (e) => {
@@ -81,6 +89,7 @@ function propsPanel(p: Project, id: string): string {
       const options = ["", ...(def.preferred ?? []), ...ids.filter((x) => !(def.preferred ?? []).includes(x))];
       return `<label>${n} <select data-prop="${n}">${options.map((o) => `<option value="${o}"${o === current ? " selected" : ""}>${o || "(none)"}</option>`).join("")}</select></label>`;
     }
+    if (def.type === "mode") return `<span class="muted">${n}: ${escapeHtml(def.modifier)} (rows)</span>`;
     return `<span class="muted">${n}: slot</span>`;
   });
   return rows.length ? `<div class="pv-props">${rows.join("")}</div>` : "";
@@ -103,14 +112,21 @@ export function renderGrid(p: Project, id: string) {
   const grid = document.createElement("table");
   grid.className = `pv-grid${dark ? " dark" : ""}`;
   grid.innerHTML = `<tr><th></th>${states.map((s) => `<th>${escapeHtml(s)}</th>`).join("")}</tr>`;
-  for (const variant of variantCombos(doc)) {
+  // rows: each mode prop context × each variant combination (mode props first: they read as the component's "kinds")
+  const modeRows = Object.entries(doc.data.props ?? {}).reduce<Record<string, string>[]>((acc, [name, d]) => {
+    if (d.type !== "mode") return acc;
+    const contexts = modifiersOf(p).find((c) => c.name === d.modifier)?.modes ?? [];
+    return acc.flatMap((row) => contexts.map((ctx) => ({ ...row, [name]: ctx })));
+  }, [{}]);
+  for (const modeProps of modeRows) for (const variant of variantCombos(doc)) {
     const tr = grid.insertRow();
-    tr.insertCell().outerHTML = `<th class="row">${escapeHtml(Object.entries(variant).map(([k, v]) => `${k}=${v}`).join(", ") || "base")}</th>`;
+    tr.insertCell().outerHTML = `<th class="row">${escapeHtml(Object.entries({ ...modeProps, ...variant }).map(([k, v]) => `${k}=${v}`).join(", ") || "base")}</th>`;
     for (const s of states) {
       const td = tr.insertCell();
-      td.dataset.cell = JSON.stringify({ variant, state: s });
+      const modes = Object.fromEntries(Object.entries(modeProps).map(([name, ctx]) => [(doc.data.props![name] as { modifier: string }).modifier, ctx]));
+      td.dataset.cell = JSON.stringify({ variant, state: s, modes });
       const root = ouRoot(p);
-      root.appendChild(toDOM(buildComponent(p, id, { variant, state: s, props: ui.props[id] ?? {}, modes: currentModes(p) })));
+      root.appendChild(toDOM(buildComponent(p, id, { variant, state: s, props: { ...(ui.props[id] ?? {}), ...modeProps }, modes: currentModes(p) })));
       td.appendChild(root);
     }
   }

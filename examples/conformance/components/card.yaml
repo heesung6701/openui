@@ -9,7 +9,7 @@ data:
   anatomy:
     root:
       kind: frame
-      layout: { direction: column, gap: "{space.gap}", padding: [16px, 16px, 24px, 16px], width: 320px, height: hug }
+      layout: { direction: column, gap: "{space.gap}", padding: ["{layout.card-padding}", "{layout.card-padding}", "{space.inset}", "{layout.card-padding}"], width: "{layout.card-width}", height: hug }
       children:
         stateLayer: { kind: frame, layout: { position: absolute, width: fill, height: fill } }
         heading:    { kind: text, text: { prop: title } }
@@ -17,8 +17,8 @@ data:
   styles:
     base:
       enabled:
-        root:       { fill: "{color.surface}", cornerRadius: "{radius.medium}", shadow: "{elevation.1}", strokeColor: "{color.outline}", strokeWidth: 1px, strokeAlign: outside }
-        stateLayer: { fill: "{color.on-surface}", opacity: 0, cornerRadius: "{radius.medium}" }
+        root:       { fill: "{color.surface}", cornerRadius: "{radius.medium}", shadow: "{elevation.1}", strokeColor: "{color.outline}", strokeWidth: "{stroke.thin}", strokeAlign: outside }
+        stateLayer: { fill: "{color.on-surface}", opacity: "{opacity.none}", cornerRadius: "{radius.medium}" }
         heading:    { color: "{color.on-surface}", typography: "{type.body}" }
       hovered:
-        stateLayer: { opacity: 0.08 }
+        stateLayer: { opacity: "{opacity.hover}" }

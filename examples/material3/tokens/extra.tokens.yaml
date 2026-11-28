@@ -1,0 +1,30 @@
+# M3 spec values that material-web v0.192 does not ship as tokens (components may not use literal values).
+# Names follow material-web conventions.
+md:
+  sys:
+    color:
+      transparent: { $type: color, $value: { colorSpace: srgb, components: [0, 0, 0], alpha: 0 } }
+    space:
+      zero: { $type: dimension, $value: { value: 0, unit: px } }
+    opacity:
+      $type: number
+      zero: { $value: 0 }
+      full: { $value: 1 }
+  comp:
+    button:
+      icon-label-space: { $type: dimension, $value: { value: 8, unit: px } }
+    filter-chip:
+      $type: dimension
+      icon-label-space: { $value: { value: 8, unit: px } }
+      leading-space: { $value: { value: 16, unit: px } }
+      trailing-space: { $value: { value: 16, unit: px } }
+      with-leading-icon-leading-space: { $value: { value: 8, unit: px } }
+    card:
+      $type: dimension
+      padding: { $value: { value: 16, unit: px } }
+      content-gap: { $value: { value: 8, unit: px } }
+      preview-width: { $value: { value: 360, unit: px }, $description: Width the pilot renders cards at (cards fill their layout slot) }
+    checkbox:
+      container-offset: { $type: dimension, $value: { value: 11, unit: px }, $description: (state-layer-size - container-size) / 2 }
+    icon:
+      size: { $type: dimension, $value: { value: 24, unit: px } }

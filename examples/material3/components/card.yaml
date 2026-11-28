@@ -1,5 +1,6 @@
 # yaml-language-server: $schema=../../../schema/component.schema.json
 # M3 cards (elevated / filled / outlined), material-web v0.192 tokens. Content is a slot.
+# One UI tree for all styles: `style` is a mode prop (tokens/card-style.*.tokens.yaml), not a variant.
 kind: Component
 metadata:
   id: card
@@ -8,52 +9,27 @@ metadata:
 data:
   props:
     content: { type: slot, min: 1, description: "Card content (media, text, actions)" }
-  variants:
-    style:
-      values:
-        elevated: { description: "Separation by shadow" }
-        filled:   { description: "Subtle separation by container color" }
-        outlined: { description: "Separation by outline" }
-      default: elevated
+    style:   { type: mode, modifier: card-style, description: "elevated | filled | outlined (token mode)" }
   states: [enabled, hovered, focused, pressed, disabled]
   anatomy:
     root:
       kind: frame
-      layout: { direction: column, gap: 8px, padding: 16px, width: 360px, height: hug }
+      layout: { direction: column, gap: "{md.comp.card.content-gap}", padding: "{md.comp.card.padding}", width: "{md.comp.card.preview-width}", height: hug }
       children:
         stateLayer: { kind: frame, layout: { position: absolute, width: fill, height: fill } }
-        body:       { kind: slot, prop: content, layout: { direction: column, gap: 8px, width: fill } }
+        body:       { kind: slot, prop: content, layout: { direction: column, gap: "{md.comp.card.content-gap}", width: fill } }
   styles:
     base:
       enabled:
-        root:       { cornerRadius: "{md.comp.elevated-card.container-shape}" }
-        stateLayer: { cornerRadius: "{md.comp.elevated-card.container-shape}", opacity: 0, fill: "{md.comp.elevated-card.hover-state-layer-color}" }
+        root:       { fill: "{card.container-color}", cornerRadius: "{md.comp.elevated-card.container-shape}", strokeColor: "{card.outline-color}", strokeWidth: "{card.outline-width}", shadow: "{card.shadow}" }
+        stateLayer: { cornerRadius: "{md.comp.elevated-card.container-shape}", opacity: "{md.sys.opacity.zero}", fill: "{md.comp.elevated-card.hover-state-layer-color}" }
       hovered:
+        root:       { shadow: "{card.hover-shadow}" }
         stateLayer: { opacity: "{md.comp.elevated-card.hover-state-layer-opacity}" }
       focused:
+        root:       { strokeColor: "{card.focus-outline-color}" }
         stateLayer: { opacity: "{md.comp.elevated-card.focus-state-layer-opacity}" }
       pressed:
         stateLayer: { opacity: "{md.comp.elevated-card.pressed-state-layer-opacity}" }
-    style=elevated:
-      enabled:
-        root: { fill: "{md.comp.elevated-card.container-color}", shadow: "{md.sys.elevation-shadow.level1}" }
-      hovered:
-        root: { shadow: "{md.sys.elevation-shadow.level2}" }
       disabled:
-        root: { fill: "{md.comp.elevated-card.disabled-container-color}", fillOpacity: "{md.comp.elevated-card.disabled-container-opacity}" }
-    style=filled:
-      enabled:
-        root: { fill: "{md.comp.filled-card.container-color}", shadow: "{md.sys.elevation-shadow.level0}" }
-      hovered:
-        root: { shadow: "{md.sys.elevation-shadow.level1}" }
-      disabled:
-        root: { fill: "{md.comp.filled-card.disabled-container-color}", fillOpacity: "{md.comp.filled-card.disabled-container-opacity}" }
-    style=outlined:
-      enabled:
-        root: { fill: "{md.comp.outlined-card.container-color}", strokeColor: "{md.comp.outlined-card.outline-color}", strokeWidth: "{md.comp.outlined-card.outline-width}", shadow: "{md.sys.elevation-shadow.level0}" }
-      hovered:
-        root: { shadow: "{md.sys.elevation-shadow.level1}" }
-      focused:
-        root: { strokeColor: "{md.comp.outlined-card.focus-outline-color}" }
-      disabled:
-        root: { strokeColor: "{md.comp.outlined-card.disabled-outline-color}", strokeOpacity: "{md.comp.outlined-card.disabled-outline-opacity}" }
+        root: { fill: "{card.disabled-container-color}", fillOpacity: "{card.disabled-container-opacity}", strokeColor: "{card.disabled-outline-color}", strokeOpacity: "{card.disabled-outline-opacity}" }

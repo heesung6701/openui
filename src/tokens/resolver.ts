@@ -2,10 +2,23 @@ import { z } from "zod";
 import { fromZod, type Diagnostic } from "../diagnostics";
 import { resolvePath, type ProjectIO } from "../io";
 import { walkTokenTree, type TokenDef } from "./tree";
-import { aliasTarget, typedAliases, type TokenType } from "./values";
+import { aliasTarget, collectAliases, typedAliases, type TokenType } from "./values";
 import { parseYaml } from "../yaml";
 
-export type Collection = { name: string; kind: "set" | "modifier"; modes: string[]; defaultMode: string };
+export const DEVICES = ["phone", "tablet", "desktop", "tv", "watch"] as const;
+export type Range = { min?: number; max?: number };
+/** When a modifier context applies (§3.6). Exactly one key. Ranges are half-open: min ≤ value < max, in px (= dp). */
+export type Condition =
+  | { width: Range } | { height: Range }
+  | { orientation: "portrait" | "landscape" }
+  | { device: (typeof DEVICES)[number] }
+  | { colorScheme: "light" | "dark" }
+  | { language: string };
+export type Collection = {
+  name: string; kind: "set" | "modifier"; modes: string[]; defaultMode: string;
+  /** Present when the context is selected by the environment rather than explicitly. */
+  when?: Record<string, Condition>;
+};
 export type TokenEntry = { collection: string; type: TokenType; byMode: Record<string, TokenDef> };
 export type TokenSet = { collections: Collection[]; tokens: Map<string, TokenEntry> };
 
@@ -22,6 +35,60 @@ const Resolver = z.looseObject({
   })).optional(),
   resolutionOrder: z.array(z.object({ $ref: z.string() })),
 });
+
+const RangeSchema = z.strictObject({ min: z.number().min(0).optional(), max: z.number().positive().optional() })
+  .refine((r) => r.min !== undefined || r.max !== undefined, "range needs min or max")
+  .refine((r) => r.min === undefined || r.max === undefined || r.min < r.max, "range min must be < max");
+const CONDITIONS: Record<string, z.ZodType> = {
+  width: RangeSchema,
+  height: RangeSchema,
+  orientation: z.enum(["portrait", "landscape"]),
+  device: z.enum(DEVICES),
+  colorScheme: z.enum(["light", "dark"]),
+  language: z.string().regex(/^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$/, "language must be a BCP 47 tag like ko or en-US"),
+};
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
+
+/** `$extensions["org.openui"].when` of a modifier: every context gets one condition; one condition kind per modifier; no overlaps. */
+function parseWhen(raw: unknown, contexts: string[], at: (string | number)[], err: (path: (string | number)[], message: string) => void): Record<string, Condition> | undefined {
+  if (raw === undefined) return undefined;
+  if (!isObj(raw)) {
+    err(at, "when must map each context to a condition");
+    return undefined;
+  }
+  const out: Record<string, Condition> = {};
+  for (const [ctx, cond] of Object.entries(raw)) {
+    const p = [...at, ctx];
+    if (!contexts.includes(ctx)) err(p, `unknown context "${ctx}"`);
+    else if (!isObj(cond) || Object.keys(cond).length !== 1) err(p, `context "${ctx}" needs exactly one condition (${Object.keys(CONDITIONS).join(", ")})`);
+    else {
+      const [key, value] = Object.entries(cond)[0]!;
+      const schema = CONDITIONS[key];
+      if (!schema) err([...p, key], `unknown condition "${key}" (use ${Object.keys(CONDITIONS).join(", ")})`);
+      else {
+        const r = schema.safeParse(value);
+        if (r.success) out[ctx] = { [key]: r.data } as Condition;
+        else err([...p, key, ...r.error.issues[0]!.path.map(String)], `invalid ${key} condition: ${r.error.issues[0]!.message}`);
+      }
+    }
+  }
+  for (const ctx of contexts) if (!(ctx in raw)) err(at, `context "${ctx}" has no condition`);
+  const entries = Object.entries(out);
+  const kinds = new Set(entries.map(([, c]) => Object.keys(c)[0]));
+  if (kinds.size > 1) err(at, `all contexts must use the same condition kind (got ${[...kinds].join(", ")})`);
+  else {
+    const overlaps = (a: unknown, b: unknown) => {
+      if (!isObj(a) || !isObj(b)) return a === b;
+      const [a0, a1, b0, b1] = [a.min ?? 0, a.max ?? Infinity, b.min ?? 0, b.max ?? Infinity] as number[];
+      return a0! < b1! && b0! < a1!;
+    };
+    for (let i = 0; i < entries.length; i++)
+      for (let j = i + 1; j < entries.length; j++)
+        if (overlaps(Object.values(entries[i]![1])[0], Object.values(entries[j]![1])[0]))
+          err(at, `conditions of "${entries[i]![0]}" and "${entries[j]![0]}" overlap`);
+  }
+  return out;
+}
 
 export async function loadTokens(io: ProjectIO, resolverPath: string): Promise<{ tokens: TokenSet; diagnostics: Diagnostic[] }> {
   const diagnostics: Diagnostic[] = [];
@@ -104,7 +171,9 @@ export async function loadTokens(io: ProjectIO, resolverPath: string): Promise<{
     const modes = Object.keys(mod.contexts);
     const defaultMode = mod.default ?? modes[0]!;
     if (!modes.includes(defaultMode)) err(resolverPath, ["modifiers", name, "default"], `default "${defaultMode}" is not a context of modifier "${name}"`);
-    collections.push({ name, kind, modes, defaultMode });
+    const ext = (mod as { $extensions?: Record<string, { when?: unknown } | undefined> }).$extensions?.["org.openui"];
+    const when = parseWhen(ext?.when, modes, ["modifiers", name, "$extensions", "org.openui", "when"], (p, m) => err(resolverPath, p, m));
+    collections.push({ name, kind, modes, defaultMode, ...(when ? { when } : {}) });
     const perCtx = new Map<string, Map<string, TokenDef>>();
     for (const ctx of modes) perCtx.set(ctx, await loadSources(mod.contexts[ctx]!, ["modifiers", name, "contexts", ctx]));
     const paths = new Set([...perCtx.values()].flatMap((m) => [...m.keys()]));
@@ -215,4 +284,21 @@ export function resolveToken(set: TokenSet, path: string, modes: Record<string, 
     path = next;
   }
   return undefined;
+}
+
+/** Collections whose tokens `aliases` depend on, directly or through alias chains in any mode. */
+export function collectionsReachedBy(set: TokenSet, aliases: Iterable<string>): Set<string> {
+  const out = new Set<string>();
+  const seen = new Set<string>();
+  const stack = [...aliases];
+  while (stack.length) {
+    const path = stack.pop()!;
+    if (seen.has(path)) continue;
+    seen.add(path);
+    const e = set.tokens.get(path);
+    if (!e) continue;
+    out.add(e.collection);
+    for (const d of Object.values(e.byMode)) stack.push(...collectAliases(d.value));
+  }
+  return out;
 }
