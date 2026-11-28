@@ -127,3 +127,15 @@ data:
   const count = (n: VNode): number => 1 + n.children.reduce((s, c) => s + count(c), 0);
   expect(count(buildComponent(self.project!, "a", { variant: {}, state: "enabled", props: {} }))).toBeLessThan(20);
 });
+
+test("text tokens: text parts and text prop defaults render the selected locale", async () => {
+  const { project } = await loadProject(fsIO("examples/conformance"));
+  const at = (modes: Record<string, string>) => buildComponent(project!, "button", { variant: {}, state: "enabled", props: {}, modes });
+  expect(find(at({}), "label")!.text).toBe("Button");
+  expect(find(at({ locale: "ko" }), "label")!.text).toBe("버튼");
+  const g = buildComponent(project!, "gallery", { variant: {}, state: "enabled", props: {}, modes: { locale: "ko" } });
+  expect(find(g, "badge")!.text).toBe("신규");
+  const o = buildComponent(project!, "button", { variant: {}, state: "enabled", props: { label: "{text.gallery.badge}" }, modes: { locale: "ko" } });
+  expect(find(o, "label")!.text).toBe("신규");
+  expect(tokenSheet(project!.tokens)).not.toContain("--text-");
+});

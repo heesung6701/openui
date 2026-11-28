@@ -3,7 +3,7 @@ kind: Component
 metadata: { id: button, name: Button, description: "Conformance: props, variants, states, styles" }
 data:
   props:
-    label:    { type: text, default: Button }
+    label:    { type: text, default: "{text.button.label}" }
     showIcon: { type: boolean, default: false }
     icon:     { type: instance, default: icon, preferred: [icon] }
   variants:

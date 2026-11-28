@@ -3,7 +3,7 @@ kind: Component
 metadata: { id: gallery, name: Gallery, description: "Conformance: grid, wrap, absolute badge, image, gradient fill, x-figma" }
 data:
   props:
-    caption: { type: text, default: Gallery }
+    caption: { type: text, default: "{text.gallery.caption}" }
   anatomy:
     root:
       kind: frame
@@ -14,14 +14,14 @@ data:
           layout: { direction: grid, grid: { columns: 2, rows: 2 }, gap: 8px, crossGap: 8px }
           children:
             photo: { kind: image, src: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='96' height='96'><rect width='96' height='96' fill='%23d0bcff'/></svg>" }
-            badge: { kind: text, text: New }
+            badge: { kind: text, text: "{text.gallery.badge}" }
         tags:
           kind: frame
           layout: { direction: row, wrap: true, gap: 4px, crossGap: 4px, width: 200px }
           children:
-            tagA: { kind: text, text: Alpha }
-            tagB: { kind: text, text: Beta }
-            tagC: { kind: text, text: Gamma }
+            tagA: { kind: text, text: "{text.gallery.tag-a}" }
+            tagB: { kind: text, text: "{text.gallery.tag-b}" }
+            tagC: { kind: text, text: "{text.gallery.tag-c}" }
         caption: { kind: text, text: { prop: caption } }
   styles:
     base:

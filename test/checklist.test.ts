@@ -15,20 +15,20 @@ const conformance = async () => {
 test("conformance checklist loads clean", async () => {
   const { project, diagnostics } = await loadProject(fsIO("examples/conformance"));
   expect(diagnostics).toEqual([]);
-  expect(project!.checklists.get("button")!.doc.items.length).toBe(3);
+  expect(project!.checklists.get("button")!.doc.items.length).toBe(4);
 });
 test("expandCheck: omitted axis/state/mode = all", async () => {
   const { project } = await loadProject(fsIO("examples/conformance"));
   const doc = project!.components.get("button")!.doc;
   const cases = expandCheck({ variant: { size: "medium" }, part: "root", property: "height", expect: "40px" }, doc, project!.tokens);
-  expect(cases.length).toBe(2 /*style*/ * 3 /*states*/ * 2 /*theme*/);
-  expect(cases[0]).toEqual({ variant: { style: "filled", size: "medium" }, state: "enabled", mode: { theme: "light" } });
+  expect(cases.length).toBe(2 /*style*/ * 3 /*states*/ * 2 /*theme*/ * 2 /*locale*/);
+  expect(cases[0]).toEqual({ variant: { style: "filled", size: "medium" }, state: "enabled", mode: { theme: "light", locale: "en" } });
 });
 test("expandCheck: explicit lists narrow", async () => {
   const { project } = await loadProject(fsIO("examples/conformance"));
   const doc = project!.components.get("button")!.doc;
   const cases = expandCheck({ variant: { style: ["outlined"] }, state: ["pressed", "disabled"], mode: { theme: "dark" }, part: "root", property: "height", expect: "40px" }, doc, project!.tokens);
-  expect(cases.length).toBe(2 /*size*/ * 2 /*states*/ * 1);
+  expect(cases.length).toBe(2 /*size*/ * 2 /*states*/ * 1 /*theme*/ * 2 /*locale*/);
   expect(cases.every((c) => c.variant.style === "outlined" && c.mode.theme === "dark")).toBe(true);
 });
 test("expectToCss + sameCss", () => {
@@ -47,7 +47,7 @@ test("runChecklist with fake measure", async () => {
   expect(r[0]).toMatchObject({ id: "height", kind: "auto", pass: false });
   expect(r[0]!.cases.filter((x) => !x.pass).every((x) => x.state === "pressed")).toBe(true);
   expect(r[1]).toMatchObject({ id: "filled-bg", kind: "auto", pass: true });
-  expect(r[2]).toEqual({ id: "ripple", title: "리플", kind: "manual", pass: null, cases: [] });
+  expect(r[3]).toEqual({ id: "ripple", title: "리플", kind: "manual", pass: null, cases: [] });
 });
 const bad: [string, string, string, string][] = [
   ["unknown part", "part: root, property: height", "part: rooot, property: height", "rooot"],
@@ -71,3 +71,26 @@ test("I6: empty measurements never pass (unknown property / invalid expect)", as
   const r = await runChecklist(cl, doc, project!.tokens, async () => ({ actual: "", expected: "" }));
   expect(r[0]!.pass).toBe(false);
 });
+
+test("text check: expected text is the token resolved in each case's locale", async () => {
+  const { project, diagnostics } = await loadProject(fsIO("examples/conformance"));
+  expect(diagnostics).toEqual([]);
+  const doc = project!.components.get("button")!.doc;
+  const cl = { kind: "Checklist" as const, metadata: { id: "t", component: "button" }, items: [
+    { id: "label", title: "label", check: { variant: { style: "filled", size: "medium" }, state: "enabled", mode: { theme: "light" }, part: "label", property: "text", expect: "{text.button.label}" } },
+  ] };
+  const seen: string[] = [];
+  const r = await runChecklist(cl, doc, project!.tokens, async (c) => (seen.push(`${c.mode.locale}:${c.expectCss}`), { actual: c.expectCss, expected: c.expectCss }));
+  expect(seen).toEqual(["en:Button", "ko:버튼"]);
+  expect(r[0]!.pass).toBe(true);
+});
+const badText: [string, string, string][] = [
+  ["literal expect", "Button", "text check expects one text token"],
+  ["non-string token", "{color.primary}", '"{color.primary}" is color'],
+];
+for (const [name, expectValue, needle] of badText)
+  test(`text check invalid: ${name}`, async () => {
+    const files = await conformance();
+    files["checklists/button.yaml"] += `  - { id: bad-text, title: label, check: { part: label, property: text, expect: "${expectValue}" } }\n`;
+    expect(msgs((await loadProject(memoryIO(files))).diagnostics)).toContain(needle);
+  });

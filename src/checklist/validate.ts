@@ -1,6 +1,7 @@
 import { partsOf, statesOf, variantAxes } from "../component/validate";
 import type { Diagnostic } from "../diagnostics";
 import type { Project } from "../project";
+import { aliasTarget } from "../tokens/values";
 import type { Checklist } from "./schema";
 
 const list = (v: string | string[] | undefined): string[] => (v === undefined ? [] : Array.isArray(v) ? v : [v]);
@@ -42,6 +43,12 @@ export function validateChecklist(cl: Checklist, file: string, project: Project)
         const modes = modifiers.get(m);
         if (!modes) err([...at, "check", "mode", m], `unknown modifier "${m}"`);
         else for (const ctx of list(v)) if (!modes.includes(ctx)) err([...at, "check", "mode", m], `unknown context "${ctx}" of modifier "${m}"`);
+      }
+      if (c.property === "text") {
+        const alias = aliasTarget(c.expect);
+        const t = alias ? project.tokens.tokens.get(alias) : undefined;
+        if (!alias) err([...at, "check", "expect"], 'text check expects one text token like "{text.button.label}"');
+        else if (t && t.type !== "string") err([...at, "check", "expect"], `token "{${alias}}" is ${t.type}, text check expects string`);
       }
       if (typeof c.expect === "string") {
         for (const [, alias] of c.expect.matchAll(/\{([^{}]+)\}/g)) {

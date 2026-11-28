@@ -3,7 +3,7 @@ export const msgs = (d: { message: string }[]): string => d.map((x) => x.message
 export const CHIP_YAML = `kind: Component
 metadata: { id: chip, name: Chip }
 data:
-  props: { label: { type: text, default: Chip }, trailing: { type: slot, max: 1 } }
+  props: { label: { type: text, default: "{text.chip.label}" }, trailing: { type: slot, max: 1 } }
   variants: { size: { values: { small: {}, large: {} }, default: small } }
   anatomy:
     root:

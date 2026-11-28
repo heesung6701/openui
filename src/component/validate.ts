@@ -1,6 +1,6 @@
 import type { Diagnostic } from "../diagnostics";
 import type { TokenSet } from "../tokens/resolver";
-import { collectAliases } from "../tokens/values";
+import { aliasTarget, collectAliases } from "../tokens/values";
 import { Ident, STYLE_PROPERTIES, type Component, type PartKind, type PartNode } from "./schema";
 
 export type ValidateContext = { tokens: TokenSet; componentIds: Set<string> };
@@ -54,6 +54,14 @@ export function validateComponent(doc: Component, file: string, ctx: ValidateCon
     }
   };
 
+  const textToken = (value: string, path: (string | number)[]) => {
+    const alias = aliasTarget(value);
+    const t = alias ? ctx.tokens.tokens.get(alias) : undefined;
+    if (!alias) return; // the schema reports literal text
+    if (!t) err(path, `unknown token "{${alias}}"`);
+    else if (t.type !== "string") err(path, `token "{${alias}}" is ${t.type}, text expects string`);
+  };
+
   // anatomy
   const root = doc.data.anatomy.root as PartNode;
   if (root.kind !== "frame") err(["data", "anatomy", "root", "kind"], `anatomy root must be a frame, got ${root.kind}`);
@@ -68,6 +76,7 @@ export function validateComponent(doc: Component, file: string, ctx: ValidateCon
       else if (def.type !== type) err([...path, at], `prop "${p}" is ${def.type}, expected a ${type} prop`);
       else bind(p);
     };
+    if (part.kind === "text" && typeof part.text === "string") textToken(part.text, [...path, "text"]);
     if (part.kind === "text" && part.text && typeof part.text === "object") propOf(part.text.prop, "text", "text");
     if (part.visible) propOf(part.visible.prop, "boolean", "visible");
     if (part.kind === "instance") {
@@ -85,6 +94,7 @@ export function validateComponent(doc: Component, file: string, ctx: ValidateCon
     const at = ["data", "props", name];
     const n = bound.get(name) ?? 0;
     if (n === 0) err(at, `prop "${name}" is not bound to any part`);
+    if (def.type === "text") textToken(def.default, [...at, "default"]);
     if (def.type === "slot" && n > 1) err(at, `slot prop "${name}" is bound by ${n} parts`);
     if (def.type === "slot" && def.min !== undefined && def.max !== undefined && def.min > def.max) err(at, "slot min must be <= max");
     if (def.type === "instance" || def.type === "slot") {

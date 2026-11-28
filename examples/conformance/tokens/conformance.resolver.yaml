@@ -10,6 +10,13 @@ modifiers:
       light: [{ $ref: light.tokens.yaml }]
       dark: [{ $ref: dark.tokens.yaml }]
     default: light
+  locale:
+    description: UI language (BCP 47). Holds the text tokens.
+    contexts:
+      en: [{ $ref: text.en.tokens.yaml }]
+      ko: [{ $ref: text.ko.tokens.yaml }]
+    default: en
 resolutionOrder:
   - { $ref: "#/sets/base" }
   - { $ref: "#/modifiers/theme" }
+  - { $ref: "#/modifiers/locale" }

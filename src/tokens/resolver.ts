@@ -202,3 +202,17 @@ export async function loadTokens(io: ProjectIO, resolverPath: string): Promise<{
 
   return { tokens: { collections, tokens }, diagnostics };
 }
+
+/** Final (non-alias) value of `path`: each collection uses `modes[collection]`, else its default mode. */
+export function resolveToken(set: TokenSet, path: string, modes: Record<string, string>): unknown {
+  const defaults = new Map(set.collections.map((c) => [c.name, c.defaultMode]));
+  for (let hop = 0; hop < 32; hop++) { // ponytail: hop cap; loadTokens already reports alias cycles
+    const e = set.tokens.get(path);
+    const def = e?.byMode[modes[e.collection] ?? defaults.get(e.collection)!];
+    if (!def) return undefined;
+    const next = aliasTarget(def.value);
+    if (!next) return def.value;
+    path = next;
+  }
+  return undefined;
+}

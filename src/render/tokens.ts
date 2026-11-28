@@ -53,6 +53,8 @@ export function tokenValueCss(type: TokenType, value: unknown): string | Record<
           return `${sub(s.color, "color")} ${p ? `calc(var(${cssVar(p)}) * 100%)` : `${(s.position as number) * 100}%`}`;
         })
         .join(", ")})`;
+    case "string":
+      throw new Error("string (text) tokens have no CSS value; renderers resolve them into text content");
     case "typography": {
       const t = value as Obj;
       return {
@@ -79,6 +81,7 @@ export function tokenSheet(set: TokenSet): string {
   const base: string[] = [];
   const contexts = new Map<string, string[]>();
   for (const [path, e] of set.tokens) {
+    if (e.type === "string") continue; // text tokens become text content, not CSS
     const c = kinds.get(e.collection)!;
     for (const [mode, def] of Object.entries(e.byMode)) {
       const lines = decls(path, e.type, def.value);

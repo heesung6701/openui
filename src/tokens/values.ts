@@ -2,11 +2,11 @@ import { z } from "zod";
 
 export type TokenType =
   | "color" | "dimension" | "number" | "duration" | "cubicBezier"
-  | "fontFamily" | "fontWeight" | "shadow" | "typography" | "gradient";
+  | "fontFamily" | "fontWeight" | "shadow" | "typography" | "gradient" | "string";
 
 export const TOKEN_TYPES: readonly TokenType[] = [
   "color", "dimension", "number", "duration", "cubicBezier",
-  "fontFamily", "fontWeight", "shadow", "typography", "gradient",
+  "fontFamily", "fontWeight", "shadow", "typography", "gradient", "string",
 ];
 
 /** DTCG 2025.10 named font weights. */
@@ -65,6 +65,8 @@ export const baseSchemas: Record<TokenType, z.ZodType> = {
     letterSpacing: or(dimension), lineHeight: or(z.number()),
   }),
   gradient: z.array(z.strictObject({ color: or(color), position: or(unit01) })).min(1),
+  /** Text token (openui extension; Figma STRING variable). The token path is the text id. */
+  string: z.string(),
 };
 
 /** Value shapes accepting an alias at top level and inside composite sub-values. */

@@ -7,7 +7,7 @@ metadata:
   description: M3 flat filter chip. Elevated chips and the dragged state are out of scope for the pilot.
 data:
   props:
-    label: { type: text, default: Filter }
+    label: { type: text, default: "{text.filter-chip.label}" }
   variants:
     selected:
       values: { "false": {}, "true": { description: "Selected: tonal container and leading check" } }

@@ -12,11 +12,12 @@ export function domMeasure(p: Project, id: string): Measure {
     const stage = document.body.appendChild(document.createElement("div"));
     stage.style.cssText = "position:fixed;left:-10000px;top:0;";
     const root = stage.appendChild(ouRoot(p, c.mode));
-    const top = root.appendChild(toDOM(buildComponent(p, id, { variant: c.variant, state: c.state, props: {} })));
+    const top = root.appendChild(toDOM(buildComponent(p, id, { variant: c.variant, state: c.state, props: {}, modes: c.mode })));
     const probe = root.appendChild(document.createElement("div"));
     try {
       // parts of nested instances also carry data-part; only match parts owned by the top component
       const el = c.part === "root" ? top : [...top.querySelectorAll(`[data-part="${CSS.escape(c.part)}"]`)].find((e) => e.closest("[data-component]") === top);
+      if (c.property === "text") return { actual: el ? el.textContent ?? "" : "(part not rendered)", expected: c.expectCss };
       const actual = el ? getComputedStyle(el).getPropertyValue(c.property).trim() || "(no value)" : "(part not rendered)";
       probe.style.setProperty(c.property, c.expectCss);
       // the browser drops invalid declarations: an empty inline value means a bad expect or an unknown property

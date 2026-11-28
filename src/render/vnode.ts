@@ -2,10 +2,13 @@ import type { PartNode } from "../component/schema";
 import { resolveStyles } from "../component/resolve";
 import { statesOf } from "../component/validate";
 import type { Project } from "../project";
+import { resolveToken } from "../tokens/resolver";
+import { aliasTarget } from "../tokens/values";
 import { partStyle } from "./style";
 
 export type VNode = { tag: string; attrs: Record<string, string>; style: Record<string, string>; text?: string; children: VNode[] };
-export type RenderOptions = { variant: Record<string, string>; state: string; props: Record<string, string | boolean | null> };
+/** `modes`: selected context per modifier (e.g. `{theme: "dark", locale: "ko"}`); omitted = the modifier's default. */
+export type RenderOptions = { variant: Record<string, string>; state: string; props: Record<string, string | boolean | null>; modes?: Record<string, string> };
 
 const MAX_DEPTH = 8;
 const note = (text: string): VNode => ({ tag: "div", attrs: {}, style: {}, text, children: [] });
@@ -26,6 +29,12 @@ export function buildComponent(project: Project, id: string, opts: RenderOptions
     return d && "default" in d ? d.default ?? null : null;
   };
 
+  /** Text tokens resolve in the selected locale; a literal runtime prop value (app data) renders as is. */
+  const text = (v: unknown): string => {
+    const a = aliasTarget(v);
+    return a ? String(resolveToken(project.tokens, a, opts.modes ?? {}) ?? `{${a}}`) : String(v ?? "");
+  };
+
   const build = (name: string, part: PartNode, parentDirection: string | null, isRoot: boolean): VNode => {
     const resolved = styles[name] ?? {};
     const style = partStyle(part.kind, resolved, { parentDirection, isRoot });
@@ -44,13 +53,13 @@ export function buildComponent(project: Project, id: string, opts: RenderOptions
         return { tag: "div", attrs, style, text: part.prop, children: [] };
       case "text": {
         const t = part.text;
-        return { tag: "div", attrs, style, text: typeof t === "string" ? t : t ? String(propVal(t.prop) ?? "") : "", children: [] };
+        return { tag: "div", attrs, style, text: typeof t === "string" ? text(t) : t ? text(propVal(t.prop)) : "", children: [] };
       }
       case "instance": {
         const target = part.component ?? (part.prop ? propVal(part.prop) : null);
         if (typeof target !== "string") return { tag: "div", attrs, style, children: [] };
         const targetDoc = project.components.get(target)?.doc;
-        const inner = buildComponent(project, target, { variant: {}, state: targetDoc ? statesOf(targetDoc)[0]! : "enabled", props: {} }, [...chain, id]);
+        const inner = buildComponent(project, target, { variant: {}, state: targetDoc ? statesOf(targetDoc)[0]! : "enabled", props: {}, modes: opts.modes }, [...chain, id]);
         const sized = (k: "width" | "height") => resolved[k] !== undefined && resolved[k] !== "hug";
         if (sized("width")) inner.style.width = "100%";
         if (sized("height")) inner.style.height = "100%";

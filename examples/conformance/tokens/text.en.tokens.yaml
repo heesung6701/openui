@@ -1,0 +1,11 @@
+# Text tokens: every rendered text has an id (the token path). One file per locale; same paths in each.
+text:
+  $type: string
+  button:  { label: { $value: Button } }
+  card:    { title: { $value: Title } }
+  gallery:
+    caption: { $value: Gallery }
+    badge:   { $value: New }
+    tag-a:   { $value: Alpha }
+    tag-b:   { $value: Beta }
+    tag-c:   { $value: Gamma }

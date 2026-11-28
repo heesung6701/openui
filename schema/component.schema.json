@@ -46,7 +46,8 @@
                     "const": "text"
                   },
                   "default": {
-                    "type": "string"
+                    "type": "string",
+                    "pattern": "^\\{[^{}]+\\}$"
                   },
                   "description": {
                     "type": "string"
@@ -1464,7 +1465,8 @@
             "text": {
               "anyOf": [
                 {
-                  "type": "string"
+                  "type": "string",
+                  "pattern": "^\\{[^{}]+\\}$"
                 },
                 {
                   "type": "object",

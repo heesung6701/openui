@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { walkTokenTree } from "../src/tokens/tree";
-import { loadTokens } from "../src/tokens/resolver";
+import { loadTokens, resolveToken } from "../src/tokens/resolver";
 import { memoryIO, resolvePath } from "../src/io";
 import { msgs } from "./helpers";
 
@@ -91,4 +91,27 @@ test("I3: literal $type differing between modifier contexts is an error", async 
     `zz: { $type: dimension, $value: { value: 8, unit: px } }`,
   ))).diagnostics);
   expect(m).toContain('"zz" is color in "light" but dimension in "dark"');
+});
+
+test("string tokens: $value must be a string", () => {
+  expect(walkTokenTree({ t: { $type: "string", $value: "확인" } }, "f").diagnostics).toEqual([]);
+  expect(msgs(walkTokenTree({ t: { $type: "string", $value: 3 } }, "f").diagnostics)).toContain("invalid string $value");
+});
+test("resolveToken follows aliases across collections and picks each collection's mode", async () => {
+  const r = `version: "2025.10"
+sets: { base: { sources: [{ $ref: base.tokens.yaml }] } }
+modifiers: { locale: { contexts: { en: [{ $ref: en.tokens.yaml }], ko: [{ $ref: ko.tokens.yaml }] }, default: en } }
+resolutionOrder: [{ $ref: "#/sets/base" }, { $ref: "#/modifiers/locale" }]
+`;
+  const { tokens, diagnostics } = await load({
+    "t/r.resolver.yaml": r,
+    "t/base.tokens.yaml": `text: { ok: { $value: "{text.common.ok}" } }\n`,
+    "t/en.tokens.yaml": `text: { $type: string, common: { ok: { $value: OK } } }\n`,
+    "t/ko.tokens.yaml": `text: { $type: string, common: { ok: { $value: 확인 } } }\n`,
+  });
+  expect(diagnostics).toEqual([]);
+  expect(tokens.tokens.get("text.ok")!.type).toBe("string");
+  expect(resolveToken(tokens, "text.ok", {})).toBe("OK");
+  expect(resolveToken(tokens, "text.ok", { locale: "ko" })).toBe("확인");
+  expect(resolveToken(tokens, "text.nope", {})).toBeUndefined();
 });

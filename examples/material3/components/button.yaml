@@ -9,7 +9,7 @@ metadata:
   description: M3 common button. Padding values come from material-web button CSS (no padding tokens in v0.192).
 data:
   props:
-    label: { type: text, default: Button }
+    label: { type: text, default: "{text.button.label}" }
     icon:  { type: instance, default: icon-add, preferred: [icon-add, icon-star], description: Leading icon (withIcon=true) }
   variants:
     style:

@@ -1,0 +1,5 @@
+# Text tokens: every rendered text has an id (the token path). One file per locale; same paths in each.
+text:
+  $type: string
+  button:      { label: { $value: Button } }
+  filter-chip: { label: { $value: Filter } }

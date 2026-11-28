@@ -1,7 +1,8 @@
 import type { Component } from "../component/schema";
 import { statesOf, variantAxes } from "../component/validate";
 import { aliasesToVars } from "../render/css-var";
-import type { TokenSet } from "../tokens/resolver";
+import { resolveToken, type TokenSet } from "../tokens/resolver";
+import { aliasTarget } from "../tokens/values";
 import type { Check, Checklist } from "./schema";
 
 export type Case = { variant: Record<string, string>; state: string; mode: Record<string, string> };
@@ -43,7 +44,9 @@ export async function runChecklist(cl: Checklist, doc: Component, tokens: TokenS
     const expectCss = expectToCss(expect);
     const cases: CaseResult[] = [];
     for (const c of expandCheck(item.check, doc, tokens)) {
-      const { actual, expected } = await measure({ ...c, part, property, expectCss });
+      // `text` = the part's rendered text vs. the text token in this case's locale
+      const want = property === "text" ? String(resolveToken(tokens, aliasTarget(expect) ?? "", c.mode) ?? "") : expectCss;
+      const { actual, expected } = await measure({ ...c, part, property, expectCss: want });
       cases.push({ ...c, actual, expected, pass: sameCss(actual, expected) });
     }
     out.push({ id: item.id, title: item.title, kind: "auto", pass: cases.length > 0 && cases.every((c) => c.pass), cases });

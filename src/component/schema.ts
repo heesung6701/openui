@@ -79,6 +79,9 @@ export const Layout = z.strictObject(shapeOf((v) => v.layout));
 export const StyleCell = z.strictObject(shapeOf(() => true));
 
 const PropRef = z.strictObject({ prop: Ident });
+const TEXT_TOKEN_MSG = 'text must be a text token like "{text.button.label}" (literal text is not allowed: every text needs an id)';
+/** Every rendered text is a text token (`$type: string`); its path is the id localization systems key on. */
+const TextToken = z.string().regex(new RegExp(`^${ALIAS}$`), TEXT_TOKEN_MSG);
 const common = { visible: PropRef.optional(), description: z.string().optional() };
 
 const Frame = ext({
@@ -94,7 +97,7 @@ const Slot = ext({
   get children(): z.ZodOptional<z.ZodRecord<z.ZodString, typeof Part>> { return z.record(z.string(), Part).optional(); },
   ...common,
 });
-const Text = ext({ kind: z.literal("text"), text: z.union([z.string(), PropRef]).optional(), ...common });
+const Text = ext({ kind: z.literal("text"), text: z.union([TextToken, PropRef], { error: `${TEXT_TOKEN_MSG} or {prop: <text prop>}` }).optional(), ...common });
 const Instance = ext({ kind: z.literal("instance"), prop: Ident.optional(), component: ComponentId.optional(), ...common })
   .refine((v) => (v.prop === undefined) !== (v.component === undefined), "instance needs exactly one of prop or component");
 const Vector = ext({
@@ -120,7 +123,7 @@ export type PartNode = {
 };
 
 const PropDef = z.discriminatedUnion("type", [
-  z.strictObject({ type: z.literal("text"), default: z.string(), description: z.string().optional() }),
+  z.strictObject({ type: z.literal("text"), default: TextToken, description: z.string().optional() }),
   z.strictObject({ type: z.literal("boolean"), default: z.boolean(), description: z.string().optional() }),
   z.strictObject({
     type: z.literal("instance"), default: ComponentId.optional(), preferred: z.array(ComponentId).optional(),

@@ -40,6 +40,7 @@ items:
   - { id: icon-size, title: "아이콘 18dp", check: { variant: { withIcon: "true" }, part: icon, property: width, expect: 18px } }
   - { id: icon-hidden, title: "withIcon=false면 아이콘 숨김", check: { variant: { withIcon: "false" }, part: icon, property: display, expect: none } }
   - { id: gap, title: "아이콘-라벨 간격 8dp", check: { variant: { withIcon: "true" }, part: root, property: column-gap, expect: 8px } }
+  - { id: label-text, title: "라벨 = 텍스트 토큰 text.button.label (en/ko)", check: { state: enabled, mode: { theme: light }, part: label, property: text, expect: "{text.button.label}" } }
   - { id: focus-ring, title: "포커스 링(3dp secondary, offset 2dp) — v0.1 어휘로 미표현임을 확인", manual: true, hint: { state: focused } }
   - { id: ripple, title: "pressed 리플이 탭 위치에서 퍼짐 — 정적 프리뷰는 state layer만 표시", manual: true, hint: { state: pressed } }
   - { id: touch-target, title: "터치 타깃 48dp 확보(컨테이너 40dp + 외부 여백)", manual: true }

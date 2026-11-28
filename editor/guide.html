@@ -17,7 +17,7 @@
       <a class="cta" href="./">웹 에디터에서 직접 열어 보기</a>
 
       <nav class="toc" aria-label="목차">
-        <a href="#overview">한눈에 보기</a><a href="#tokens">토큰</a><a href="#component">컴포넌트 문서</a><a href="#vocabulary">속성 어휘</a><a href="#resolution">스타일 해석 규칙</a><a href="#checklist">체크리스트</a><a href="#mapping">Figma · 웹 매핑</a><a href="#tools">도구</a><a href="#limits">v0.1의 한계</a>
+        <a href="#overview">한눈에 보기</a><a href="#tokens">토큰</a><a href="#text">텍스트 토큰</a><a href="#component">컴포넌트 문서</a><a href="#vocabulary">속성 어휘</a><a href="#resolution">스타일 해석 규칙</a><a href="#checklist">체크리스트</a><a href="#mapping">Figma · 웹 매핑</a><a href="#tools">도구</a><a href="#limits">v0.1의 한계</a>
       </nav>
 
       <h2 id="overview">한눈에 보기</h2>
@@ -32,7 +32,7 @@
           <text class="dg-body" x="56" y="128">토큰·컴포넌트·체크리스트 파일 위치</text>
           <rect class="dg-box" x="388" y="88" width="332" height="56" rx="8" />
           <text class="dg-name" x="404" y="112">토큰 · DTCG 2025.10</text>
-          <text class="dg-body" x="404" y="128">resolver가 light/dark 모드를 정의</text>
+          <text class="dg-body" x="404" y="128">resolver가 테마·언어 모드를 정의</text>
           <rect class="dg-box" x="40" y="160" width="332" height="56" rx="8" />
           <text class="dg-name" x="56" y="184">컴포넌트 · kind: Component</text>
           <text class="dg-body" x="56" y="200">props·variants·states·anatomy·styles</text>
@@ -77,7 +77,7 @@
       corner-full: { $type: dimension, $value: { value: 9999, unit: px } }</code></pre>
       <ul>
         <li><code>$value</code>가 있으면 토큰, 없으면 그룹이다. <code>$type</code>은 직접 쓰거나, alias 대상이나 부모 그룹에서 물려받는다.</li>
-        <li>지원 타입은 10종이다: color, dimension, number, duration, cubicBezier, fontFamily, fontWeight, shadow, typography, gradient.</li>
+        <li>지원 타입은 11종이다: color, dimension, number, duration, cubicBezier, fontFamily, fontWeight, shadow, typography, gradient, 그리고 텍스트용 string.</li>
         <li>color는 <code>{colorSpace: srgb, components: [r, g, b]}</code> 객체로만 쓴다. hex 문자열 단독은 DTCG 2025.10에서 허용되지 않는다.</li>
         <li>alias <code>"{a.b.c}"</code>는 그룹이 아닌 토큰을 가리켜야 하고 타입이 맞아야 한다. 순환 참조는 오류다.</li>
       </ul>
@@ -87,9 +87,33 @@
         <tbody>
           <tr><td>set <code>ref</code>, <code>sys</code>, <code>comp</code></td><td>같은 이름</td><td><code>default</code></td><td>팔레트, 모서리, comp 토큰</td></tr>
           <tr><td>modifier <code>theme</code></td><td><code>theme</code></td><td><code>light</code>, <code>dark</code></td><td>sys 색상</td></tr>
+          <tr><td>modifier <code>locale</code></td><td><code>locale</code></td><td><code>en</code>, <code>ko</code></td><td>텍스트 토큰</td></tr>
         </tbody>
       </table></div>
       <p>토큰 하나는 정확히 한 set, 또는 한 modifier의 모든 context에 있어야 한다. 이 규칙 덕분에 Figma variable 컬렉션/모드와 웹의 CSS 변수 + <code>data-theme</code> 속성으로 그대로 옮겨진다.</p>
+
+      <h2 id="text">텍스트 토큰</h2>
+      <p><strong>화면에 나오는 모든 텍스트는 텍스트 토큰이다.</strong> 텍스트 토큰은 <code>$type: string</code>인 토큰이고, 토큰 경로가 그 텍스트의 ID다. 다국어 시스템은 이 ID를 번역 키로 쓴다.</p>
+      <pre><code># tokens/text.en.tokens.yaml          # tokens/text.ko.tokens.yaml
+text:                                 text:
+  $type: string                         $type: string
+  button:                               button:
+    label: { $value: Button }             label: { $value: 버튼 }</code></pre>
+      <p>언어 하나가 <code>locale</code> modifier의 context 하나다. 컴포넌트는 리터럴 대신 ID를 쓴다.</p>
+      <pre><code>props:
+  label: { type: text, default: "{text.button.label}" }
+anatomy:
+  root:
+    children:
+      badge: { kind: text, text: "{text.gallery.badge}" }</code></pre>
+      <ul>
+        <li><strong>리터럴 텍스트는 오류다.</strong> text part의 <code>text</code>와 text prop의 <code>default</code>는 텍스트 토큰이어야 한다. 다른 타입의 토큰을 가리켜도 오류다.</li>
+        <li><strong>번역 누락도 오류다.</strong> 한 언어에 ID가 빠지면 <code>token "text.button.label" missing in context "ko" of modifier "locale"</code>가 난다.</li>
+        <li>ID 이름은 <code>text.&lt;컴포넌트&gt;.&lt;이름&gt;</code>을 권장한다. 공통 문구는 <code>text.common.*</code>에 두고 alias로 재사용한다. 브랜드명처럼 언어와 상관없는 텍스트는 set에 둔다.</li>
+        <li>렌더러는 선택된 locale로 값을 해석해 텍스트로 넣는다. 에디터 상단에서 <code>locale</code>을 바꾸면 프리뷰가 바로 그 언어로 바뀐다.</li>
+        <li>앱이 런타임에 넘기는 사용자 데이터(이름 등)는 리터럴이어도 된다. 문서용 문자열(<code>name</code>, <code>description</code>)은 화면에 그려지지 않으므로 대상이 아니다.</li>
+      </ul>
+      <p>Figma에서는 STRING 변수(scope <code>TEXT_CONTENT</code>)가 되고, locale 컬렉션의 mode가 언어다. 텍스트 레이어의 <code>characters</code>에 변수를 바인딩한다. 언어 하나를 풀면 <code>{ID: 문자열}</code> 평면 맵이라 JSON, <code>strings.xml</code>, <code>.strings</code> 같은 번역 파일로 그대로 옮길 수 있다.</p>
 
       <h2 id="component">컴포넌트 문서</h2>
       <p>컴포넌트 하나는 <code>kind: Component</code> YAML 파일 하나다. 다섯 부분으로 나뉘며, part(해부도 요소)와 slot(사용자가 콘텐츠를 넣는 자리)을 구분한다.</p>
@@ -108,7 +132,7 @@
 metadata: { id: button, name: Button }
 data:
   props:
-    label: { type: text, default: Button }
+    label: { type: text, default: "{text.button.label}" }
     icon:  { type: instance, default: icon-add }
   variants:
     style:    { values: { filled: {}, outlined: {} }, default: filled }
@@ -196,6 +220,7 @@ items:
     manual: true</code></pre>
       <ul>
         <li><strong>자동 항목</strong>: variant × state × 모드 조합마다 컴포넌트를 렌더하고 part의 computed CSS 값을 읽는다. 생략한 축·state·모드는 모든 값에 대해 검사한다.</li>
+        <li><strong>텍스트 항목</strong>: <code>property: text</code>는 part에 렌더된 텍스트를 읽어, 그 케이스의 locale로 해석한 텍스트 토큰과 비교한다. 예: <code>expect: "{text.button.label}"</code>은 en에서 <code>Button</code>, ko에서 <code>버튼</code>이어야 통과한다.</li>
         <li><strong>판정</strong>: 기대값을 프로브 요소에 설정해 브라우저가 양쪽을 같은 방식으로 정규화하게 한 뒤 비교한다. px는 0.05px 오차를 허용하고, 측정값이 비어 있으면 실패다.</li>
         <li><strong>수동 항목</strong>: 포커스 링, 리플, 터치 타깃처럼 v0.1 어휘로 표현하지 못하는 것을 사람이 보고 체크한다.</li>
         <li><strong>기대값 원칙</strong>: 컴포넌트가 쓰는 comp 토큰이 아니라 sys 토큰이나 공식 스펙의 리터럴을 쓴다. 그래야 YAML 작성, comp→sys 연결, 렌더러가 한꺼번에 교차 검증된다.</li>
@@ -204,9 +229,9 @@ items:
       <div class="table"><table>
         <thead><tr><th>컴포넌트</th><th>자동 항목</th></tr></thead>
         <tbody>
-          <tr><td>Button</td><td>33/33</td></tr>
+          <tr><td>Button</td><td>34/34</td></tr>
           <tr><td>Checkbox</td><td>27/27</td></tr>
-          <tr><td>Filter chip</td><td>24/24</td></tr>
+          <tr><td>Filter chip</td><td>25/25</td></tr>
           <tr><td>Icon button</td><td>21/21</td></tr>
           <tr><td>Card</td><td>19/19</td></tr>
         </tbody>
@@ -218,6 +243,7 @@ items:
         <thead><tr><th>OpenUI</th><th>Figma</th><th>CSS</th></tr></thead>
         <tbody>
           <tr><td>토큰 / 모드</td><td>Variable / VariableCollection.modes</td><td><code>--md-sys-color-primary</code> / <code>.ou-root[data-theme="dark"]</code></td></tr>
+          <tr><td>텍스트 토큰 / locale</td><td>STRING Variable, <code>boundVariables.characters</code> / 언어별 mode</td><td>선택된 locale로 해석한 텍스트, <code>lang</code> 속성</td></tr>
           <tr><td>typography 토큰</td><td>Text Style</td><td><code>--…__font-size</code> 등 하위 변수 5개</td></tr>
           <tr><td>shadow 토큰</td><td>Effect Style</td><td><code>box-shadow</code></td></tr>
           <tr><td>Component(variant × state)</td><td>COMPONENT_SET 안의 COMPONENT</td><td>variant×state 조합마다 렌더</td></tr>
@@ -235,7 +261,7 @@ items:
       <div class="table"><table>
         <thead><tr><th>도구</th><th>명령</th><th>하는 일</th></tr></thead>
         <tbody>
-          <tr><td>검증 CLI</td><td><code>bun src/cli.ts validate examples/material3</code></td><td>스키마와 의미 검증. 성공하면 <code>ok: 768 tokens, 9 components</code></td></tr>
+          <tr><td>검증 CLI</td><td><code>bun src/cli.ts validate examples/material3</code></td><td>스키마와 의미 검증. 성공하면 <code>ok: 770 tokens, 9 components</code></td></tr>
           <tr><td>로컬 에디터</td><td><code>bun editor/server.ts examples/material3</code></td><td>YAML 편집, 실시간 진단, variant×state 프리뷰, 체크리스트. ⌘S로 디스크에 저장</td></tr>
           <tr><td>웹 에디터</td><td><a href="./">이 사이트</a></td><td>예제는 Save 시 다운로드. Chrome의 Open folder로 로컬 YAML을 직접 수정</td></tr>
         </tbody>
@@ -245,7 +271,7 @@ items:
       <h2 id="limits">v0.1의 한계와 다음 단계</h2>
       <p>v0.1은 정적인 외형과 구조를 다룬다. 상호작용과 모션은 아직 수동 체크로 확인한다.</p>
       <ul>
-        <li><strong>표현하지 못하는 것</strong>: 리플, 포커스 링 오프셋, 애니메이션, state 조합(<code>enabled,selected</code>), string/boolean 토큰.</li>
+        <li><strong>표현하지 못하는 것</strong>: 리플, 포커스 링 오프셋, 애니메이션, state 조합(<code>enabled,selected</code>), boolean 토큰, 텍스트의 자리표시자(<code>{count}개</code>)와 복수형, 번역 fallback(<code>ko-KR</code>→<code>ko</code>), RTL 레이아웃.</li>
         <li><strong>작성이 번거로운 것</strong>: variant 식에 OR가 없어 같은 블록을 반복해야 한다. 존재하지 않는 variant 조합을 제외할 방법도 없다.</li>
         <li><strong>아직 정의하지 않은 것</strong>: 렌더러용 정규화 JSON(exchange 포맷)은 v0.2에서 정의한다. 지금 렌더러는 YAML을 직접 읽는다.</li>
         <li><strong>다음 단계 후보</strong>: Compose·React 렌더러, 비주얼(인스펙터) 편집, YAML→Figma 생성 플러그인.</li>

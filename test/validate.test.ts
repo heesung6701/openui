@@ -10,7 +10,7 @@ const entry = (type: TokenType): TokenEntry => ({ collection: "base", type, byMo
 const ctx: ValidateContext = {
   tokens: {
     collections: [{ name: "base", kind: "set", modes: ["default"], defaultMode: "default" }],
-    tokens: new Map([["c", entry("color")], ["h", entry("dimension")], ["t", entry("typography")], ["sh", entry("shadow")]]),
+    tokens: new Map([["c", entry("color")], ["h", entry("dimension")], ["t", entry("typography")], ["sh", entry("shadow")], ["text.chip.label", entry("string")], ["text.chip.other", entry("string")]]),
   },
   componentIds: new Set(["icon", "chip"]),
 };
@@ -32,12 +32,16 @@ const cases: [string, (d: any) => void, string][] = [
   ["unbound prop",             d => (d.data.props.extra = { type: "boolean", default: false }), "extra"],
   ["slot bound twice",         d => (d.data.anatomy.root.children.tail2 = { kind: "slot", prop: "trailing" }), "trailing"],
   ["unknown component ref",    d => (d.data.props.icon = { type: "instance", default: "ghost" }), "ghost"],
-  ["duplicate part name",      d => (d.data.anatomy.root.children.wrap = { kind: "frame", children: { label: { kind: "text", text: "x" } } }), "label"],
+  ["duplicate part name",      d => (d.data.anatomy.root.children.wrap = { kind: "frame", children: { label: { kind: "text", text: "{text.chip.other}" } } }), "label"],
   ["root not frame",           d => (d.data.anatomy.root.kind = "text"),                        "root"],
   ["axis named state",         d => (d.data.variants.state = { values: { a: {} }, default: "a" }), "state"],
   ["x-figma duplicates core",  d => (d.data["x-figma"] = { parts: { root: { fill: "#000000" } } }), "fill"],
   ["fillOpacity on text",      d => (d.data.styles.base.enabled.label.fillOpacity = 0.5),       "fillOpacity"],
   ["strokeOpacity on text",    d => (d.data.styles.base.enabled.label.strokeOpacity = 0.5),     "strokeOpacity"],
+  ["text part: unknown text token", d => (d.data.anatomy.root.children.label.text = "{text.nope}"), "{text.nope}"],
+  ["text part: non-string token",   d => (d.data.anatomy.root.children.label.text = "{c}"),          '"{c}" is color, text expects string'],
+  ["text prop: non-string default", d => (d.data.props.label.default = "{h}"),                       '"{h}" is dimension, text expects string'],
+  ["string token used as a style",  d => (d.data.styles.base.enabled.label.color = "{text.chip.label}"), "{text.chip.label}"],
 ];
 for (const [name, mutate, needle] of cases)
   test(name, () => {

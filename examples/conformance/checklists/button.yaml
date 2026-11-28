@@ -4,4 +4,5 @@ metadata: { id: button, component: button, source: conformance }
 items:
   - { id: height, title: "높이 40px", check: { variant: { size: medium }, part: root, property: height, expect: 40px } }
   - { id: filled-bg, title: "filled 배경", check: { variant: { style: filled }, state: enabled, part: root, property: background-color, expect: "{color.primary}" } }
+  - { id: label-text, title: "라벨 = 텍스트 토큰 (로케일별)", check: { state: enabled, mode: { theme: light }, part: label, property: text, expect: "{text.button.label}" } }
   - { id: ripple, title: "리플", manual: true, hint: { state: pressed } }

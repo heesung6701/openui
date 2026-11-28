@@ -2,6 +2,7 @@ import { variantCombos } from "../src/component/resolve";
 import { statesOf } from "../src/component/validate";
 import type { Project } from "../src/project";
 import { tokenSheet } from "../src/render/tokens";
+import { resolveToken } from "../src/tokens/resolver";
 import { buildComponent, type RenderOptions, type VNode } from "../src/render/vnode";
 import { escapeHtml, hooks, state } from "./app";
 import { previewMode } from "./support";
@@ -22,12 +23,15 @@ export const ui = { props: {} as Record<string, RenderOptions["props"]>, modes: 
 
 export const modifiersOf = (p: Project) => p.tokens.collections.filter((c) => c.kind === "modifier");
 export const modeOf = (p: Project, name: string) => ui.modes[name] ?? modifiersOf(p).find((c) => c.name === name)!.defaultMode;
+export const currentModes = (p: Project) => Object.fromEntries(modifiersOf(p).map((c) => [c.name, modeOf(p, c.name)]));
 
 /** Wrap content in a `.ou-root` carrying the token sheet scope and modifier attributes. */
 export function ouRoot(p: Project, modes: Record<string, string> = {}): HTMLElement {
   const root = document.createElement("div");
   root.className = "ou-root";
   for (const c of modifiersOf(p)) root.setAttribute(`data-${c.name}`, modes[c.name] ?? modeOf(p, c.name));
+  const locale = root.getAttribute("data-locale");
+  if (locale) root.lang = locale; // locale contexts are BCP 47 tags: picks CJK glyphs, hyphenation
   return root;
 }
 
@@ -61,7 +65,16 @@ function propsPanel(p: Project, id: string): string {
   const rows = Object.entries(props).map(([name, def]) => {
     const v = values[name];
     const n = escapeHtml(name);
-    if (def.type === "text") return `<label>${n} <input data-prop="${n}" value="${escapeHtml(String(v ?? def.default))}"></label>`;
+    if (def.type === "text") {
+      // text props take a text token id, never literal text
+      const current = String(v ?? def.default);
+      const options = [...p.tokens.tokens].filter(([, t]) => t.type === "string").map(([path]) => {
+        const alias = `{${path}}`;
+        const shown = `${path} — ${String(resolveToken(p.tokens, path, currentModes(p)) ?? "")}`;
+        return `<option value="${escapeHtml(alias)}"${alias === current ? " selected" : ""}>${escapeHtml(shown)}</option>`;
+      });
+      return `<label>${n} <select data-prop="${n}">${options.join("")}</select></label>`;
+    }
     if (def.type === "boolean") return `<label><input type="checkbox" data-prop="${n}"${(v ?? def.default) ? " checked" : ""}> ${n}</label>`;
     if (def.type === "instance") {
       const current = v === undefined ? def.default ?? "" : v ?? "";
@@ -97,7 +110,7 @@ export function renderGrid(p: Project, id: string) {
       const td = tr.insertCell();
       td.dataset.cell = JSON.stringify({ variant, state: s });
       const root = ouRoot(p);
-      root.appendChild(toDOM(buildComponent(p, id, { variant, state: s, props: ui.props[id] ?? {} })));
+      root.appendChild(toDOM(buildComponent(p, id, { variant, state: s, props: ui.props[id] ?? {}, modes: currentModes(p) })));
       td.appendChild(root);
     }
   }

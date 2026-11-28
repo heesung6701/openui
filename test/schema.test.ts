@@ -11,7 +11,7 @@ test("unknown non-x key at data and part level rejected", () => {
   expect(Component.safeParse(y(ok.replace("kind: text,", "kind: text, colour: red,"))).success).toBe(false);
 });
 test("prop rules", () => {
-  expect(Component.safeParse(y(ok.replace("default: Chip", "default: 3"))).success).toBe(false);
+  expect(Component.safeParse(y(ok.replace('default: "{text.chip.label}"', "default: 3"))).success).toBe(false);
   expect(Component.safeParse(y(ok.replace("max: 1", "max: 0"))).success).toBe(false);
 });
 test("value shorthand", () => {
@@ -32,4 +32,15 @@ test("JSON Schema: x- extension rule and committed files fresh", async () => {
   const out = genSchemas();
   expect(out["component.schema.json"]).toContain('"^x-"');
   for (const [name, text] of Object.entries(out)) expect(await Bun.file(`schema/${name}`).text()).toBe(text);
+});
+
+test("text tokens: literal text in a text part or a text prop default is rejected", () => {
+  const lit = ok.replace("text: { prop: label }", "text: Hello");
+  const r = Component.safeParse(y(lit));
+  expect(r.success).toBe(false);
+  expect(r.error!.issues[0]!.message).toContain("text token");
+  expect(Component.safeParse(y(ok.replace("text: { prop: label }", 'text: "{text.chip.label}"'))).success).toBe(true);
+  const def = Component.safeParse(y(ok.replace('default: "{text.chip.label}"', "default: Chip")));
+  expect(def.success).toBe(false);
+  expect(def.error!.issues[0]!.message).toContain("text token");
 });

@@ -17,7 +17,8 @@ OpenUI는 디자인 토큰과 UI 컴포넌트를 YAML 문서로 기술한다. **
 |---|---|
 | 토큰(token) | 이름이 붙은 디자인 값. DTCG 형식 |
 | 컬렉션(collection) | 토큰 묶음. 하나 이상의 모드를 가진다 |
-| 모드(mode) | 같은 토큰의 맥락별 값(예: light/dark) |
+| 모드(mode) | 같은 토큰의 맥락별 값(예: light/dark, en/ko) |
+| 텍스트 토큰 | 화면에 나오는 텍스트. `$type: string` 토큰이고, 경로가 텍스트 ID다(3.5) |
 | part | 컴포넌트 해부도(anatomy)의 한 요소. 예: `root`, `label`, `icon` |
 | slot | 사용 측이 임의 콘텐츠를 넣는 자리. Figma SLOT, React children, Compose `@Composable` 람다에 해당 |
 | prop | 컴포넌트 공개 API. text / boolean / instance / slot |
@@ -87,6 +88,7 @@ checklists?: ["checklists/*.yaml"]    # 체크리스트 문서 glob 목록(8장)
 | `shadow` | `{color, offsetX, offsetY, blur, spread, inset?}` 또는 그 배열 |
 | `typography` | `{fontFamily, fontSize, fontWeight, letterSpacing, lineHeight}`. lineHeight는 fontSize의 배수(number) |
 | `gradient` | `[{color, position: 0..1}]` |
+| `string` | string. **텍스트 토큰**(3.5). DTCG 2025.10에 없는 openui 확장 타입 |
 
 **alias**:
 - 값 전체가 `"{a.b.c}"`인 문자열이다. 복합 값의 하위 필드(예: shadow의 `color`)에도 쓸 수 있다.
@@ -96,7 +98,7 @@ checklists?: ["checklists/*.yaml"]    # 체크리스트 문서 glob 목록(8장)
 **v0.1 미지원**(검증기 메시지 `unsupported in openui 0.1`):
 - JSON Pointer `$ref`, `$extends`, `$root`
 - 위 표에 없는 `$type`(`border`, `strokeStyle`, `transition` 등)
-- string/boolean 변수
+- boolean 변수
 
 **`$extensions["com.figma"]`**: `{scopes?: string[], codeSyntax?: {WEB?, ANDROID?, iOS?}, hiddenFromPublishing?: boolean}`. 그 밖의 `$extensions` 키는 검사하지 않고 보존한다.
 
@@ -128,6 +130,60 @@ resolutionOrder: [{ $ref: "#/sets/base" }, { $ref: "#/modifiers/theme" }]
 - 한 context에서 빠진 토큰은 오류다. 예: `"bg" missing in context "dark" of modifier "theme"`
 - 이 규칙 덕분에 Figma variable collection/mode로도, 웹의 CSS 변수 + `data-<modifier>` 속성으로도 손실 없이 옮길 수 있다.
 
+### 3.5 텍스트 토큰과 다국어
+
+**화면에 나오는 모든 텍스트는 텍스트 토큰이다.** 텍스트 토큰은 `$type: string`인 토큰이고, **토큰 경로가 그 텍스트의 ID**다. 다국어 시스템은 이 ID로 번역을 연결한다.
+
+```yaml
+# tokens/text.en.tokens.yaml
+text:
+  $type: string
+  button: { label: { $value: Button } }
+```
+
+```yaml
+# tokens/text.ko.tokens.yaml
+text:
+  $type: string
+  button: { label: { $value: 버튼 } }
+```
+
+```yaml
+# resolver: 언어 하나 = locale modifier의 context 하나
+modifiers:
+  locale:
+    contexts:
+      en: [{ $ref: text.en.tokens.yaml }]
+      ko: [{ $ref: text.ko.tokens.yaml }]
+    default: en
+```
+
+**ID**
+- ID는 토큰 경로다. 예: `text.button.label`. 토큰 경로 규칙(3.1)에 따라 프로젝트 안에서 고유하다.
+- 권장 이름: `text.<componentId>.<이름>`. 여러 컴포넌트가 함께 쓰는 문구는 `text.common.<이름>`에 둔다.
+- ID는 번역 키라서 한번 배포하면 바꾸지 않는다. 문구를 바꿀 때는 값만 바꾼다.
+
+**언어**
+- 언어는 modifier로 표현한다. 이름은 `locale`, context 이름은 BCP 47 언어 태그(`en`, `ko`, `ja-JP`)를 권장한다.
+- 3.4 규칙에 따라 한 언어에서 번역이 빠지면 오류다. 예: `token "text.button.label" missing in context "ko" of modifier "locale"`
+- 언어와 상관없는 텍스트(브랜드명 등)도 ID가 필요하다. set에 두면 모든 언어에서 같은 값을 쓴다.
+- 텍스트 토큰끼리 alias할 수 있다. 예: `text.dialog.confirm: { $value: "{text.common.ok}" }`
+
+**컴포넌트에서 쓰는 곳**
+- text part의 `text`(4.4): 텍스트 토큰 alias 또는 `{prop}`.
+- text prop의 `default`(4.2): 텍스트 토큰 alias.
+- 리터럴 텍스트는 오류다: `text must be a text token like "{text.button.label}" (literal text is not allowed: every text needs an id)`
+- 텍스트 토큰이 아닌 토큰을 가리키면 오류다. 예: `token "{md.sys.color.primary}" is color, text expects string`
+- 텍스트 토큰은 스타일 속성 값으로 쓸 수 없다(4.6의 어떤 속성도 `string`을 받지 않는다).
+
+**범위**
+- 이 규칙은 스펙 문서에 쓰는 텍스트에 적용된다. 앱이 런타임에 text prop으로 넘기는 값은 텍스트 토큰이어도 되고, 사용자 이름 같은 데이터면 리터럴이어도 된다.
+- 문서용 문자열(`metadata.name`, `description`, 체크리스트 `title`)은 화면에 그려지지 않으므로 대상이 아니다.
+
+**렌더러**
+- 선택된 locale context로 값을 해석해 텍스트 내용으로 넣는다. alias를 따라갈 때는 각 토큰이 속한 컬렉션의 모드를 쓴다.
+- 해석된 locale 하나는 `{ID: 문자열}` 평면 맵이다. 번역 파일(JSON, `strings.xml`, `.strings` 등)로 그대로 옮길 수 있다.
+
 ## 4. 컴포넌트
 
 ### 4.1 문서 구조
@@ -156,7 +212,7 @@ data:
 
 | type | 필드 | 바인딩 위치 |
 |---|---|---|
-| `text` | `default: string` | text part의 `text: {prop}` |
+| `text` | `default: "<텍스트 토큰>"` (3.5) | text part의 `text: {prop}` |
 | `boolean` | `default: boolean` | part의 `visible: {prop}` |
 | `instance` | `default?: componentId`, `preferred?: componentId[]` | instance part의 `prop` |
 | `slot` | `min?: int≥0`, `max?: int≥1`, `preferred?: componentId[]`, `preferredOnly?: boolean` | slot part의 `prop` |
@@ -202,7 +258,7 @@ part 이름은 트리 전체에서 고유하다. 스타일은 이름으로 part�
 |---|---|
 | `frame` | `layout?`, `children?` |
 | `slot` | `prop`(slot prop, 필수), `layout?`, `children?`(기본 콘텐츠) |
-| `text` | `text?: string \| {prop}` |
+| `text` | `text?: "<텍스트 토큰>" \| {prop}`. 리터럴 텍스트는 금지(3.5) |
 | `instance` | `prop`(instance prop)과 `component`(componentId) 중 **정확히 하나** |
 | `vector` | `svg: {viewBox: string, d: string \| string[]}` 필수 |
 | `image` | `src: string` 필수(URL, data URI, 프로젝트 기준 상대경로) |
@@ -323,7 +379,7 @@ items:
       state?: enabled | [enabled, hovered]            # 생략 = 모든 state
       mode?: { theme: light | [light, dark] }         # 생략 = 모든 modifier context
       part: root
-      property: height               # CSS longhand(사용자 정의 속성 --x 포함)
+      property: height               # CSS longhand(사용자 정의 속성 --x 포함) 또는 text
       expect: 40px                   # 문자열 안의 "{a.b}"는 토큰 값으로 치환, 또는 number
   - id: ripple
     title: pressed 리플
@@ -342,6 +398,7 @@ items:
 - 각 케이스(variant × state × mode)를 렌더하고 part의 computed `property` 값을 읽는다.
 - 기대값은 같은 컨텍스트에 둔 프로브 요소에 `expect`를 설정해서 얻은 computed 값이다. 양쪽을 브라우저가 같은 방식으로 정규화하게 하려는 것.
 - 문자열이 같으면 통과한다. 둘 다 px 길이면 차이가 0.05px 미만일 때 통과한다(레이아웃 반올림 허용).
+- **`property: text`**는 CSS 속성이 아니라 part의 렌더된 텍스트다. `expect`는 텍스트 토큰 alias 하나여야 하고, 케이스마다 그 케이스의 locale로 해석한 값과 비교한다. 예: `{ part: label, property: text, expect: "{text.button.label}" }`는 en에서 `Button`, ko에서 `버튼`을 기대한다.
 
 **기대값 작성 원칙**: 컴포넌트가 참조하는 comp 토큰을 그대로 기대값으로 쓰지 않는다. 대신 sys 토큰이나 공식 스펙의 리터럴을 쓴다. 그래야 comp→sys 연결, YAML 작성, 렌더러가 한꺼번에 교차 검증된다.
 
@@ -353,6 +410,10 @@ items:
 |---|---|---|
 | 컬렉션 / 모드 | `VariableCollection.modes`, `defaultModeId` | `figma.variables.createVariableCollection`, `addMode` |
 | 토큰(color/dimension/number) | `Variable.resolvedType`(`COLOR` / `FLOAT`), `valuesByMode` | `createVariable`, `setValueForMode` |
+| 텍스트 토큰(`string`) | `Variable.resolvedType` `STRING`, `scopes: ["TEXT_CONTENT"]`. 변수 이름 = ID | `createVariable(…, "STRING")` |
+| locale modifier | variable collection 하나, 언어마다 mode 하나 | `addMode("ko")` |
+| text part의 텍스트 토큰 | TEXT 노드 `boundVariables.characters` | `setBoundVariable("characters", v)` |
+| text prop 기본값 | TEXT 속성 + 기본 텍스트의 `boundVariables.characters`. 인스턴스 값은 `ComponentProperty.boundVariables.value` | 같음 |
 | 토큰 alias | `VariableAlias` | `createVariableAlias` |
 | `com.figma.scopes` / `codeSyntax` | `Variable.scopes` / `codeSyntax` | `variable.scopes` / `setVariableCodeSyntax` |
 | typography 토큰 | `TypeStyle`(`fontFamily`, `fontSize`, `fontWeight`, `letterSpacing`, `lineHeightPx`) | `createTextStyle` |
@@ -387,7 +448,10 @@ items:
 ## 부록 B. 미해결 과제
 
 - **state 조합**(`enabled,selected`): Figma state 축 하나와 대응하지 않아 v0.1에서 제외했다. 토글은 variant로 표현한다.
-- **string/boolean 토큰**: DTCG에 타입이 없다. Figma STRING/BOOLEAN 변수 대응 방법이 필요하다.
+- **boolean 토큰**: DTCG에 타입이 없다. Figma BOOLEAN 변수 대응 방법이 필요하다. (string은 3.5의 텍스트 토큰으로 정의했다.)
+- **텍스트 토큰의 자리표시자와 복수형**: `{count}개` 같은 치환값과 복수형 규칙(ICU MessageFormat 등)은 v0.1 범위 밖이다. `{`로 시작해 `}`로 끝나는 값 전체는 alias로 해석되므로, 자리표시자 문법은 이와 겹치지 않게 정해야 한다.
+- **번역 대체 순서**: `ko-KR`에 없으면 `ko`를 쓰는 식의 fallback이 없다. v0.1은 모든 locale context에 모든 텍스트 토큰을 요구한다.
+- **RTL**: 오른쪽에서 왼쪽으로 쓰는 언어의 레이아웃 반전(`start`/`end`)은 정의하지 않았다.
 - **variant 조합 제외**: 존재하지 않는 조합(예: 특정 style에는 없는 size)을 표현할 방법이 없다.
 - **리플·포커스 링 오프셋·모션**: 어휘가 없다. 체크리스트의 수동 항목으로 확인한다.
 - **variant 식의 OR**: `type=selected|indeterminate` 같은 표현이 없어서 같은 블록을 반복해야 한다(Material 3 checkbox).
@@ -419,6 +483,7 @@ items:
 | fontWeight | 숫자(이름은 DTCG 표대로 변환) |
 | shadow | box-shadow 목록 |
 | gradient | `linear-gradient(180deg, …)` |
+| string | CSS 변수를 만들지 않는다. 텍스트 내용으로 렌더한다(아래) |
 | typography | 하위 변수 5개: `__font-family`, `__font-size`, `__font-weight`, `__letter-spacing`, `__line-height`. 예: `--md-sys-typescale-label-large__line-height`. `__`를 쓰는 이유는 형제 토큰 `label-large-line-height`(`--md-sys-typescale-label-large-line-height`)와 이름이 겹치지 않게 하려는 것 |
 
 **part → CSS**
@@ -439,5 +504,5 @@ items:
 | stroke* (frame) | `box-shadow`: inside → `inset 0 0 0 W C`, outside → `0 0 0 W C`, center → 둘로 나눔. strokeOpacity는 color-mix |
 | shadow | `box-shadow`에 stroke 그림자 뒤로 이어 붙임 |
 | cornerRadius / opacity / visible:false | `border-radius` / `opacity` / `display:none` |
-| text | `white-space:nowrap`, `color`, typography 하위 변수, `text-align` |
+| text | `white-space:nowrap`, `color`, typography 하위 변수, `text-align`. 내용은 텍스트 토큰을 선택된 locale로 해석한 문자열(`textContent`). `.ou-root`에는 `data-locale`과 함께 `lang` 속성을 둔다 |
 | vector / image | `<svg viewBox><path d>` / `<img object-fit:cover>` |

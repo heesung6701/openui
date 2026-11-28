@@ -42,7 +42,7 @@ test("conformance project is clean and covers every token type and part kind", a
   expect(diagnostics).toEqual([]);
   expect(project!.components.size).toBe(4);
   expect(new Set([...project!.tokens.tokens.values()].map((t) => t.type))).toEqual(
-    new Set(["color", "dimension", "number", "duration", "cubicBezier", "fontFamily", "fontWeight", "shadow", "typography", "gradient"]));
+    new Set(["color", "dimension", "number", "duration", "cubicBezier", "fontFamily", "fontWeight", "shadow", "typography", "gradient", "string"]));
   const kinds = new Set<string>();
   const walk = (p: any) => { kinds.add(p.kind); Object.values(p.children ?? {}).forEach(walk); };
   for (const { doc } of project!.components.values()) walk(doc.data.anatomy.root);
