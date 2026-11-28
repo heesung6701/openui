@@ -19,7 +19,8 @@ export async function bundleProjects(dirs: string[]): Promise<BundledProject[]> 
 export async function buildPages(outdir: string, dirs: string[]): Promise<void> {
   await rm(outdir, { recursive: true, force: true });
   await mkdir(outdir, { recursive: true });
-  const r = await Bun.build({ entrypoints: [join(import.meta.dir, "../editor/index.html")], outdir, minify: true });
+  const pages = ["index.html", "guide.html"].map((f) => join(import.meta.dir, "../editor", f));
+  const r = await Bun.build({ entrypoints: pages, outdir, minify: true });
   if (!r.success) throw new AggregateError(r.logs, "editor build failed");
   await writeFile(join(outdir, "projects.json"), JSON.stringify({ projects: await bundleProjects(dirs) }));
   await writeFile(join(outdir, ".nojekyll"), ""); // serve files as-is (no Jekyll processing)

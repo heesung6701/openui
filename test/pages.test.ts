@@ -21,3 +21,11 @@ test("buildPages writes a relative-path static site with projects.json and .noje
   const { projects } = JSON.parse(readFileSync(join(out, "projects.json"), "utf8"));
   expect(projects.map((p: { name: string }) => p.name)).toEqual(["material3", "conformance"]);
 });
+test("buildPages ships the spec guide page without a sources section or benchmark references", async () => {
+  const out = mkdtempSync(join(tmpdir(), "ou-pages-"));
+  await buildPages(out, ["examples/conformance"]);
+  const guide = readFileSync(join(out, "guide.html"), "utf8");
+  for (const heading of ["한눈에 보기", "토큰", "컴포넌트 문서", "속성 어휘", "스타일 해석 규칙", "체크리스트", "Figma · 웹 매핑", "도구"]) expect(guide).toContain(heading);
+  for (const banned of ["rootage", "seed-design", "daangn", "당근", "출처", "벤치마킹"]) expect(guide).not.toContain(banned);
+  expect(guide).toMatch(/href="\.\/"/); // back to the editor, relative (Pages serves under /openui/)
+});

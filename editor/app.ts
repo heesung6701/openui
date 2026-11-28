@@ -43,6 +43,7 @@ document.querySelector("#app")!.innerHTML = `
     <span id="source"></span>
     <span id="modes"></span>
     <button id="save" title="Save (⌘S)">Save</button>
+    <a id="guide" href="./guide.html" target="_blank" rel="noopener">스펙 해설</a>
     <span id="status"></span>
   </header>
   <aside id="files"></aside>

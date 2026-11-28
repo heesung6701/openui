@@ -2,6 +2,7 @@ import { existsSync, lstatSync, realpathSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, resolve, sep } from "node:path";
 import { fsIO } from "../src/fs-io";
+import guide from "./guide.html";
 import index from "./index.html";
 
 /** Absolute path for a project-relative `.yaml` path, or null if it could escape the root. */
@@ -50,6 +51,7 @@ export function startServer(opts: { root: string; port: number }) {
     development: process.env.NODE_ENV !== "production",
     routes: {
       "/": index,
+      "/guide.html": guide,
       "/api/files": {
         GET: async (req) => guard(req) ?? Response.json({ files: await io.list() }),
       },
